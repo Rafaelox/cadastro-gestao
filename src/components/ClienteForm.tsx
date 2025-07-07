@@ -18,7 +18,6 @@ interface ClienteFormProps {
 export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => {
   const [formData, setFormData] = useState<Partial<Cliente>>({
     nome: '',
-    data_nascimento: '',
     cpf: '',
     cep: '',
     endereco: '',
@@ -213,19 +212,6 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="data_nascimento" className="text-foreground">
-                  Data de Nascimento
-                </Label>
-                <Input
-                  id="data_nascimento"
-                  type="date"
-                  value={formData.data_nascimento}
-                  onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
-                  className="bg-background/50 border-border"
-                  disabled={isLoading}
-                />
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="cpf" className="text-foreground">

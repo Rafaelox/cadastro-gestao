@@ -1,22 +1,23 @@
-// Configuração e funções para conectar ao banco PostgreSQL na VPS
-import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-// Tipos TypeScript para as entidades
+// Interfaces
 export interface Cliente {
   id?: number;
   nome: string;
-  data_nascimento?: string;
   cpf?: string;
+  email?: string;
+  telefone?: string;
   cep?: string;
   endereco?: string;
-  telefone?: string;
-  email?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
   categoria_id?: number;
   origem_id?: number;
-  ativo: boolean;
   recebe_email: boolean;
   recebe_whatsapp: boolean;
   recebe_sms: boolean;
+  ativo: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -26,6 +27,8 @@ export interface Categoria {
   nome: string;
   descricao?: string;
   ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Origem {
@@ -33,89 +36,11 @@ export interface Origem {
   nome: string;
   descricao?: string;
   ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
-
-export interface Usuario {
-  id?: number;
-  username: string;
-  password_hash?: string;
-  nome: string;
-  email?: string;
-  tipo_usuario: 'admin' | 'user';
-  ativo: boolean;
-  ultimo_login?: string;
-}
-
-// Configuração da API para conectar ao backend na VPS
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class DatabaseService {
-  private async request(endpoint: string, options: RequestInit = {}) {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-          ...options.headers,
-        },
-        ...options,
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || `HTTP error! status: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Database request error:', error);
-      toast({
-        title: "Erro na operação",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  }
-
-  // ============================================
-  // AUTENTICAÇÃO
-  // ============================================
-
-  async login(username: string, password: string): Promise<{ token: string; user: Usuario }> {
-    const response = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-    
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user_data', JSON.stringify(response.user));
-    }
-    
-    return response;
-  }
-
-  logout() {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-  }
-
-  getCurrentUser(): Usuario | null {
-    const userData = localStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
-  }
-
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem('auth_token');
-  }
-
-  isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    return user?.tipo_usuario === 'admin';
-  }
-
   // ============================================
   // CLIENTES CRUD
   // ============================================
@@ -130,38 +55,97 @@ class DatabaseService {
     limit?: number;
     offset?: number;
   } = {}): Promise<Cliente[]> {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.append(key, value.toString());
-      }
-    });
-    
-    return this.request(`/clientes?${params.toString()}`);
+    let query = supabase
+      .from('clientes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (filters.nome) {
+      query = query.ilike('nome', `%${filters.nome}%`);
+    }
+    if (filters.cpf) {
+      query = query.ilike('cpf', `%${filters.cpf}%`);
+    }
+    if (filters.email) {
+      query = query.ilike('email', `%${filters.email}%`);
+    }
+    if (filters.categoria_id) {
+      query = query.eq('categoria_id', filters.categoria_id);
+    }
+    if (filters.origem_id) {
+      query = query.eq('origem_id', filters.origem_id);
+    }
+    if (filters.ativo !== undefined) {
+      query = query.eq('ativo', filters.ativo);
+    }
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+    if (filters.offset) {
+      query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
   }
 
   async getClienteById(id: number): Promise<Cliente> {
-    return this.request(`/clientes/${id}`);
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async createCliente(cliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>): Promise<Cliente> {
-    return this.request('/clientes', {
-      method: 'POST',
-      body: JSON.stringify(cliente),
-    });
+    const { data, error } = await supabase
+      .from('clientes')
+      .insert(cliente)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async updateCliente(id: number, cliente: Partial<Cliente>): Promise<Cliente> {
-    return this.request(`/clientes/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(cliente),
-    });
+    const { data, error } = await supabase
+      .from('clientes')
+      .update(cliente)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async deleteCliente(id: number): Promise<void> {
-    await this.request(`/clientes/${id}`, {
-      method: 'DELETE',
-    });
+    const { error } = await supabase
+      .from('clientes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   // ============================================
@@ -169,27 +153,56 @@ class DatabaseService {
   // ============================================
 
   async getCategorias(): Promise<Categoria[]> {
-    return this.request('/categorias');
+    const { data, error } = await supabase
+      .from('categorias')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
   }
 
-  async createCategoria(categoria: Omit<Categoria, 'id'>): Promise<Categoria> {
-    return this.request('/categorias', {
-      method: 'POST',
-      body: JSON.stringify(categoria),
-    });
+  async createCategoria(categoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at'>): Promise<Categoria> {
+    const { data, error } = await supabase
+      .from('categorias')
+      .insert(categoria)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async updateCategoria(id: number, categoria: Partial<Categoria>): Promise<Categoria> {
-    return this.request(`/categorias/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(categoria),
-    });
+    const { data, error } = await supabase
+      .from('categorias')
+      .update(categoria)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async deleteCategoria(id: number): Promise<void> {
-    await this.request(`/categorias/${id}`, {
-      method: 'DELETE',
-    });
+    const { error } = await supabase
+      .from('categorias')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   // ============================================
@@ -197,27 +210,56 @@ class DatabaseService {
   // ============================================
 
   async getOrigens(): Promise<Origem[]> {
-    return this.request('/origens');
+    const { data, error } = await supabase
+      .from('origens')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
   }
 
-  async createOrigem(origem: Omit<Origem, 'id'>): Promise<Origem> {
-    return this.request('/origens', {
-      method: 'POST',
-      body: JSON.stringify(origem),
-    });
+  async createOrigem(origem: Omit<Origem, 'id' | 'created_at' | 'updated_at'>): Promise<Origem> {
+    const { data, error } = await supabase
+      .from('origens')
+      .insert(origem)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async updateOrigem(id: number, origem: Partial<Origem>): Promise<Origem> {
-    return this.request(`/origens/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(origem),
-    });
+    const { data, error } = await supabase
+      .from('origens')
+      .update(origem)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   async deleteOrigem(id: number): Promise<void> {
-    await this.request(`/origens/${id}`, {
-      method: 'DELETE',
-    });
+    const { error } = await supabase
+      .from('origens')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   }
 
   // ============================================
@@ -266,7 +308,77 @@ class DatabaseService {
     por_categoria: { categoria: string; total: number }[];
     por_origem: { origem: string; total: number }[];
   }> {
-    return this.request('/estatisticas');
+    try {
+      // Total de clientes
+      const { count: totalClientes } = await supabase
+        .from('clientes')
+        .select('*', { count: 'exact', head: true });
+
+      // Clientes ativos
+      const { count: clientesAtivos } = await supabase
+        .from('clientes')
+        .select('*', { count: 'exact', head: true })
+        .eq('ativo', true);
+
+      // Clientes inativos
+      const { count: clientesInativos } = await supabase
+        .from('clientes')
+        .select('*', { count: 'exact', head: true })
+        .eq('ativo', false);
+
+      // Por categoria
+      const { data: porCategoria } = await supabase
+        .from('clientes')
+        .select(`
+          categoria_id,
+          categorias!inner(nome)
+        `);
+
+      // Por origem
+      const { data: porOrigem } = await supabase
+        .from('clientes')
+        .select(`
+          origem_id,
+          origens!inner(nome)
+        `);
+
+      // Agrupar por categoria
+      const categoriasGroup = porCategoria?.reduce((acc: any, item: any) => {
+        const categoria = item.categorias?.nome || 'Sem categoria';
+        acc[categoria] = (acc[categoria] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      // Agrupar por origem
+      const origensGroup = porOrigem?.reduce((acc: any, item: any) => {
+        const origem = item.origens?.nome || 'Sem origem';
+        acc[origem] = (acc[origem] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      return {
+        total_clientes: totalClientes || 0,
+        clientes_ativos: clientesAtivos || 0,
+        clientes_inativos: clientesInativos || 0,
+        por_categoria: Object.entries(categoriasGroup).map(([categoria, total]) => ({
+          categoria,
+          total: total as number
+        })),
+        por_origem: Object.entries(origensGroup).map(([origem, total]) => ({
+          origem,
+          total: total as number
+        }))
+      };
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return {
+        total_clientes: 0,
+        clientes_ativos: 0,
+        clientes_inativos: 0,
+        por_categoria: [],
+        por_origem: []
+      };
+    }
   }
 }
 

@@ -1,20 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { db } from "@/lib/database";
-import { LogOut, User } from "lucide-react";
+import { User } from "lucide-react";
 
-interface HeaderProps {
-  onLogout: () => void;
-}
-
-export const Header = ({ onLogout }: HeaderProps) => {
-  const user = db.getCurrentUser();
-
-  const handleLogout = () => {
-    db.logout();
-    onLogout();
-  };
-
+export const Header = () => {
   return (
     <Card className="border-b border-border/50 bg-card/80 backdrop-blur-sm">
       <div className="px-6 py-4 flex items-center justify-between">
@@ -30,27 +18,6 @@ export const Header = ({ onLogout }: HeaderProps) => {
               Gerenciamento de clientes
             </p>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-sm font-medium text-foreground">
-              {user?.nome || 'Usuário'}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {user?.tipo_usuario === 'admin' ? 'Administrador' : 'Usuário'}
-            </p>
-          </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="border-border hover:bg-destructive hover:text-destructive-foreground"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
         </div>
       </div>
     </Card>

@@ -1,33 +1,16 @@
-import { useState, useEffect } from "react";
-import { LoginForm } from "@/components/LoginForm";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
 import { CategoriasList } from "@/components/CategoriasList";
 import { OrigensList } from "@/components/OrigensList";
-import { db, Cliente } from "@/lib/database";
+import { Cliente } from "@/lib/database";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('clientes');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
-
-  useEffect(() => {
-    setIsAuthenticated(db.isAuthenticated());
-  }, []);
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setActiveTab('clientes');
-    setShowClienteForm(false);
-    setEditingCliente(undefined);
-  };
 
   const handleEditCliente = (cliente: Cliente) => {
     setEditingCliente(cliente);
@@ -49,13 +32,9 @@ const Index = () => {
     setEditingCliente(undefined);
   };
 
-  if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <Header onLogout={handleLogout} />
+      <Header />
       
       <div className="container mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

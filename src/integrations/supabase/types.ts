@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categorias: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: number
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          ativo: boolean
+          bairro: string | null
+          categoria_id: number | null
+          cep: string | null
+          cidade: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: number
+          nome: string
+          origem_id: number | null
+          recebe_email: boolean
+          recebe_sms: boolean
+          recebe_whatsapp: boolean
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          bairro?: string | null
+          categoria_id?: number | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: number
+          nome: string
+          origem_id?: number | null
+          recebe_email?: boolean
+          recebe_sms?: boolean
+          recebe_whatsapp?: boolean
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          bairro?: string | null
+          categoria_id?: number | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: number
+          nome?: string
+          origem_id?: number | null
+          recebe_email?: boolean
+          recebe_sms?: boolean
+          recebe_whatsapp?: boolean
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_origem_id_fkey"
+            columns: ["origem_id"]
+            isOneToOne: false
+            referencedRelation: "origens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      origens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: number
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
