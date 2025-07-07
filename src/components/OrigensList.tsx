@@ -19,6 +19,9 @@ export const OrigensList = () => {
     ativo: true
   });
 
+  // Debug logging
+  console.log('OrigensList state:', { showForm, editingId, isLoading });
+
   useEffect(() => {
     loadOrigens();
   }, []);
@@ -125,9 +128,12 @@ export const OrigensList = () => {
               </CardDescription>
             </div>
             <Button
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                console.log('Nova Origem clicked');
+                setShowForm(true);
+              }}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              disabled={showForm || editingId !== null}
+              disabled={isLoading}
             >
               <Plus className="w-4 h-4 mr-2" />
               Nova Origem
