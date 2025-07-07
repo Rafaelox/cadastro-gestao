@@ -193,6 +193,211 @@ app.get('/api/origens', authenticateToken, async (req, res) => {
   }
 });
 
+// Complete CRUD for clientes
+app.get('/api/clientes/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`
+      SELECT c.*, cat.nome as categoria_nome, ori.nome as origem_nome
+      FROM clientes c
+      LEFT JOIN categorias cat ON c.categoria_id = cat.id
+      LEFT JOIN origens ori ON c.origem_id = ori.id
+      WHERE c.id = $1
+    `, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/clientes/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nome, data_nascimento, cpf, cep, endereco, telefone, email,
+      categoria_id, origem_id, ativo, recebe_email, recebe_whatsapp, recebe_sms
+    } = req.body;
+    
+    const result = await pool.query(`
+      UPDATE clientes SET
+        nome = $1, data_nascimento = $2, cpf = $3, cep = $4, endereco = $5,
+        telefone = $6, email = $7, categoria_id = $8, origem_id = $9,
+        ativo = $10, recebe_email = $11, recebe_whatsapp = $12, recebe_sms = $13,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $14
+      RETURNING *
+    `, [
+      nome, data_nascimento, cpf, cep, endereco, telefone, email,
+      categoria_id, origem_id, ativo, recebe_email, recebe_whatsapp, recebe_sms, id
+    ]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/clientes/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM clientes WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado' });
+    }
+    
+    res.json({ message: 'Cliente deletado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete CRUD for categorias
+app.post('/api/categorias', authenticateToken, async (req, res) => {
+  try {
+    const { nome, descricao, ativo } = req.body;
+    const result = await pool.query(`
+      INSERT INTO categorias (nome, descricao, ativo)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `, [nome, descricao, ativo]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/categorias/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, descricao, ativo } = req.body;
+    const result = await pool.query(`
+      UPDATE categorias SET nome = $1, descricao = $2, ativo = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `, [nome, descricao, ativo, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Categoria não encontrada' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/categorias/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM categorias WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Categoria não encontrada' });
+    }
+    
+    res.json({ message: 'Categoria deletada com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete CRUD for origens
+app.post('/api/origens', authenticateToken, async (req, res) => {
+  try {
+    const { nome, descricao, ativo } = req.body;
+    const result = await pool.query(`
+      INSERT INTO origens (nome, descricao, ativo)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `, [nome, descricao, ativo]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/origens/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome, descricao, ativo } = req.body;
+    const result = await pool.query(`
+      UPDATE origens SET nome = $1, descricao = $2, ativo = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `, [nome, descricao, ativo, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Origem não encontrada' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/origens/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM origens WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Origem não encontrada' });
+    }
+    
+    res.json({ message: 'Origem deletada com sucesso' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Estatísticas
+app.get('/api/estatisticas', authenticateToken, async (req, res) => {
+  try {
+    const totalClientes = await pool.query('SELECT COUNT(*) as total FROM clientes');
+    const clientesAtivos = await pool.query('SELECT COUNT(*) as total FROM clientes WHERE ativo = true');
+    const clientesInativos = await pool.query('SELECT COUNT(*) as total FROM clientes WHERE ativo = false');
+    
+    const porCategoria = await pool.query(`
+      SELECT cat.nome as categoria, COUNT(c.id) as total
+      FROM categorias cat
+      LEFT JOIN clientes c ON c.categoria_id = cat.id
+      GROUP BY cat.id, cat.nome
+      ORDER BY total DESC
+    `);
+    
+    const porOrigem = await pool.query(`
+      SELECT ori.nome as origem, COUNT(c.id) as total
+      FROM origens ori
+      LEFT JOIN clientes c ON c.origem_id = ori.id
+      GROUP BY ori.id, ori.nome
+      ORDER BY total DESC
+    `);
+    
+    res.json({
+      total_clientes: parseInt(totalClientes.rows[0].total),
+      clientes_ativos: parseInt(clientesAtivos.rows[0].total),
+      clientes_inativos: parseInt(clientesInativos.rows[0].total),
+      por_categoria: porCategoria.rows,
+      por_origem: porOrigem.rows
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
