@@ -94,12 +94,12 @@ class DatabaseService {
     return data || [];
   }
 
-  async getClienteById(id: number): Promise<Cliente> {
+  async getClienteById(id: number): Promise<Cliente | null> {
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
@@ -113,10 +113,14 @@ class DatabaseService {
       .from('clientes')
       .insert(cliente)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      throw new Error('Erro ao criar cliente');
     }
 
     return data;
@@ -128,10 +132,14 @@ class DatabaseService {
       .update(cliente)
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      throw new Error('Cliente não encontrado para atualização');
     }
 
     return data;

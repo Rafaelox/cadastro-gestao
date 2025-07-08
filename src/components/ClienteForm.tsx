@@ -197,22 +197,21 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
               Dados Pessoais
             </h3>
             
+            <div className="space-y-2">
+              <Label htmlFor="nome" className="text-foreground">
+                Nome <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => handleInputChange('nome', e.target.value)}
+                placeholder="Nome completo do cliente"
+                className="bg-background/50 border-border"
+                disabled={isLoading}
+              />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome" className="text-foreground">
-                  Nome <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => handleInputChange('nome', e.target.value)}
-                  placeholder="Nome completo do cliente"
-                  className="bg-background/50 border-border"
-                  disabled={isLoading}
-                />
-              </div>
-
-
               <div className="space-y-2">
                 <Label htmlFor="cpf" className="text-foreground">
                   CPF
@@ -224,6 +223,7 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
                   placeholder="000.000.000-00"
                   className="bg-background/50 border-border"
                   disabled={isLoading}
+                  maxLength={14}
                 />
               </div>
 
