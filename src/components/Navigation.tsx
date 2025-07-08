@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, Database, FileText } from "lucide-react";
+import { Users, Database, FileText, BarChart3 } from "lucide-react";
 
 interface NavigationProps {
   activeTab: string;
@@ -9,6 +9,12 @@ interface NavigationProps {
 
 export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: BarChart3,
+      description: 'Gráficos e estatísticas'
+    },
     {
       id: 'clientes',
       label: 'Clientes',

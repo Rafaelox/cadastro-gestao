@@ -5,10 +5,11 @@ import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
 import { CategoriasList } from "@/components/CategoriasList";
 import { OrigensList } from "@/components/OrigensList";
+import { Dashboard } from "@/components/Dashboard";
 import { Cliente } from "@/lib/database";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('clientes');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
 
@@ -51,6 +52,7 @@ const Index = () => {
               />
             ) : (
               <>
+                {activeTab === 'dashboard' && <Dashboard />}
                 {activeTab === 'clientes' && (
                   <ClientesList
                     onEdit={handleEditCliente}
