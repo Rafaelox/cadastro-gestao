@@ -5,6 +5,7 @@ import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
 import { CategoriasList } from "@/components/CategoriasList";
 import { OrigensList } from "@/components/OrigensList";
+import { Configuracoes } from "@/components/Configuracoes";
 import { Dashboard } from "@/components/Dashboard";
 import { Cliente } from "@/lib/database";
 
@@ -61,6 +62,7 @@ const Index = () => {
                 )}
                 {activeTab === 'categorias' && <CategoriasList />}
                 {activeTab === 'origens' && <OrigensList />}
+                {activeTab === 'configuracoes' && <Configuracoes />}
               </>
             )}
           </div>

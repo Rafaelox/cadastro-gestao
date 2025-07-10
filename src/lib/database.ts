@@ -40,6 +40,34 @@ export interface Origem {
   updated_at?: string;
 }
 
+export interface Servico {
+  id?: number;
+  nome: string;
+  descricao?: string;
+  preco: number;
+  duracao_minutos: number;
+  ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Consultor {
+  id?: number;
+  nome: string;
+  cpf?: string;
+  email?: string;
+  telefone?: string;
+  cep?: string;
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  percentual_comissao: number;
+  ativo: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 class DatabaseService {
   // ============================================
   // CLIENTES CRUD
@@ -262,6 +290,120 @@ class DatabaseService {
   async deleteOrigem(id: number): Promise<void> {
     const { error } = await supabase
       .from('origens')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  // ============================================
+  // SERVIÇOS CRUD
+  // ============================================
+
+  async getServicos(): Promise<Servico[]> {
+    const { data, error } = await supabase
+      .from('servicos')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  }
+
+  async createServico(servico: Omit<Servico, 'id' | 'created_at' | 'updated_at'>): Promise<Servico> {
+    const { data, error } = await supabase
+      .from('servicos')
+      .insert(servico)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async updateServico(id: number, servico: Partial<Servico>): Promise<Servico> {
+    const { data, error } = await supabase
+      .from('servicos')
+      .update(servico)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async deleteServico(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('servicos')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  // ============================================
+  // CONSULTORES CRUD
+  // ============================================
+
+  async getConsultores(): Promise<Consultor[]> {
+    const { data, error } = await supabase
+      .from('consultores')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  }
+
+  async createConsultor(consultor: Omit<Consultor, 'id' | 'created_at' | 'updated_at'>): Promise<Consultor> {
+    const { data, error } = await supabase
+      .from('consultores')
+      .insert(consultor)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async updateConsultor(id: number, consultor: Partial<Consultor>): Promise<Consultor> {
+    const { data, error } = await supabase
+      .from('consultores')
+      .update(consultor)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async deleteConsultor(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('consultores')
       .delete()
       .eq('id', id);
 

@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda: {
+        Row: {
+          cliente_id: number
+          comissao_consultor: number
+          consultor_id: number
+          created_at: string
+          data_agendamento: string
+          id: number
+          observacoes: string | null
+          servico_id: number
+          status: string
+          updated_at: string
+          valor_servico: number
+        }
+        Insert: {
+          cliente_id: number
+          comissao_consultor?: number
+          consultor_id: number
+          created_at?: string
+          data_agendamento: string
+          id?: number
+          observacoes?: string | null
+          servico_id: number
+          status?: string
+          updated_at?: string
+          valor_servico?: number
+        }
+        Update: {
+          cliente_id?: number
+          comissao_consultor?: number
+          consultor_id?: number
+          created_at?: string
+          data_agendamento?: string
+          id?: number
+          observacoes?: string | null
+          servico_id?: number
+          status?: string
+          updated_at?: string
+          valor_servico?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "consultores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_servico_id_fkey"
+            columns: ["servico_id"]
+            isOneToOne: false
+            referencedRelation: "servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias: {
         Row: {
           ativo: boolean
@@ -193,6 +257,39 @@ export type Database = {
           descricao?: string | null
           id?: number
           nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          duracao_minutos: number
+          id: number
+          nome: string
+          preco: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: number
+          nome: string
+          preco?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          id?: number
+          nome?: string
+          preco?: number
           updated_at?: string
         }
         Relationships: []
