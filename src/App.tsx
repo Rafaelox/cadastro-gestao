@@ -34,9 +34,12 @@ const AppContent = () => {
       '/agenda': 'agenda',
       '/clientes': 'clientes',
       '/atendimentos': 'historico-diario',
-      '/caixa': 'caixa'
+      '/caixa': 'caixa',
+      '/sistema': 'comissoes' // Default para /sistema
     };
-    setActiveTab(routeToTab[location.pathname] || 'dashboard');
+    const newTab = routeToTab[location.pathname] || 'dashboard';
+    console.log('App.tsx - Rota mudou:', location.pathname, 'mapeando para tab:', newTab);
+    setActiveTab(newTab);
   }, [location.pathname]);
 
   const showNavigation = isAuthenticated && location.pathname !== '/login';
@@ -52,6 +55,8 @@ const AppContent = () => {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-1">
                   <Navigation activeTab={activeTab} onTabChange={(tab) => {
+                    console.log('App.tsx - Tab clicada:', tab, 'activeTab atual:', activeTab);
+                    setActiveTab(tab); // Atualizar o estado local
                     // Mapear tabs para rotas
                     const tabToRoute: Record<string, string> = {
                       'dashboard': '/',
@@ -68,7 +73,8 @@ const AppContent = () => {
                       'configuracoes': '/sistema'
                     };
                     const route = tabToRoute[tab];
-                    if (route) {
+                    console.log('App.tsx - Navegando para rota:', route, 'de:', location.pathname);
+                    if (route && route !== location.pathname) {
                       navigate(route);
                     }
                   }} />
@@ -80,7 +86,7 @@ const AppContent = () => {
                     <Route path="/clientes" element={<ClientesPage />} />
                     <Route path="/atendimentos" element={<AtendimentosPage />} />
                     <Route path="/caixa" element={<CaixaPage />} />
-                    <Route path="/sistema" element={<Index />} />
+                    <Route path="/sistema" element={<Index activeTab={activeTab} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
@@ -96,7 +102,7 @@ const AppContent = () => {
               <Route path="/clientes" element={<ClientesPage />} />
               <Route path="/atendimentos" element={<AtendimentosPage />} />
               <Route path="/caixa" element={<CaixaPage />} />
-              <Route path="/sistema" element={<Index />} />
+              <Route path="/sistema" element={<Index activeTab={activeTab} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />

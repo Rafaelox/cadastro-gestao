@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/Header";
-import { Navigation } from "@/components/Navigation";
 import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
 import { CategoriasList } from "@/components/CategoriasList";
@@ -18,14 +16,29 @@ import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { AuditLogs } from "@/components/AuditLogs";
 import { Cliente } from "@/lib/database";
 import { useAuth } from "@/contexts/AuthContext";
-import { ActionButtonGuard } from "@/components/PermissionGuard";
 
-const Index = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+interface IndexProps {
+  activeTab?: string;
+}
+
+const Index = ({ activeTab: propActiveTab }: IndexProps) => {
+  const [activeTab, setActiveTab] = useState(propActiveTab || 'dashboard');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Sincronizar com a prop quando mudar
+  useEffect(() => {
+    console.log('Index.tsx - propActiveTab mudou:', propActiveTab);
+    if (propActiveTab) {
+      setActiveTab(propActiveTab);
+    }
+  }, [propActiveTab]);
+
+  useEffect(() => {
+    console.log('Index.tsx - activeTab mudou:', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,51 +71,39 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <Header />
-      
-      <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
-          
-          <div className="lg:col-span-3">
-            {showClienteForm ? (
-              <ClienteForm
-                cliente={editingCliente}
-                onSave={handleClienteSaved}
-                onCancel={handleCancelCliente}
-              />
-            ) : (
-              <>
-                {activeTab === 'dashboard' && <Dashboard />}
-                {activeTab === 'dashboard-financeiro' && <DashboardFinanceiro />}
-                {activeTab === 'clientes' && (
-                  <ClientesList
-                    onEdit={handleEditCliente}
-                    onNew={handleNewCliente}
-                  />
-                )}
-                {activeTab === 'agenda' && <Agenda />}
-                {activeTab === 'historico-diario' && <HistoricoDiario />}
-                {activeTab === 'relatorios' && <RelatorioForm />}
-                {activeTab === 'caixa' && (
-                  <div className="space-y-6">
-                    <CaixaForm />
-                    <CaixaList />
-                  </div>
-                )}
-                {activeTab === 'comissoes' && <ComissaoExtrato />}
-                {activeTab === 'categorias' && <CategoriasList />}
-                {activeTab === 'origens' && <OrigensList />}
-                {activeTab === 'auditoria' && <AuditLogs />}
-                {activeTab === 'configuracoes' && <Configuracoes />}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {showClienteForm ? (
+        <ClienteForm
+          cliente={editingCliente}
+          onSave={handleClienteSaved}
+          onCancel={handleCancelCliente}
+        />
+      ) : (
+        <>
+          {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'dashboard-financeiro' && <DashboardFinanceiro />}
+          {activeTab === 'clientes' && (
+            <ClientesList
+              onEdit={handleEditCliente}
+              onNew={handleNewCliente}
+            />
+          )}
+          {activeTab === 'agenda' && <Agenda />}
+          {activeTab === 'historico-diario' && <HistoricoDiario />}
+          {activeTab === 'relatorios' && <RelatorioForm />}
+          {activeTab === 'caixa' && (
+            <div className="space-y-6">
+              <CaixaForm />
+              <CaixaList />
+            </div>
+          )}
+          {activeTab === 'comissoes' && <ComissaoExtrato />}
+          {activeTab === 'categorias' && <CategoriasList />}
+          {activeTab === 'origens' && <OrigensList />}
+          {activeTab === 'auditoria' && <AuditLogs />}
+          {activeTab === 'configuracoes' && <Configuracoes />}
+        </>
+      )}
     </div>
   );
 };
