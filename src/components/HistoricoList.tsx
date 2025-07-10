@@ -80,6 +80,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const [clientes, setClientes] = useState<any[]>([]);
   const [showAgendaForm, setShowAgendaForm] = useState(false);
   const [selectedClienteForAgenda, setSelectedClienteForAgenda] = useState<number | null>(null);
+  const [selectedConsultorForAgenda, setSelectedConsultorForAgenda] = useState<number | null>(null);
   const { toast } = useToast();
 
   const itemsPerPage = 10;
@@ -212,8 +213,9 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
     setCurrentPage(1);
   };
 
-  const handleAgendarNovo = (clienteIdForAgenda: number) => {
+  const handleAgendarNovo = (clienteIdForAgenda: number, consultorIdForAgenda: number) => {
     setSelectedClienteForAgenda(clienteIdForAgenda);
+    setSelectedConsultorForAgenda(consultorIdForAgenda);
     setShowAgendaForm(true);
   };
 
@@ -428,7 +430,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
                   <div className="flex flex-col space-y-2 ml-4">
                     <Button
                       size="sm"
-                      onClick={() => handleAgendarNovo(item.cliente_id)}
+                      onClick={() => handleAgendarNovo(item.cliente_id, item.consultor_id)}
                       className="flex items-center space-x-1"
                     >
                       <Plus className="h-3 w-3" />
@@ -481,9 +483,12 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
             <DialogTitle>Novo Agendamento</DialogTitle>
           </DialogHeader>
           <AgendaForm
+            preSelectedClienteId={selectedClienteForAgenda}
+            preSelectedConsultorId={selectedConsultorForAgenda}
             onSuccess={() => {
               setShowAgendaForm(false);
               setSelectedClienteForAgenda(null);
+              setSelectedConsultorForAgenda(null);
               onNovoAgendamento?.();
               toast({
                 title: "Agendamento criado",
@@ -497,6 +502,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
               onClick={() => {
                 setShowAgendaForm(false);
                 setSelectedClienteForAgenda(null);
+                setSelectedConsultorForAgenda(null);
               }}
             >
               Cancelar

@@ -20,6 +20,8 @@ interface AgendaFormProps {
   onSuccess?: () => void;
   selectedDate?: Date;
   selectedTime?: string;
+  preSelectedClienteId?: number;
+  preSelectedConsultorId?: number;
 }
 
 interface AgendaFormData {
@@ -30,7 +32,7 @@ interface AgendaFormData {
   observacoes: string;
 }
 
-export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaFormProps) => {
+export const AgendaForm = ({ onSuccess, selectedDate, selectedTime, preSelectedClienteId, preSelectedConsultorId }: AgendaFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [consultores, setConsultores] = useState<Consultor[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -46,6 +48,20 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Pré-selecionar consultor se fornecido
+    if (preSelectedConsultorId) {
+      setValue("consultor_id", preSelectedConsultorId);
+    }
+  }, [preSelectedConsultorId, setValue]);
+
+  useEffect(() => {
+    // Pré-selecionar cliente se fornecido  
+    if (preSelectedClienteId) {
+      setValue("cliente_id", preSelectedClienteId);
+    }
+  }, [preSelectedClienteId, setValue]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -205,6 +221,7 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
           <ClienteSearch
             onClienteSelect={(cliente) => setValue("cliente_id", cliente.id)}
             placeholder="Pesquisar cliente por nome, CPF, telefone ou email"
+            selectedClienteId={preSelectedClienteId}
           />
           {errors.cliente_id && (
             <p className="text-sm text-destructive">{errors.cliente_id.message}</p>
@@ -219,7 +236,10 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
             <p className="text-sm text-muted-foreground mb-2">
               Selecione o consultor que irá realizar o atendimento
             </p>
-            <Select onValueChange={(value) => setValue("consultor_id", Number(value))}>
+            <Select 
+              value={watchConsultor ? watchConsultor.toString() : ""} 
+              onValueChange={(value) => setValue("consultor_id", Number(value))}
+            >
               <SelectTrigger className="bg-background">
                 <User className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Selecione o consultor responsável" />
