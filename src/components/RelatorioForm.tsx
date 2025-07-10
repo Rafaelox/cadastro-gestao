@@ -56,7 +56,7 @@ export const RelatorioForm = ({ onClose }: RelatorioFormProps) => {
     setIsLoading(true);
     try {
       const filters = {
-        servico_id: servicoSelecionado ? parseInt(servicoSelecionado) : undefined,
+        servico_id: servicoSelecionado && servicoSelecionado !== "todos" ? parseInt(servicoSelecionado) : undefined,
         data_inicio: format(dataInicio, "yyyy-MM-dd"),
         data_fim: format(dataFim, "yyyy-MM-dd"),
       };
@@ -171,7 +171,7 @@ export const RelatorioForm = ({ onClose }: RelatorioFormProps) => {
                 <SelectValue placeholder="Todos os serviços" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os serviços</SelectItem>
+                <SelectItem value="todos">Todos os serviços</SelectItem>
                 {servicos.map((servico) => (
                   <SelectItem key={servico.id} value={servico.id!.toString()}>
                     {servico.nome}
