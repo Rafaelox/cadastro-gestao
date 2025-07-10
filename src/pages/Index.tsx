@@ -28,17 +28,11 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Sincronizar com a prop quando mudar
   useEffect(() => {
-    console.log('Index.tsx - propActiveTab mudou:', propActiveTab);
     if (propActiveTab) {
       setActiveTab(propActiveTab);
     }
   }, [propActiveTab]);
-
-  useEffect(() => {
-    console.log('Index.tsx - activeTab mudou:', activeTab);
-  }, [activeTab]);
 
   useEffect(() => {
     if (!isAuthenticated) {

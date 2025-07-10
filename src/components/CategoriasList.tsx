@@ -19,8 +19,6 @@ export const CategoriasList = () => {
     ativo: true
   });
 
-  // Debug logging
-  console.log('CategoriasList state:', { showForm, editingId, isLoading });
 
   useEffect(() => {
     loadCategorias();
@@ -128,10 +126,7 @@ export const CategoriasList = () => {
               </CardDescription>
             </div>
             <Button
-              onClick={() => {
-                console.log('Nova Categoria clicked');
-                setShowForm(true);
-              }}
+              onClick={() => setShowForm(true)}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={isLoading}
             >

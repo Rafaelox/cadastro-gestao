@@ -38,7 +38,6 @@ const AppContent = () => {
       '/sistema': 'comissoes' // Default para /sistema
     };
     const newTab = routeToTab[location.pathname] || 'dashboard';
-    console.log('App.tsx - Rota mudou:', location.pathname, 'mapeando para tab:', newTab);
     setActiveTab(newTab);
   }, [location.pathname]);
 
@@ -55,8 +54,7 @@ const AppContent = () => {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-1">
                   <Navigation activeTab={activeTab} onTabChange={(tab) => {
-                    console.log('App.tsx - Tab clicada:', tab, 'activeTab atual:', activeTab);
-                    setActiveTab(tab); // Atualizar o estado local
+                    setActiveTab(tab);
                     // Mapear tabs para rotas
                     const tabToRoute: Record<string, string> = {
                       'dashboard': '/',
@@ -73,7 +71,6 @@ const AppContent = () => {
                       'configuracoes': '/sistema'
                     };
                     const route = tabToRoute[tab];
-                    console.log('App.tsx - Navegando para rota:', route, 'de:', location.pathname);
                     if (route && route !== location.pathname) {
                       navigate(route);
                     }

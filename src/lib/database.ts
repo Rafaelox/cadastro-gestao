@@ -601,7 +601,6 @@ class DatabaseService {
     data_inicio?: string;
     data_fim?: string;
   } = {}): Promise<any[]> {
-    console.log('getHistorico filters:', filters);
     
     let query = supabase
       .from('historico')
@@ -626,8 +625,6 @@ class DatabaseService {
     }
 
     const { data, error } = await query;
-    
-    console.log('getHistorico result:', { data, error, count: data?.length || 0 });
 
     if (error) {
       console.error('getHistorico error:', error);
@@ -643,7 +640,6 @@ class DatabaseService {
       forma_pagamento_nome: ''
     }));
     
-    console.log('getHistorico mapped data:', mappedData);
     return mappedData;
   }
 

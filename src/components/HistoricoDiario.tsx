@@ -52,11 +52,8 @@ export const HistoricoDiario = () => {
         data_fim: format(dataFim, "yyyy-MM-dd"),
       };
 
-      console.log('Buscando histórico com filtros:', filters);
       const data = await db.getHistorico(filters);
       setHistorico(data);
-
-      console.log('Dados retornados:', data);
 
       if (data.length === 0) {
         toast({

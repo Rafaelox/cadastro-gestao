@@ -21,6 +21,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useHistorico, type HistoricoItem } from "@/hooks/useHistorico";
+import { useAgendaForm } from "@/hooks/useAgendaForm";
 import { supabase } from "@/integrations/supabase/client";
 import { AgendaForm } from "./AgendaForm";
 import {
@@ -38,26 +40,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface HistoricoItem {
-  id: number;
-  agenda_id: number;
-  consultor_id: number;
-  servico_id: number;
-  cliente_id: number;
-  data_atendimento: string;
-  data_agendamento: string | null;
-  valor_servico: number;
-  valor_final: number;
-  comissao_consultor: number;
-  observacoes_atendimento: string | null;
-  procedimentos_realizados: string | null;
-  forma_pagamento: number;
-  created_at: string;
-  consultor_nome?: string;
-  servico_nome?: string;
-  cliente_nome?: string;
-  forma_pagamento_nome?: string;
-}
 
 interface HistoricoListProps {
   clienteId?: number;
@@ -68,9 +50,7 @@ interface HistoricoListProps {
 }
 
 export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searchTerm = "", onNovoAtendimento }: HistoricoListProps) => {
-  const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [filteredHistorico, setFilteredHistorico] = useState<HistoricoItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [selectedConsultor, setSelectedConsultor] = useState<string>("all");
   const [selectedServico, setSelectedServico] = useState<string>("all");
@@ -78,101 +58,28 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const [consultores, setConsultores] = useState<any[]>([]);
   const [servicos, setServicos] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
-  const [showAgendaForm, setShowAgendaForm] = useState(false);
-  const [selectedClienteForAgenda, setSelectedClienteForAgenda] = useState<number | null>(null);
-  const [selectedConsultorForAgenda, setSelectedConsultorForAgenda] = useState<number | null>(null);
-  console.log('HistoricoList - selectedClienteForAgenda:', selectedClienteForAgenda);
-  console.log('HistoricoList - selectedConsultorForAgenda:', selectedConsultorForAgenda);
+  
+  const { historico, isLoading, loadHistorico } = useHistorico();
+  const { 
+    showAgendaForm, 
+    selectedClienteForAgenda, 
+    selectedConsultorForAgenda, 
+    openAgendaForm, 
+    closeAgendaForm 
+  } = useAgendaForm();
   const { toast } = useToast();
 
   const itemsPerPage = 10;
 
   useEffect(() => {
-    loadHistorico();
+    loadHistorico({ clienteId, consultorId });
     loadFilterData();
-  }, [clienteId, consultorId]);
+  }, [clienteId, consultorId, loadHistorico]);
 
   useEffect(() => {
     filterHistorico();
   }, [historico, searchTerm, localSearchTerm, selectedConsultor, selectedServico]);
 
-  const loadHistorico = async () => {
-    setIsLoading(true);
-    try {
-      let query = supabase
-        .from('historico')
-        .select('*')
-        .order('data_atendimento', { ascending: false });
-
-      if (clienteId) {
-        query = query.eq('cliente_id', clienteId);
-      }
-
-      if (consultorId) {
-        query = query.eq('consultor_id', consultorId);
-      }
-
-      const { data: historicoData, error } = await query;
-
-      if (error) throw error;
-
-      // Enriquecer dados com nomes dos relacionamentos
-      const enrichedData = await Promise.all(
-        (historicoData || []).map(async (item: any) => {
-          // Buscar nome do consultor
-          const { data: consultor } = await supabase
-            .from('consultores')
-            .select('nome')
-            .eq('id', item.consultor_id)
-            .maybeSingle();
-
-          // Buscar nome do serviço
-          const { data: servico } = await supabase
-            .from('servicos')
-            .select('nome')
-            .eq('id', item.servico_id)
-            .maybeSingle();
-
-          // Buscar nome do cliente
-          const { data: cliente } = await supabase
-            .from('clientes')
-            .select('nome')
-            .eq('id', item.cliente_id)
-            .maybeSingle();
-
-          // Buscar nome da forma de pagamento se existir
-          let formaPagamento = null;
-          if (item.forma_pagamento) {
-            const { data } = await supabase
-              .from('formas_pagamento')
-              .select('nome')
-              .eq('id', item.forma_pagamento)
-              .maybeSingle();
-            formaPagamento = data;
-          }
-
-          return {
-            ...item,
-            consultor_nome: consultor?.nome || 'Não encontrado',
-            servico_nome: servico?.nome || 'Não encontrado',
-            cliente_nome: cliente?.nome || 'Não encontrado',
-            forma_pagamento_nome: formaPagamento?.nome || 'Não informado'
-          };
-        })
-      );
-
-      setHistorico(enrichedData);
-    } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao carregar histórico",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const loadFilterData = async () => {
     try {
@@ -216,9 +123,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   };
 
   const handleAgendarNovo = (clienteIdForAgenda: number, consultorIdForAgenda: number) => {
-    setSelectedClienteForAgenda(clienteIdForAgenda);
-    setSelectedConsultorForAgenda(consultorIdForAgenda);
-    setShowAgendaForm(true);
+    openAgendaForm(clienteIdForAgenda, consultorIdForAgenda);
   };
 
   const totalPages = Math.ceil(filteredHistorico.length / itemsPerPage);
@@ -249,7 +154,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
           </p>
         </div>
         {!clienteId && !consultorId && (
-          <Button onClick={() => setShowAgendaForm(true)} className="flex items-center space-x-2">
+          <Button onClick={() => openAgendaForm(0, 0)} className="flex items-center space-x-2">
             <Plus className="h-4 w-4" />
             <span>Novo Agendamento</span>
           </Button>
@@ -479,19 +384,16 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
       )}
 
       {/* Dialog para Novo Agendamento */}
-      <Dialog open={showAgendaForm} onOpenChange={setShowAgendaForm}>
+      <Dialog open={showAgendaForm} onOpenChange={closeAgendaForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Novo Agendamento</DialogTitle>
           </DialogHeader>
           <AgendaForm
-            preSelectedClienteId={selectedClienteForAgenda}
-            preSelectedConsultorId={selectedConsultorForAgenda}
+            preSelectedClienteId={selectedClienteForAgenda || undefined}
+            preSelectedConsultorId={selectedConsultorForAgenda || undefined}
             onSuccess={() => {
-              console.log('AgendaForm onSuccess - before clearing states');
-              setShowAgendaForm(false);
-              setSelectedClienteForAgenda(null);
-              setSelectedConsultorForAgenda(null);
+              closeAgendaForm();
               onNovoAgendamento?.();
               toast({
                 title: "Agendamento criado",
@@ -502,12 +404,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
           <div className="flex justify-end mt-4">
             <Button
               variant="outline"
-              onClick={() => {
-                console.log('Cancel button clicked - before clearing states');
-                setShowAgendaForm(false);
-                setSelectedClienteForAgenda(null);
-                setSelectedConsultorForAgenda(null);
-              }}
+              onClick={closeAgendaForm}
             >
               Cancelar
             </Button>
