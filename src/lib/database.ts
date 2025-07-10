@@ -357,6 +357,20 @@ class DatabaseService {
     return data || [];
   }
 
+  async getServicoById(id: number): Promise<Servico | null> {
+    const { data, error } = await supabase
+      .from('servicos')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
   async createServico(servico: Omit<Servico, 'id' | 'created_at' | 'updated_at'>): Promise<Servico> {
     const { data, error } = await supabase
       .from('servicos')

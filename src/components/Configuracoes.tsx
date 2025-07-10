@@ -19,26 +19,26 @@ import { useAuth } from "@/contexts/AuthContext";
 export const Configuracoes = () => {
   const [activeTab, setActiveTab] = useState("servicos");
   const [showServicoForm, setShowServicoForm] = useState(false);
-  const [editingServico, setEditingServico] = useState<Servico | null>(null);
+  const [editingServicoId, setEditingServicoId] = useState<number | null>(null);
   const [showConsultorForm, setShowConsultorForm] = useState(false);
   const [editingConsultor, setEditingConsultor] = useState<Consultor | null>(null);
   const [showUsuarioForm, setShowUsuarioForm] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState<any>(null);
   const { canManageUsers } = useAuth();
 
-  const handleEditServico = (servico: Servico) => {
-    setEditingServico(servico);
+  const handleEditServico = (servicoId: number) => {
+    setEditingServicoId(servicoId);
     setShowServicoForm(true);
   };
 
   const handleAddServico = () => {
-    setEditingServico(null);
+    setEditingServicoId(null);
     setShowServicoForm(true);
   };
 
   const handleServicoSuccess = () => {
     setShowServicoForm(false);
-    setEditingServico(null);
+    setEditingServicoId(null);
   };
 
   const handleEditConsultor = (consultor: Consultor) => {
@@ -77,7 +77,7 @@ export const Configuracoes = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
-              {editingServico ? "Editar Serviço" : "Novo Serviço"}
+              {editingServicoId ? "Editar Serviço" : "Novo Serviço"}
             </h3>
             <Button 
               variant="outline" 
@@ -86,7 +86,7 @@ export const Configuracoes = () => {
               Voltar
             </Button>
           </div>
-          <ServicoForm onSuccess={handleServicoSuccess} />
+          <ServicoForm servicoId={editingServicoId || undefined} onSuccess={handleServicoSuccess} />
         </div>
       );
     }

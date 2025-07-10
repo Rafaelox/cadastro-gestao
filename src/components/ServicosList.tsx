@@ -16,7 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { db, type Servico } from "@/lib/database";
 
 interface ServicosListProps {
-  onEdit?: (servico: Servico) => void;
+  onEdit?: (servicoId: number) => void;
   onAdd?: () => void;
 }
 
@@ -160,7 +160,7 @@ export function ServicosList({ onEdit, onAdd }: ServicosListProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onEdit?.(servico)}
+                          onClick={() => onEdit?.(servico.id!)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
