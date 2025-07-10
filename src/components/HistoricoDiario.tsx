@@ -58,17 +58,29 @@ export const HistoricoDiario = () => {
         data_fim: format(dataFim, "yyyy-MM-dd"),
       };
 
+      console.log('Buscando histórico com filtros:', filters);
       const data = await db.getHistorico(filters);
       setHistorico(data);
 
-      toast({
-        title: "Sucesso",
-        description: `Encontrados ${data.length} atendimentos no período de ${format(dataInicio, "dd/MM/yyyy", { locale: ptBR })} a ${format(dataFim, "dd/MM/yyyy", { locale: ptBR })}`,
-      });
+      console.log('Dados retornados:', data);
+
+      if (data.length === 0) {
+        toast({
+          title: "Aviso",
+          description: `Nenhum atendimento encontrado no período de ${format(dataInicio, "dd/MM/yyyy", { locale: ptBR })} a ${format(dataFim, "dd/MM/yyyy", { locale: ptBR })}`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Sucesso",
+          description: `Encontrados ${data.length} atendimentos no período de ${format(dataInicio, "dd/MM/yyyy", { locale: ptBR })} a ${format(dataFim, "dd/MM/yyyy", { locale: ptBR })}`,
+        });
+      }
     } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar o histórico",
+        description: "Não foi possível carregar o histórico. Verifique o console para mais detalhes.",
         variant: "destructive",
       });
     } finally {

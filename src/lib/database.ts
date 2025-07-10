@@ -601,6 +601,8 @@ class DatabaseService {
     data_inicio?: string;
     data_fim?: string;
   } = {}): Promise<any[]> {
+    console.log('getHistorico filters:', filters);
+    
     let query = supabase
       .from('historico')
       .select(`
@@ -619,23 +621,31 @@ class DatabaseService {
       query = query.gte('data_atendimento', filters.data_inicio);
     }
     if (filters.data_fim) {
-      query = query.lte('data_atendimento', filters.data_fim);
+      // Adicionar 23:59:59 ao final do dia para incluir o dia inteiro
+      const dataFimCompleta = filters.data_fim + ' 23:59:59';
+      query = query.lte('data_atendimento', dataFimCompleta);
     }
 
     const { data, error } = await query;
+    
+    console.log('getHistorico result:', { data, error, count: data?.length || 0 });
 
     if (error) {
+      console.error('getHistorico error:', error);
       throw new Error(error.message);
     }
 
     // Mapear os dados para estrutura esperada pelos componentes
-    return (data || []).map((item: any) => ({
+    const mappedData = (data || []).map((item: any) => ({
       ...item,
       cliente_nome: item.clientes?.nome || '',
       consultor_nome: item.consultores?.nome || '',
       servico_nome: item.servicos?.nome || '',
       forma_pagamento_nome: item.formas_pagamento?.nome || ''
     }));
+    
+    console.log('getHistorico mapped data:', mappedData);
+    return mappedData;
   }
 
   // Getter para acessar supabase diretamente quando necessário
