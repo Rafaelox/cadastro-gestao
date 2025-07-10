@@ -67,7 +67,7 @@ export const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@sistema.com"
+                  placeholder="Digite seu email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -83,7 +83,7 @@ export const Login = () => {
                 <Input
                   id="senha"
                   type="password"
-                  placeholder="admin1234"
+                  placeholder="Digite sua senha"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   className="pl-10"
@@ -100,16 +100,6 @@ export const Login = () => {
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground mb-2">
-              <strong>Usuário Padrão:</strong>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Email: admin@sistema.com<br />
-              Senha: admin1234
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
