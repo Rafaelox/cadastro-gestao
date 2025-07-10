@@ -46,6 +46,12 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       description: 'Controle financeiro'
     },
     {
+      id: 'comissoes',
+      label: 'Comissões',
+      icon: DollarSign,
+      description: 'Extrato de comissões'
+    },
+    {
       id: 'categorias',
       label: 'Categorias',
       icon: Database,

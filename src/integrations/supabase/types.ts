@@ -183,6 +183,69 @@ export type Database = {
           },
         ]
       }
+      comissoes: {
+        Row: {
+          cliente_nome: string
+          consultor_id: number
+          created_at: string
+          data_operacao: string
+          id: number
+          observacoes: string | null
+          pagamento_id: number | null
+          percentual_comissao: number
+          servico_nome: string
+          tipo_operacao: string
+          updated_at: string
+          valor_comissao: number
+          valor_servico: number
+        }
+        Insert: {
+          cliente_nome: string
+          consultor_id: number
+          created_at?: string
+          data_operacao?: string
+          id?: number
+          observacoes?: string | null
+          pagamento_id?: number | null
+          percentual_comissao?: number
+          servico_nome: string
+          tipo_operacao?: string
+          updated_at?: string
+          valor_comissao?: number
+          valor_servico?: number
+        }
+        Update: {
+          cliente_nome?: string
+          consultor_id?: number
+          created_at?: string
+          data_operacao?: string
+          id?: number
+          observacoes?: string | null
+          pagamento_id?: number | null
+          percentual_comissao?: number
+          servico_nome?: string
+          tipo_operacao?: string
+          updated_at?: string
+          valor_comissao?: number
+          valor_servico?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "consultores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultores: {
         Row: {
           ativo: boolean

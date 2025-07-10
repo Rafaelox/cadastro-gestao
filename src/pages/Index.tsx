@@ -12,6 +12,7 @@ import { RelatorioForm } from "@/components/relatorios/RelatorioForm";
 import { HistoricoDiario } from "@/components/HistoricoDiario";
 import { CaixaForm } from "@/components/CaixaForm";
 import { CaixaList } from "@/components/CaixaList";
+import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { Cliente } from "@/lib/database";
 
 const Index = () => {
@@ -74,6 +75,7 @@ const Index = () => {
                     <CaixaList />
                   </div>
                 )}
+                {activeTab === 'comissoes' && <ComissaoExtrato />}
                 {activeTab === 'categorias' && <CategoriasList />}
                 {activeTab === 'origens' && <OrigensList />}
                 {activeTab === 'configuracoes' && <Configuracoes />}
