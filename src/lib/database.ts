@@ -607,10 +607,9 @@ class DatabaseService {
       .from('historico')
       .select(`
         *,
-        clientes(nome),
-        consultores(nome),
-        servicos(nome),
-        formas_pagamento(nome)
+        clientes!fk_historico_cliente(nome),
+        consultores!fk_historico_consultor(nome),
+        servicos!fk_historico_servico(nome)
       `)
       .order('data_atendimento', { ascending: false });
 
@@ -641,7 +640,7 @@ class DatabaseService {
       cliente_nome: item.clientes?.nome || '',
       consultor_nome: item.consultores?.nome || '',
       servico_nome: item.servicos?.nome || '',
-      forma_pagamento_nome: item.formas_pagamento?.nome || ''
+      forma_pagamento_nome: ''
     }));
     
     console.log('getHistorico mapped data:', mappedData);
