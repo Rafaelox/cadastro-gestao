@@ -89,29 +89,29 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
     try {
       const dataAgendamento = `${format(date, "yyyy-MM-dd")} ${time}:00`;
       
-      const agendamento = {
-        ...data,
-        cliente_id: Number(data.cliente_id),
-        consultor_id: Number(data.consultor_id),
-        servico_id: Number(data.servico_id),
-        data_agendamento: dataAgendamento,
-      };
-
       // Calcular valor do serviço e comissão
       const servico = servicos.find(s => s.id === Number(data.servico_id));
       const consultor = consultores.find(c => c.id === Number(data.consultor_id));
       
-      if (servico && consultor) {
-        const valorServico = servico.preco;
-        const comissaoConsultor = (valorServico * consultor.percentual_comissao) / 100;
-        
-        await db.createAgenda({
-          ...agendamento,
-          valor_servico: valorServico,
-          comissao_consultor: comissaoConsultor,
-          status: "agendado"
-        });
+      if (!servico || !consultor) {
+        throw new Error("Serviço ou consultor não encontrado");
       }
+
+      const valorServico = servico.preco;
+      const comissaoConsultor = (valorServico * consultor.percentual_comissao) / 100;
+      
+      const agendamento = {
+        cliente_id: Number(data.cliente_id),
+        consultor_id: Number(data.consultor_id),
+        servico_id: Number(data.servico_id),
+        data_agendamento: dataAgendamento,
+        observacoes: data.observacoes || "",
+        valor_servico: valorServico,
+        comissao_consultor: comissaoConsultor,
+        status: "agendado"
+      };
+
+      await db.createAgenda(agendamento);
 
       toast({
         title: "Agendamento criado",
@@ -225,7 +225,7 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
               <SelectContent>
                 {consultores.map((consultor) => (
                   <SelectItem key={consultor.id} value={consultor.id!.toString()}>
-                    <div>
+                    <div className="text-left">
                       <div className="font-medium">{consultor.nome}</div>
                       <div className="text-sm text-muted-foreground">
                         Comissão: {consultor.percentual_comissao}%
@@ -248,7 +248,7 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
               <SelectContent>
                 {servicos.map((servico) => (
                   <SelectItem key={servico.id} value={servico.id!.toString()}>
-                    <div>
+                    <div className="text-left">
                       <div className="font-medium">{servico.nome}</div>
                       <div className="text-sm text-muted-foreground">
                         R$ {servico.preco.toFixed(2)} - {servico.duracao_minutos}min

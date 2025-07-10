@@ -36,21 +36,7 @@ import {
   XCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/database";
-
-interface Agenda {
-  id: number;
-  cliente_id: number;
-  consultor_id: number;
-  servico_id: number;
-  data_agendamento: string;
-  status: string;
-  observacoes: string | null;
-  valor_servico: number;
-  comissao_consultor: number;
-  created_at: string;
-  updated_at: string;
-}
+import { db, type Agenda } from "@/lib/database";
 
 interface AgendaListProps {
   selectedDate?: Date;
@@ -59,6 +45,8 @@ interface AgendaListProps {
 
 export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
   const [agendamentos, setAgendamentos] = useState<Agenda[]>([]);
+  const [consultores, setConsultores] = useState<{ [key: number]: string }>({});
+  const [servicos, setServicos] = useState<{ [key: number]: string }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const { toast } = useToast();
@@ -66,14 +54,26 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
   const loadAgendamentos = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implementar filtro por data quando selectedDate estiver definida
-      const { data, error } = await db.supabase
-        .from('agenda')
-        .select('*')
-        .order('data_agendamento', { ascending: true });
-
-      if (error) throw error;
-      setAgendamentos(data || []);
+      const data = await db.getAgenda();
+      setAgendamentos(data);
+      
+      // Carregar nomes dos consultores e serviços
+      const consultoresData = await db.getConsultores();
+      const servicosData = await db.getServicos();
+      
+      const consultoresMap: { [key: number]: string } = {};
+      const servicosMap: { [key: number]: string } = {};
+      
+      consultoresData.forEach(c => {
+        if (c.id) consultoresMap[c.id] = c.nome;
+      });
+      
+      servicosData.forEach(s => {
+        if (s.id) servicosMap[s.id] = s.nome;
+      });
+      
+      setConsultores(consultoresMap);
+      setServicos(servicosMap);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -98,13 +98,7 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      const { error } = await db.supabase
-        .from('agenda')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await db.deleteAgenda(id);
       toast({
         title: "Agendamento excluído",
         description: "O agendamento foi excluído com sucesso.",
@@ -228,13 +222,13 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <User className="h-3 w-3" />
-                        <span>Consultor #{agenda.consultor_id}</span>
+                        <span>{consultores[agenda.consultor_id] || `Consultor #${agenda.consultor_id}`}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
                         <Briefcase className="h-3 w-3" />
-                        <span>Serviço #{agenda.servico_id}</span>
+                        <span>{servicos[agenda.servico_id] || `Serviço #${agenda.servico_id}`}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -280,7 +274,7 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDelete(agenda.id)}
+                              onClick={() => handleDelete(agenda.id!)}
                               className="bg-destructive hover:bg-destructive/90"
                               disabled={deletingId === agenda.id}
                             >
