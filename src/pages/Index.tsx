@@ -68,6 +68,12 @@ const Index = () => {
                 {activeTab === 'agenda' && <Agenda />}
                 {activeTab === 'historico-diario' && <HistoricoDiario />}
                 {activeTab === 'relatorios' && <RelatorioForm />}
+                {activeTab === 'caixa' && (
+                  <div className="space-y-6">
+                    <CaixaForm />
+                    <CaixaList />
+                  </div>
+                )}
                 {activeTab === 'categorias' && <CategoriasList />}
                 {activeTab === 'origens' && <OrigensList />}
                 {activeTab === 'configuracoes' && <Configuracoes />}
