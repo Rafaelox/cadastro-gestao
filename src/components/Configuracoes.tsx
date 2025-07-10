@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Database, FileText, Briefcase, UserCheck, Shield } from "lucide-react";
+import { Settings, Users, Database, FileText, Briefcase, UserCheck, Shield, BarChart3 } from "lucide-react";
 import { ServicoForm } from "@/components/ServicoForm";
 import { ServicosList } from "@/components/ServicosList";
 import { CategoriasList } from "@/components/CategoriasList";
@@ -12,6 +12,7 @@ import { ConsultoresList } from "@/components/ConsultoresList";
 import { FormasPagamentoList } from "@/components/FormasPagamentoList";
 import { UsuariosList } from "@/components/UsuariosList";
 import { UsuarioForm } from "@/components/UsuarioForm";
+import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
 import { type Servico, type Consultor } from "@/lib/database";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -173,7 +174,7 @@ export const Configuracoes = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="servicos" className="flex items-center space-x-2">
             <Briefcase className="h-4 w-4" />
             <span>Serviços</span>
@@ -194,6 +195,10 @@ export const Configuracoes = () => {
             <Settings className="h-4 w-4" />
             <span>Pagamentos</span>
           </TabsTrigger>
+          <TabsTrigger value="dashboard_financeiro" className="flex items-center space-x-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Dashboard</span>
+          </TabsTrigger>
           {isAdmin && (
             <TabsTrigger value="usuarios" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
@@ -203,7 +208,7 @@ export const Configuracoes = () => {
         </TabsList>
 
         {/* Links rápidos */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
           <Button 
             variant="outline" 
             size="sm"
@@ -248,6 +253,15 @@ export const Configuracoes = () => {
           >
             <Settings className="h-4 w-4" />
             <span>Pagamentos</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("dashboard_financeiro")}
+            className="flex items-center space-x-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Dashboard</span>
           </Button>
           {isAdmin && (
             <Button 
@@ -328,6 +342,20 @@ export const Configuracoes = () => {
             </CardHeader>
             <CardContent>
               <FormasPagamentoList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dashboard_financeiro" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5" />
+                <span>Dashboard Financeiro</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DashboardFinanceiro />
             </CardContent>
           </Card>
         </TabsContent>
