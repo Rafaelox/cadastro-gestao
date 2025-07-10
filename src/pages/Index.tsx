@@ -8,7 +8,7 @@ import { OrigensList } from "@/components/OrigensList";
 import { Configuracoes } from "@/components/Configuracoes";
 import { Agenda } from "@/components/Agenda";
 import { Dashboard } from "@/components/Dashboard";
-import { RelatorioForm } from "@/components/RelatorioForm";
+import { RelatorioForm } from "@/components/relatorios/RelatorioForm";
 import { Cliente } from "@/lib/database";
 
 const Index = () => {
