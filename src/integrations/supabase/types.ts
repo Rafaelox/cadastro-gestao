@@ -119,6 +119,57 @@ export type Database = {
           },
         ]
       }
+      consultores: {
+        Row: {
+          ativo: boolean
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: number
+          nome: string
+          percentual_comissao: number
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: number
+          nome: string
+          percentual_comissao?: number
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: number
+          nome?: string
+          percentual_comissao?: number
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       origens: {
         Row: {
           ativo: boolean
