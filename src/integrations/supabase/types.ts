@@ -163,6 +163,7 @@ export type Database = {
           email: string | null
           endereco: string | null
           estado: string | null
+          foto_url: string | null
           id: number
           nome: string
           origem_id: number | null
@@ -185,6 +186,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           estado?: string | null
+          foto_url?: string | null
           id?: number
           nome: string
           origem_id?: number | null
@@ -207,6 +209,7 @@ export type Database = {
           email?: string | null
           endereco?: string | null
           estado?: string | null
+          foto_url?: string | null
           id?: number
           nome?: string
           origem_id?: number | null
@@ -400,6 +403,7 @@ export type Database = {
           data_agendamento: string | null
           data_atendimento: string
           forma_pagamento: number | null
+          fotos_urls: string[] | null
           id: number
           observacoes_atendimento: string | null
           procedimentos_realizados: string | null
@@ -417,6 +421,7 @@ export type Database = {
           data_agendamento?: string | null
           data_atendimento: string
           forma_pagamento?: number | null
+          fotos_urls?: string[] | null
           id?: number
           observacoes_atendimento?: string | null
           procedimentos_realizados?: string | null
@@ -434,6 +439,7 @@ export type Database = {
           data_agendamento?: string | null
           data_atendimento?: string
           forma_pagamento?: number | null
+          fotos_urls?: string[] | null
           id?: number
           observacoes_atendimento?: string | null
           procedimentos_realizados?: string | null
