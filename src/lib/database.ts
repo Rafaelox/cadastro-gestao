@@ -618,7 +618,14 @@ class DatabaseService {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Mapear os dados para estrutura esperada pelos componentes
+    return (data || []).map((item: any) => ({
+      ...item,
+      cliente_nome: item.clientes?.nome || '',
+      consultor_nome: item.consultores?.nome || '',
+      servico_nome: item.servicos?.nome || '',
+      forma_pagamento_nome: item.formas_pagamento?.nome || ''
+    }));
   }
 
   // Getter para acessar supabase diretamente quando necessário
