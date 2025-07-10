@@ -24,6 +24,12 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
   const [showFilters, setShowFilters] = useState(false);
   const { permissions } = usePermissions();
   
+  console.log('ClientesList - Permissões do usuário:', {
+    canEditClient: permissions.canEditClient,
+    canCreateClient: permissions.canCreateClient,
+    canDeleteClient: permissions.canDeleteClient
+  });
+  
   // Filtros
   const [filters, setFilters] = useState({
     nome: '',
@@ -383,15 +389,18 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
                   </div>
 
                   <div className="flex gap-2 ml-4">
-                    <ActionButtonGuard requiredPermissions={['canEditClient']}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(cliente)}
-                        className="border-border hover:bg-muted/50"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                     <ActionButtonGuard requiredPermissions={['canEditClient']}>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => {
+                           console.log('ClientesList - Botão editar clicado para cliente:', cliente);
+                           onEdit(cliente);
+                         }}
+                         className="border-border hover:bg-muted/50"
+                       >
+                         <Edit className="w-4 h-4" />
+                       </Button>
                     </ActionButtonGuard>
                     <ActionButtonGuard requiredPermissions={['canDeleteClient']}>
                       <Button

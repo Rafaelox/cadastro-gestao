@@ -16,6 +16,7 @@ interface ClienteFormProps {
 }
 
 export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => {
+  console.log('ClienteForm - Renderizado com cliente:', cliente);
   const [formData, setFormData] = useState<Partial<Cliente>>({
     nome: '',
     cpf: '',
