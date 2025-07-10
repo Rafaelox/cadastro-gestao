@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Plus, List, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, Plus, List, TrendingUp, TrendingDown, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,6 +11,8 @@ import { useCaixaForm } from "./caixa/useCaixaForm";
 import { CaixaFormFields } from "./caixa/CaixaFormFields";
 import { ParcelasList } from "./caixa/ParcelasList";
 import type { CaixaFormProps } from "./caixa/types";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface Pagamento {
   id: number;
@@ -138,6 +140,50 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
 
   const totais = calcularTotais();
 
+  const gerarPDF = () => {
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(18);
+    doc.text("Relatório de Movimentação Financeira", 20, 20);
+    
+    // Data
+    doc.setFontSize(12);
+    doc.text(`Data: ${format(dataPagamentos, "dd/MM/yyyy", { locale: ptBR })}`, 20, 35);
+    
+    // Totais
+    doc.text(`Total Entradas: R$ ${totais.entradas.toFixed(2)}`, 20, 50);
+    doc.text(`Total Saídas: R$ ${totais.saidas.toFixed(2)}`, 20, 60);
+    doc.text(`Saldo: R$ ${totais.saldo.toFixed(2)}`, 20, 70);
+    
+    // Tabela de movimentos
+    const tableData = pagamentos.map(p => [
+      p.tipo_transacao === 'entrada' ? 'Entrada' : 'Saída',
+      p.cliente_nome,
+      p.consultor_nome,
+      p.servico_nome,
+      p.forma_pagamento_nome,
+      p.numero_parcelas > 1 ? `${p.numero_parcelas}x` : '1x',
+      `R$ ${(p.numero_parcelas > 1 ? p.valor_original : p.valor).toFixed(2)}`,
+      format(new Date(p.data_pagamento), "HH:mm", { locale: ptBR })
+    ]);
+    
+    (doc as any).autoTable({
+      head: [['Tipo', 'Cliente', 'Consultor', 'Serviço', 'Pagamento', 'Parcelas', 'Valor', 'Hora']],
+      body: tableData,
+      startY: 85,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] }
+    });
+    
+    doc.save(`movimentacao-${format(dataPagamentos, "dd-MM-yyyy")}.pdf`);
+    
+    toast({
+      title: "PDF Gerado",
+      description: "Relatório de movimentação financeira salvo com sucesso."
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -250,9 +296,19 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
 
             {/* Lista de Pagamentos */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Pagamentos do dia {format(dataPagamentos, "dd/MM/yyyy", { locale: ptBR })}
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Pagamentos do dia {format(dataPagamentos, "dd/MM/yyyy", { locale: ptBR })}
+                </h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => gerarPDF()}
+                  disabled={pagamentos.length === 0}
+                >
+                  Gerar PDF
+                </Button>
+              </div>
               
               {isLoadingPagamentos ? (
                 <p>Carregando pagamentos...</p>
@@ -261,70 +317,86 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
                   Nenhum pagamento encontrado para esta data.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {pagamentos.map((pagamento) => (
-                    <div key={pagamento.id}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            {pagamento.tipo_transacao === 'entrada' ? (
-                              <TrendingUp className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-600" />
-                            )}
-                            <span className="font-medium">{pagamento.cliente_nome}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {format(new Date(pagamento.data_pagamento), "HH:mm", { locale: ptBR })}
-                            </span>
-                          </div>
-                          
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            <div>Consultor: {pagamento.consultor_nome}</div>
-                            <div>Serviço: {pagamento.servico_nome}</div>
-                            <div>Pagamento: {pagamento.forma_pagamento_nome}</div>
-                            {pagamento.numero_parcelas > 1 && (
-                              <div className="text-blue-600 font-medium">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-2 text-left">Tipo</th>
+                        <th className="border border-border p-2 text-left">Cliente</th>
+                        <th className="border border-border p-2 text-left">Consultor</th>
+                        <th className="border border-border p-2 text-left">Serviço</th>
+                        <th className="border border-border p-2 text-left">Forma Pagamento</th>
+                        <th className="border border-border p-2 text-left">Parcelas</th>
+                        <th className="border border-border p-2 text-left">Valor</th>
+                        <th className="border border-border p-2 text-left">Hora</th>
+                        <th className="border border-border p-2 text-left">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagamentos.map((pagamento) => (
+                        <tr key={pagamento.id} className="hover:bg-muted/25">
+                          <td className="border border-border p-2">
+                            <div className="flex items-center space-x-2">
+                              {pagamento.tipo_transacao === 'entrada' ? (
+                                <TrendingUp className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-red-600" />
+                              )}
+                              <span className="capitalize">{pagamento.tipo_transacao}</span>
+                            </div>
+                          </td>
+                          <td className="border border-border p-2 font-medium">{pagamento.cliente_nome}</td>
+                          <td className="border border-border p-2">{pagamento.consultor_nome}</td>
+                          <td className="border border-border p-2">{pagamento.servico_nome}</td>
+                          <td className="border border-border p-2">{pagamento.forma_pagamento_nome}</td>
+                          <td className="border border-border p-2">
+                            {pagamento.numero_parcelas > 1 ? (
+                              <span className="text-blue-600 font-medium">
                                 {pagamento.numero_parcelas}x de R$ {(pagamento.valor_original / pagamento.numero_parcelas).toFixed(2)}
-                              </div>
+                              </span>
+                            ) : (
+                              <span>1x</span>
                             )}
-                            {pagamento.observacoes && (
-                              <div>Obs: {pagamento.observacoes}</div>
+                          </td>
+                          <td className="border border-border p-2">
+                            <span className={`font-bold ${
+                              pagamento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {pagamento.tipo_transacao === 'entrada' ? '+' : '-'} 
+                              R$ {pagamento.numero_parcelas > 1 ? pagamento.valor_original.toFixed(2) : pagamento.valor.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="border border-border p-2 text-sm text-muted-foreground">
+                            {format(new Date(pagamento.data_pagamento), "HH:mm", { locale: ptBR })}
+                          </td>
+                          <td className="border border-border p-2">
+                            {pagamento.numero_parcelas > 1 && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowParcelas(showParcelas === pagamento.id ? null : pagamento.id)}
+                              >
+                                {showParcelas === pagamento.id ? 'Ocultar' : 'Ver'} Parcelas
+                              </Button>
                             )}
-                          </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className={`text-lg font-bold ${
-                            pagamento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {pagamento.tipo_transacao === 'entrada' ? '+' : '-'} 
-                            R$ {pagamento.numero_parcelas > 1 ? pagamento.valor_original.toFixed(2) : pagamento.valor.toFixed(2)}
-                          </div>
-                          
-                          {pagamento.numero_parcelas > 1 && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="mt-2"
-                              onClick={() => setShowParcelas(showParcelas === pagamento.id ? null : pagamento.id)}
-                            >
-                              {showParcelas === pagamento.id ? 'Ocultar' : 'Ver'} Parcelas
-                            </Button>
-                          )}
-                        </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* Mostrar parcelas expandidas */}
+                  {pagamentos.map((pagamento) => (
+                    showParcelas === pagamento.id && pagamento.numero_parcelas > 1 && (
+                      <div key={`parcelas-${pagamento.id}`} className="mt-4 p-4 bg-muted/25 rounded-lg">
+                        <ParcelasList 
+                          pagamentoId={pagamento.id}
+                          clienteNome={pagamento.cliente_nome}
+                          valorTotal={pagamento.valor_original}
+                          numeroParcelas={pagamento.numero_parcelas}
+                        />
                       </div>
-                      
-                      {showParcelas === pagamento.id && pagamento.numero_parcelas > 1 && (
-                        <div className="mt-2">
-                          <ParcelasList 
-                            pagamentoId={pagamento.id}
-                            clienteNome={pagamento.cliente_nome}
-                            valorTotal={pagamento.valor_original}
-                            numeroParcelas={pagamento.numero_parcelas}
-                          />
-                        </div>
-                      )}
-                    </div>
+                    )
                   ))}
                 </div>
               )}

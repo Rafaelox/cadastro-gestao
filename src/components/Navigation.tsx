@@ -49,6 +49,12 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       icon: DollarSign,
       description: 'Controle financeiro'
     },
+    {
+      id: 'dashboard-financeiro',
+      label: 'Dashboard Financeiro',
+      icon: BarChart3,
+      description: 'Análises financeiras'
+    },
   ];
 
   const configItems = [

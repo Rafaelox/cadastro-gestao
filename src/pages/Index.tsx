@@ -9,6 +9,7 @@ import { OrigensList } from "@/components/OrigensList";
 import { Configuracoes } from "@/components/Configuracoes";
 import { Agenda } from "@/components/Agenda";
 import { Dashboard } from "@/components/Dashboard";
+import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
 import { RelatorioForm } from "@/components/relatorios/RelatorioForm";
 import { HistoricoDiario } from "@/components/HistoricoDiario";
 import { CaixaForm } from "@/components/CaixaForm";
@@ -74,6 +75,7 @@ const Index = () => {
             ) : (
               <>
                 {activeTab === 'dashboard' && <Dashboard />}
+                {activeTab === 'dashboard-financeiro' && <DashboardFinanceiro />}
                 {activeTab === 'clientes' && (
                   <ClientesList
                     onEdit={handleEditCliente}
