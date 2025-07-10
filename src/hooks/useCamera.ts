@@ -1,18 +1,46 @@
-import { useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+
+export interface PhotoResult {
+  url: string;
+  path: string;
+}
 
 export const useCamera = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const takePhoto = async () => {
+  const checkCameraPermissions = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      return true; // Web sempre tem permissão
+    }
+
     try {
-      setIsLoading(true);
+      const permissions = await Camera.checkPermissions();
+      if (permissions.camera !== 'granted') {
+        const requestResult = await Camera.requestPermissions();
+        return requestResult.camera === 'granted';
+      }
+      return true;
+    } catch (error) {
+      console.error('Erro ao verificar permissões da câmera:', error);
+      return false;
+    }
+  };
 
-      if (!Capacitor.isNativePlatform()) {
-        // Para desenvolvimento web, usar input file como fallback
-        return await selectFromGallery();
+  const takePhoto = async (): Promise<string | null> => {
+    try {
+      const hasPermission = await checkCameraPermissions();
+      if (!hasPermission) {
+        toast({
+          title: "Permissão negada",
+          description: "É necessário permitir o acesso à câmera para tirar fotos.",
+          variant: "destructive",
+        });
+        return null;
       }
 
       const image = await Camera.getPhoto({
@@ -20,73 +48,127 @@ export const useCamera = () => {
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Camera,
+        width: 1024,
+        height: 1024,
+        correctOrientation: true,
       });
 
-      return image.dataUrl;
-    } catch (error) {
-      console.error('Erro ao capturar foto:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return image.dataUrl || null;
+    } catch (error: any) {
+      if (error.message !== 'User cancelled photos app') {
+        toast({
+          title: "Erro ao tirar foto",
+          description: "Não foi possível capturar a foto. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+      return null;
     }
   };
 
-  const selectFromGallery = async () => {
+  const selectFromGallery = async (): Promise<string | null> => {
     try {
-      setIsLoading(true);
+      const hasPermission = await checkCameraPermissions();
+      if (!hasPermission) {
+        toast({
+          title: "Permissão negada",
+          description: "É necessário permitir o acesso à galeria para selecionar fotos.",
+          variant: "destructive",
+        });
+        return null;
+      }
 
       const image = await Camera.getPhoto({
         quality: 80,
         allowEditing: false,
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Photos,
+        width: 1024,
+        height: 1024,
+        correctOrientation: true,
       });
 
-      return image.dataUrl;
-    } catch (error) {
-      console.error('Erro ao selecionar foto:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
+      return image.dataUrl || null;
+    } catch (error: any) {
+      if (error.message !== 'User cancelled photos app') {
+        toast({
+          title: "Erro ao selecionar foto",
+          description: "Não foi possível selecionar a foto. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+      return null;
     }
   };
 
-  const uploadPhoto = async (dataUrl: string, fileName: string) => {
+  const uploadPhoto = async (
+    dataUrl: string, 
+    folder: string, 
+    filename?: string
+  ): Promise<PhotoResult | null> => {
+    setIsUploading(true);
+    
     try {
-      setIsLoading(true);
-
-      // Converter DataURL para Blob
+      // Converter dataUrl para blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
+      
+      // Gerar nome único se não fornecido
+      const finalFilename = filename || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      const filePath = `${folder}/${finalFilename}`;
 
       // Upload para Supabase Storage
       const { data, error } = await supabase.storage
         .from('atendimento-fotos')
-        .upload(fileName, blob, {
-          cacheControl: '3600',
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
           upsert: false
         });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       // Obter URL pública
-      const { data: urlData } = supabase.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('atendimento-fotos')
         .getPublicUrl(data.path);
 
-      return urlData.publicUrl;
-    } catch (error) {
+      return {
+        url: publicUrl,
+        path: data.path
+      };
+
+    } catch (error: any) {
       console.error('Erro ao fazer upload da foto:', error);
-      throw error;
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar a foto. Tente novamente.",
+        variant: "destructive",
+      });
+      return null;
     } finally {
-      setIsLoading(false);
+      setIsUploading(false);
     }
+  };
+
+  const takeAndUploadPhoto = async (
+    folder: string, 
+    filename?: string
+  ): Promise<PhotoResult | null> => {
+    const dataUrl = await takePhoto();
+    if (!dataUrl) return null;
+
+    return await uploadPhoto(dataUrl, folder, filename);
   };
 
   return {
     takePhoto,
     selectFromGallery,
     uploadPhoto,
-    isLoading
+    takeAndUploadPhoto,
+    isUploading,
+    isLoading: isUploading,
+    checkCameraPermissions
   };
 };

@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { CameraCapture } from "@/components/mobile/CameraCapture";
 
 interface AtendimentoFormProps {
   agendaId: number;
@@ -40,6 +41,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
   const [dataAtendimento, setDataAtendimento] = useState<Date>(new Date());
   const [procedimentosRealizados, setProcedimentosRealizados] = useState("");
   const [observacoesAtendimento, setObservacoesAtendimento] = useState("");
+  const [fotosUrls, setFotosUrls] = useState<string[]>([]);
 
   useEffect(() => {
     loadAgenda();
@@ -104,7 +106,8 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           comissao_consultor: agenda.comissao_consultor,
           forma_pagamento: null,
           procedimentos_realizados: procedimentosRealizados,
-          observacoes_atendimento: observacoesAtendimento
+          observacoes_atendimento: observacoesAtendimento,
+          fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
         });
 
       if (error) {
@@ -240,6 +243,22 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
               placeholder="Observações adicionais sobre o atendimento"
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Fotos do Atendimento</Label>
+            <CameraCapture
+              onPhotoTaken={(photoUrl) => setFotosUrls(prev => [...prev, photoUrl])}
+              onPhotoRemoved={() => setFotosUrls([])}
+              label="Adicionar Foto do Atendimento"
+            />
+            {fotosUrls.length > 0 && (
+              <div className="mt-2">
+                <p className="text-sm text-muted-foreground">
+                  {fotosUrls.length} foto(s) adicionada(s)
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-2 pt-4">

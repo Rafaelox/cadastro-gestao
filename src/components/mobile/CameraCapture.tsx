@@ -30,13 +30,15 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         
         // Upload da foto
         const fileName = `atendimento_${Date.now()}.jpg`;
-        const publicUrl = await uploadPhoto(dataUrl, fileName);
+        const result = await uploadPhoto(dataUrl, 'atendimentos', fileName);
         
-        onPhotoTaken(publicUrl);
-        toast({
-          title: "Foto capturada",
-          description: "Foto salva com sucesso!",
-        });
+        if (result) {
+          onPhotoTaken(result.url);
+          toast({
+            title: "Foto capturada",
+            description: "Foto salva com sucesso!",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -55,13 +57,15 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         
         // Upload da foto
         const fileName = `atendimento_${Date.now()}.jpg`;
-        const publicUrl = await uploadPhoto(dataUrl, fileName);
+        const result = await uploadPhoto(dataUrl, 'atendimentos', fileName);
         
-        onPhotoTaken(publicUrl);
-        toast({
-          title: "Foto selecionada",
-          description: "Foto salva com sucesso!",
-        });
+        if (result) {
+          onPhotoTaken(result.url);
+          toast({
+            title: "Foto selecionada",
+            description: "Foto salva com sucesso!",
+          });
+        }
       }
     } catch (error) {
       toast({
