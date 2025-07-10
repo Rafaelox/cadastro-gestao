@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, Clock, Plus, List } from "lucide-react";
+import { CalendarIcon, Clock, Plus, List, FileText } from "lucide-react";
 import { AgendaForm } from "@/components/AgendaForm";
 import { AgendaList } from "@/components/AgendaList";
+import { AtendimentoForm } from "@/components/AtendimentoForm";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ export const Agenda = () => {
   const [activeTab, setActiveTab] = useState("calendario");
   const [showForm, setShowForm] = useState(false);
   const [refreshList, setRefreshList] = useState(0);
+  const [atendimentoId, setAtendimentoId] = useState<number | null>(null);
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -27,6 +29,22 @@ export const Agenda = () => {
   const handleFormSuccess = () => {
     setShowForm(false);
     setRefreshList(prev => prev + 1);
+    setActiveTab("lista");
+  };
+
+  const handleAtendimento = (agendamentoId: number) => {
+    setAtendimentoId(agendamentoId);
+    setActiveTab("atendimento");
+  };
+
+  const handleAtendimentoSuccess = () => {
+    setAtendimentoId(null);
+    setRefreshList(prev => prev + 1);
+    setActiveTab("lista");
+  };
+
+  const handleAtendimentoCancel = () => {
+    setAtendimentoId(null);
     setActiveTab("lista");
   };
 
@@ -50,7 +68,7 @@ export const Agenda = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="calendario" className="flex items-center space-x-2">
             <CalendarIcon className="h-4 w-4" />
             <span>Calendário</span>
@@ -62,6 +80,10 @@ export const Agenda = () => {
           <TabsTrigger value="lista" className="flex items-center space-x-2">
             <List className="h-4 w-4" />
             <span>Lista</span>
+          </TabsTrigger>
+          <TabsTrigger value="atendimento" className="flex items-center space-x-2" disabled={!atendimentoId}>
+            <FileText className="h-4 w-4" />
+            <span>Atendimento</span>
           </TabsTrigger>
         </TabsList>
 
@@ -121,7 +143,10 @@ export const Agenda = () => {
 
             {/* Lista de agendamentos do dia */}
             <div className="lg:col-span-2">
-              <AgendaList selectedDate={selectedDate} />
+              <AgendaList 
+                selectedDate={selectedDate} 
+                onAtendimento={handleAtendimento}
+              />
             </div>
           </div>
         </TabsContent>
@@ -168,7 +193,34 @@ export const Agenda = () => {
         </TabsContent>
 
         <TabsContent value="lista" className="space-y-6">
-          <AgendaList key={refreshList} />
+          <AgendaList 
+            key={refreshList} 
+            onAtendimento={handleAtendimento}
+          />
+        </TabsContent>
+
+        <TabsContent value="atendimento" className="space-y-6">
+          {atendimentoId ? (
+            <AtendimentoForm
+              agendamentoId={atendimentoId}
+              onSuccess={handleAtendimentoSuccess}
+              onCancel={handleAtendimentoCancel}
+            />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-12">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-medium mb-2">Nenhum atendimento selecionado</h3>
+                <p className="text-muted-foreground mb-4">
+                  Selecione um agendamento na lista para iniciar o atendimento.
+                </p>
+                <Button onClick={() => setActiveTab("lista")}>
+                  <List className="h-4 w-4 mr-2" />
+                  Ir para Lista
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

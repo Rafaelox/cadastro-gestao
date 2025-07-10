@@ -33,7 +33,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Stethoscope
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db, type Agenda } from "@/lib/database";
@@ -41,9 +42,10 @@ import { db, type Agenda } from "@/lib/database";
 interface AgendaListProps {
   selectedDate?: Date;
   onRefresh?: () => void;
+  onAtendimento?: (agendamentoId: number) => void;
 }
 
-export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
+export const AgendaList = ({ selectedDate, onRefresh, onAtendimento }: AgendaListProps) => {
   const [agendamentos, setAgendamentos] = useState<Agenda[]>([]);
   const [consultores, setConsultores] = useState<{ [key: number]: string }>({});
   const [servicos, setServicos] = useState<{ [key: number]: string }>({});
@@ -252,7 +254,19 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog>
+                      <div className="flex items-center space-x-2">
+                        {agenda.status === 'agendado' && onAtendimento && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => onAtendimento(agenda.id!)}
+                            className="flex items-center space-x-1"
+                          >
+                            <Stethoscope className="h-3 w-3" />
+                            <span>Atender</span>
+                          </Button>
+                        )}
+                        <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -286,6 +300,7 @@ export const AgendaList = ({ selectedDate, onRefresh }: AgendaListProps) => {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
