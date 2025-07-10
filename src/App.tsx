@@ -43,7 +43,7 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      {showNavigation && (
+      {showNavigation ? (
         <>
           {/* Desktop Navigation */}
           <div className="hidden md:block">
@@ -75,7 +75,6 @@ const AppContent = () => {
                 </div>
                 <div className="lg:col-span-3">
                   <Routes>
-                    <Route path="/login" element={<Login />} />
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/agenda" element={<AgendaPage />} />
                     <Route path="/clientes" element={<ClientesPage />} />
@@ -92,7 +91,6 @@ const AppContent = () => {
           {/* Mobile Navigation */}
           <div className="md:hidden pb-20">
             <Routes>
-              <Route path="/login" element={<Login />} />
               <Route path="/" element={<DashboardPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
               <Route path="/clientes" element={<ClientesPage />} />
@@ -104,18 +102,10 @@ const AppContent = () => {
             <BottomNavigation />
           </div>
         </>
-      )}
-
-      {!showNavigation && (
+      ) : (
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/agenda" element={<AgendaPage />} />
-          <Route path="/clientes" element={<ClientesPage />} />
-          <Route path="/atendimentos" element={<AtendimentosPage />} />
-          <Route path="/caixa" element={<CaixaPage />} />
-          <Route path="/sistema" element={<Index />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Login />} />
         </Routes>
       )}
     </div>
