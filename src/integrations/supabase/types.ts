@@ -234,6 +234,48 @@ export type Database = {
         }
         Relationships: []
       }
+      historico: {
+        Row: {
+          agenda_id: number
+          cliente_id: number
+          comissao_consultor: number
+          consultor_id: number
+          created_at: string
+          data_atendimento: string
+          id: number
+          observacoes_atendimento: string | null
+          servico_id: number
+          updated_at: string
+          valor_servico: number
+        }
+        Insert: {
+          agenda_id: number
+          cliente_id: number
+          comissao_consultor?: number
+          consultor_id: number
+          created_at?: string
+          data_atendimento: string
+          id?: number
+          observacoes_atendimento?: string | null
+          servico_id: number
+          updated_at?: string
+          valor_servico?: number
+        }
+        Update: {
+          agenda_id?: number
+          cliente_id?: number
+          comissao_consultor?: number
+          consultor_id?: number
+          created_at?: string
+          data_atendimento?: string
+          id?: number
+          observacoes_atendimento?: string | null
+          servico_id?: number
+          updated_at?: string
+          valor_servico?: number
+        }
+        Relationships: []
+      }
       origens: {
         Row: {
           ativo: boolean

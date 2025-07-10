@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db, type Agenda, type Cliente, type Consultor, type Servico } from "@/lib/database";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AtendimentoFormProps {
   agendamentoId: number;
@@ -112,16 +113,36 @@ export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: Atendime
 
     setIsSaving(true);
     try {
+      // Calcular comissão do consultor baseado no valor final
+      const comissaoCalculada = (data.valor_final * (consultor?.percentual_comissao || 0)) / 100;
+
+      // Salvar no histórico
+      const { error: historicoError } = await supabase
+        .from('historico')
+        .insert({
+          agenda_id: agendamento.id,
+          consultor_id: agendamento.consultor_id,
+          servico_id: agendamento.servico_id,
+          cliente_id: agendamento.cliente_id,
+          data_atendimento: new Date().toISOString(),
+          valor_servico: data.valor_final,
+          comissao_consultor: comissaoCalculada,
+          observacoes_atendimento: `Procedimentos: ${data.procedimentos_realizados}\n\nObservações: ${data.observacoes_atendimento || 'Nenhuma observação adicional.'}`
+        });
+
+      if (historicoError) throw historicoError;
+
       // Atualizar o agendamento para status "realizado"
       await db.updateAgenda(agendamento.id!, {
         status: "realizado",
         valor_servico: data.valor_final,
+        comissao_consultor: comissaoCalculada,
         observacoes: `${agendamento.observacoes || ""}\n\nATENDIMENTO:\nProcedimentos: ${data.procedimentos_realizados}\nObservações: ${data.observacoes_atendimento}`.trim()
       });
 
       toast({
         title: "Atendimento registrado",
-        description: "O atendimento foi registrado com sucesso.",
+        description: "O atendimento foi registrado com sucesso no histórico.",
       });
       
       onSuccess?.();
