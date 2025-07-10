@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ParcelasList } from "./ParcelasList";
 import { CaixaPDFGenerator } from "./CaixaPDFGenerator";
+import { usePermissions } from "@/hooks/usePermissions";
+import { ActionButtonGuard } from "@/components/PermissionGuard";
 
 interface Pagamento {
   id: number;
@@ -32,6 +36,9 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
   const [isLoadingPagamentos, setIsLoadingPagamentos] = useState(false);
   const [dataPagamentos, setDataPagamentos] = useState<Date>(new Date());
   const [showParcelas, setShowParcelas] = useState<number | null>(null);
+  const [editingPagamento, setEditingPagamento] = useState<Pagamento | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const { permissions } = usePermissions();
 
   useEffect(() => {
     loadPagamentos();
@@ -102,6 +109,64 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
   };
 
   const totais = calcularTotais();
+
+  const handleDeletePagamento = async (pagamento: Pagamento) => {
+    try {
+      // A exclusão em cascata das comissões é feita automaticamente pelo trigger
+      const { error } = await supabase
+        .from('pagamentos')
+        .delete()
+        .eq('id', pagamento.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Pagamento excluído com sucesso!"
+      });
+
+      await loadPagamentos();
+    } catch (error) {
+      console.error('Erro ao excluir pagamento:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir o pagamento."
+      });
+    }
+  };
+
+  const handleEditPagamento = async (editedPagamento: Pagamento) => {
+    try {
+      const { error } = await supabase
+        .from('pagamentos')
+        .update({
+          valor: editedPagamento.valor,
+          valor_original: editedPagamento.valor_original,
+          tipo_transacao: editedPagamento.tipo_transacao,
+          observacoes: editedPagamento.observacoes
+        })
+        .eq('id', editedPagamento.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Pagamento atualizado com sucesso!"
+      });
+
+      setIsEditing(false);
+      setEditingPagamento(null);
+      await loadPagamentos();
+    } catch (error) {
+      console.error('Erro ao atualizar pagamento:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar o pagamento."
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -230,15 +295,122 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
                       {format(new Date(pagamento.data_pagamento), "HH:mm", { locale: ptBR })}
                     </td>
                     <td className="border border-border p-2">
-                      {pagamento.numero_parcelas > 1 && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setShowParcelas(showParcelas === pagamento.id ? null : pagamento.id)}
-                        >
-                          {showParcelas === pagamento.id ? 'Ocultar' : 'Ver'} Parcelas
-                        </Button>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {pagamento.numero_parcelas > 1 && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setShowParcelas(showParcelas === pagamento.id ? null : pagamento.id)}
+                          >
+                            {showParcelas === pagamento.id ? 'Ocultar' : 'Ver'} Parcelas
+                          </Button>
+                        )}
+                        
+                        <ActionButtonGuard requiredPermissions={['canEditPayment']}>
+                          <Dialog open={isEditing && editingPagamento?.id === pagamento.id} onOpenChange={(open) => {
+                            if (!open) {
+                              setIsEditing(false);
+                              setEditingPagamento(null);
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingPagamento(pagamento);
+                                  setIsEditing(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Editar Pagamento</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-sm font-medium">Valor</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingPagamento?.valor || 0}
+                                    onChange={(e) => setEditingPagamento(prev => prev ? {...prev, valor: parseFloat(e.target.value) || 0} : null)}
+                                    className="w-full p-2 border rounded"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Valor Original</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingPagamento?.valor_original || 0}
+                                    onChange={(e) => setEditingPagamento(prev => prev ? {...prev, valor_original: parseFloat(e.target.value) || 0} : null)}
+                                    className="w-full p-2 border rounded"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Tipo</label>
+                                  <select
+                                    value={editingPagamento?.tipo_transacao || 'entrada'}
+                                    onChange={(e) => setEditingPagamento(prev => prev ? {...prev, tipo_transacao: e.target.value as 'entrada' | 'saida'} : null)}
+                                    className="w-full p-2 border rounded"
+                                  >
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">Observações</label>
+                                  <textarea
+                                    value={editingPagamento?.observacoes || ''}
+                                    onChange={(e) => setEditingPagamento(prev => prev ? {...prev, observacoes: e.target.value} : null)}
+                                    className="w-full p-2 border rounded"
+                                    rows={3}
+                                  />
+                                </div>
+                                <div className="flex justify-end space-x-2">
+                                  <Button variant="outline" onClick={() => {
+                                    setIsEditing(false);
+                                    setEditingPagamento(null);
+                                  }}>
+                                    Cancelar
+                                  </Button>
+                                  <Button onClick={() => editingPagamento && handleEditPagamento(editingPagamento)}>
+                                    Salvar
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </ActionButtonGuard>
+
+                        <ActionButtonGuard requiredPermissions={['canDeletePayment']}>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita e 
+                                  também excluirá automaticamente as comissões relacionadas.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeletePagamento(pagamento)}>
+                                  Confirmar Exclusão
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </ActionButtonGuard>
+                      </div>
                     </td>
                   </tr>
                 ))}
