@@ -362,11 +362,13 @@ export type Database = {
           data_pagamento: string
           forma_pagamento_id: number
           id: number
+          numero_parcelas: number | null
           observacoes: string | null
           servico_id: number
           tipo_transacao: string
           updated_at: string
           valor: number
+          valor_original: number | null
         }
         Insert: {
           atendimento_id: number
@@ -376,11 +378,13 @@ export type Database = {
           data_pagamento?: string
           forma_pagamento_id: number
           id?: number
+          numero_parcelas?: number | null
           observacoes?: string | null
           servico_id: number
           tipo_transacao: string
           updated_at?: string
           valor?: number
+          valor_original?: number | null
         }
         Update: {
           atendimento_id?: number
@@ -390,11 +394,13 @@ export type Database = {
           data_pagamento?: string
           forma_pagamento_id?: number
           id?: number
+          numero_parcelas?: number | null
           observacoes?: string | null
           servico_id?: number
           tipo_transacao?: string
           updated_at?: string
           valor?: number
+          valor_original?: number | null
         }
         Relationships: [
           {
@@ -402,6 +408,53 @@ export type Database = {
             columns: ["forma_pagamento_id"]
             isOneToOne: false
             referencedRelation: "formas_pagamento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcelas: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          id: number
+          numero_parcela: number
+          observacoes: string | null
+          pagamento_id: number
+          status: string
+          updated_at: string
+          valor_parcela: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          id?: number
+          numero_parcela: number
+          observacoes?: string | null
+          pagamento_id: number
+          status?: string
+          updated_at?: string
+          valor_parcela?: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          id?: number
+          numero_parcela?: number
+          observacoes?: string | null
+          pagamento_id?: number
+          status?: string
+          updated_at?: string
+          valor_parcela?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcelas_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
             referencedColumns: ["id"]
           },
         ]

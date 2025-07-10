@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ParcelasList } from "./caixa/ParcelasList";
 import jsPDF from 'jspdf';
 
 interface Movimento {
@@ -21,6 +22,8 @@ interface Movimento {
   servico_nome: string;
   forma_pagamento_nome: string;
   valor: number;
+  valor_original: number;
+  numero_parcelas: number;
   tipo_transacao: 'entrada' | 'saida';
   data_pagamento: string;
   observacoes?: string;
@@ -32,6 +35,7 @@ export const CaixaList = () => {
   const [dataInicio, setDataInicio] = useState<Date>(new Date());
   const [dataFim, setDataFim] = useState<Date>(new Date());
   const [termoPesquisa, setTermoPesquisa] = useState("");
+  const [showParcelas, setShowParcelas] = useState<number | null>(null);
 
   useEffect(() => {
     loadMovimentos();
@@ -45,18 +49,16 @@ export const CaixaList = () => {
         .select(`
           id,
           atendimento_id,
-          cliente_id,
-          consultor_id,
-          servico_id,
-          forma_pagamento_id,
           valor,
+          valor_original,
+          numero_parcelas,
           tipo_transacao,
           data_pagamento,
           observacoes,
-          clientes(nome),
-          consultores(nome),
-          servicos(nome),
-          formas_pagamento(nome)
+          clientes!cliente_id (nome),
+          consultores!consultor_id (nome),
+          servicos!servico_id (nome),
+          formas_pagamento!forma_pagamento_id (nome)
         `)
         .gte('data_pagamento', format(dataInicio, 'yyyy-MM-dd 00:00:00'))
         .lte('data_pagamento', format(dataFim, 'yyyy-MM-dd 23:59:59'))
@@ -73,7 +75,9 @@ export const CaixaList = () => {
         consultor_nome: item.consultores?.nome || 'N/A',
         servico_nome: item.servicos?.nome || 'N/A',
         forma_pagamento_nome: item.formas_pagamento?.nome || 'N/A',
-        valor: item.valor,
+        valor: item.valor || 0,
+        valor_original: item.valor_original || item.valor || 0,
+        numero_parcelas: item.numero_parcelas || 1,
         tipo_transacao: item.tipo_transacao as 'entrada' | 'saida',
         data_pagamento: item.data_pagamento,
         observacoes: item.observacoes
@@ -104,11 +108,11 @@ export const CaixaList = () => {
   const calcularTotais = () => {
     const entradas = movimentos
       .filter(m => m.tipo_transacao === 'entrada')
-      .reduce((sum, m) => sum + m.valor, 0);
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? m.valor_original : m.valor), 0);
     
     const saidas = movimentos
       .filter(m => m.tipo_transacao === 'saida')
-      .reduce((sum, m) => sum + m.valor, 0);
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? m.valor_original : m.valor), 0);
 
     return { entradas, saidas, saldo: entradas - saidas };
   };
@@ -147,13 +151,16 @@ export const CaixaList = () => {
       }
 
       const tipo = movimento.tipo_transacao === 'entrada' ? 'ENT' : 'SAI';
+      const valorDisplay = movimento.numero_parcelas > 1 ? movimento.valor_original : movimento.valor;
       const valor = movimento.tipo_transacao === 'entrada' ? 
-        `+R$ ${movimento.valor.toFixed(2)}` : 
-        `-R$ ${movimento.valor.toFixed(2)}`;
+        `+R$ ${valorDisplay.toFixed(2)}` : 
+        `-R$ ${valorDisplay.toFixed(2)}`;
+
+      const parcelaInfo = movimento.numero_parcelas > 1 ? ` (${movimento.numero_parcelas}x)` : '';
 
       doc.text([
         `${format(new Date(movimento.data_pagamento), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`,
-        `${tipo} | ${movimento.cliente_nome} | ${movimento.servico_nome}`,
+        `${tipo} | ${movimento.cliente_nome} | ${movimento.servico_nome}${parcelaInfo}`,
         `${movimento.forma_pagamento_nome} | ${valor}`
       ], 20, y);
 
@@ -315,52 +322,72 @@ export const CaixaList = () => {
               Nenhum movimento encontrado no período selecionado.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Data/Hora</th>
-                    <th className="text-left p-2">Tipo</th>
-                    <th className="text-left p-2">Cliente</th>
-                    <th className="text-left p-2">Consultor</th>
-                    <th className="text-left p-2">Serviço</th>
-                    <th className="text-left p-2">Forma Pagto</th>
-                    <th className="text-right p-2">Valor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {movimentos.map((movimento) => (
-                    <tr key={movimento.id} className="border-b hover:bg-muted/50">
-                      <td className="p-2">
-                        {format(new Date(movimento.data_pagamento), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                      </td>
-                      <td className="p-2">
-                        <div className={`flex items-center space-x-1 ${
-                          movimento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {movimento.tipo_transacao === 'entrada' ? (
-                            <TrendingUp className="h-4 w-4" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4" />
-                          )}
-                          <span className="text-xs font-medium">
-                            {movimento.tipo_transacao === 'entrada' ? 'ENT' : 'SAI'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-2">{movimento.cliente_nome}</td>
-                      <td className="p-2">{movimento.consultor_nome}</td>
-                      <td className="p-2">{movimento.servico_nome}</td>
-                      <td className="p-2">{movimento.forma_pagamento_nome}</td>
-                      <td className={`p-2 text-right font-medium ${
+            <div className="space-y-4">
+              {movimentos.map((movimento) => (
+                <div key={movimento.id}>
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        {movimento.tipo_transacao === 'entrada' ? (
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4 text-red-600" />
+                        )}
+                        <span className="font-medium">{movimento.cliente_nome}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {format(new Date(movimento.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}
+                        </span>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Consultor: {movimento.consultor_nome}</div>
+                        <div>Serviço: {movimento.servico_nome}</div>
+                        <div>Forma de Pagamento: {movimento.forma_pagamento_nome}</div>
+                        {movimento.numero_parcelas > 1 && (
+                          <div className="text-blue-600 font-medium">
+                            {movimento.numero_parcelas}x de R$ {(movimento.valor_original / movimento.numero_parcelas).toFixed(2)} 
+                            = R$ {movimento.valor_original.toFixed(2)}
+                          </div>
+                        )}
+                        {movimento.observacoes && (
+                          <div>Obs: {movimento.observacoes}</div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${
                         movimento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {movimento.tipo_transacao === 'entrada' ? '+' : '-'}R$ {movimento.valor.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {movimento.tipo_transacao === 'entrada' ? '+' : '-'} 
+                        R$ {movimento.numero_parcelas > 1 ? movimento.valor_original.toFixed(2) : movimento.valor.toFixed(2)}
+                      </div>
+                      
+                      {movimento.numero_parcelas > 1 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={() => setShowParcelas(showParcelas === movimento.id ? null : movimento.id)}
+                        >
+                          {showParcelas === movimento.id ? 'Ocultar' : 'Ver'} Parcelas
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {showParcelas === movimento.id && movimento.numero_parcelas > 1 && (
+                    <div className="mt-4">
+                      <ParcelasList 
+                        pagamentoId={movimento.id}
+                        clienteNome={movimento.cliente_nome}
+                        valorTotal={movimento.valor_original}
+                        numeroParcelas={movimento.numero_parcelas}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

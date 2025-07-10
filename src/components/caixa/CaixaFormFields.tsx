@@ -29,9 +29,13 @@ interface CaixaFormFieldsProps {
   setDataPagamento: (data: Date) => void;
   formasPagamento: FormaPagamento[];
   formaPagamentoId: string;
-  setFormaPagamentoId: (id: string) => void;
+  handleFormaPagamentoChange: (id: string) => void;
   observacoes: string;
   setObservacoes: (obs: string) => void;
+  numeroParcelas: number;
+  setNumeroParcelas: (num: number) => void;
+  isParcelado: boolean;
+  setIsParcelado: (parcelado: boolean) => void;
 }
 
 export const CaixaFormFields = ({
@@ -51,9 +55,13 @@ export const CaixaFormFields = ({
   setDataPagamento,
   formasPagamento,
   formaPagamentoId,
-  setFormaPagamentoId,
+  handleFormaPagamentoChange,
   observacoes,
-  setObservacoes
+  setObservacoes,
+  numeroParcelas,
+  setNumeroParcelas,
+  isParcelado,
+  setIsParcelado
 }: CaixaFormFieldsProps) => {
   return (
     <div className="space-y-6">
@@ -173,7 +181,7 @@ export const CaixaFormFields = ({
       {/* Forma de Pagamento */}
       <div className="space-y-2">
         <Label htmlFor="forma_pagamento">Forma de Pagamento *</Label>
-        <Select value={formaPagamentoId} onValueChange={setFormaPagamentoId}>
+        <Select value={formaPagamentoId} onValueChange={handleFormaPagamentoChange}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a forma de pagamento" />
           </SelectTrigger>
@@ -186,6 +194,28 @@ export const CaixaFormFields = ({
           </SelectContent>
         </Select>
       </div>
+
+      {/* Parcelamento - só mostra se for parcelado */}
+      {isParcelado && (
+        <div className="space-y-2">
+          <Label htmlFor="parcelas">Número de Parcelas *</Label>
+          <Select 
+            value={numeroParcelas.toString()} 
+            onValueChange={(value) => setNumeroParcelas(parseInt(value))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o número de parcelas" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}x de R$ {(parseFloat(valor || '0') / num).toFixed(2)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Observações */}
       <div className="space-y-2">

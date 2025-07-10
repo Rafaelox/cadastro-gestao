@@ -18,7 +18,7 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
     servicoId,
     handleServicoChange,
     formaPagamentoId,
-    setFormaPagamentoId,
+    handleFormaPagamentoChange,
     valor,
     setValor,
     tipoTransacao,
@@ -27,6 +27,10 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
     setDataPagamento,
     observacoes,
     setObservacoes,
+    numeroParcelas,
+    setNumeroParcelas,
+    isParcelado,
+    setIsParcelado,
     handleSubmit
   } = useCaixaForm(atendimentoId, onSuccess);
 
@@ -57,9 +61,13 @@ export const CaixaForm = ({ onSuccess, atendimentoId }: CaixaFormProps) => {
             setDataPagamento={setDataPagamento}
             formasPagamento={formasPagamento}
             formaPagamentoId={formaPagamentoId}
-            setFormaPagamentoId={setFormaPagamentoId}
+            handleFormaPagamentoChange={handleFormaPagamentoChange}
             observacoes={observacoes}
             setObservacoes={setObservacoes}
+            numeroParcelas={numeroParcelas}
+            setNumeroParcelas={setNumeroParcelas}
+            isParcelado={isParcelado}
+            setIsParcelado={setIsParcelado}
           />
 
           <div className="flex space-x-2 pt-4">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { FormaPagamento, Consultor, Servico, Cliente } from "./types";
@@ -19,6 +19,8 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
   const [tipoTransacao, setTipoTransacao] = useState<"entrada" | "saida">("entrada");
   const [dataPagamento, setDataPagamento] = useState<Date>(new Date());
   const [observacoes, setObservacoes] = useState("");
+  const [numeroParcelas, setNumeroParcelas] = useState(1);
+  const [isParcelado, setIsParcelado] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -61,9 +63,22 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
       return;
     }
 
+    if (isParcelado && numeroParcelas < 1) {
+      toast({
+        variant: "destructive",
+        title: "Erro nas parcelas",
+        description: "Número de parcelas deve ser maior que zero."
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const valorOriginal = parseFloat(valor);
+      const valorPorParcela = valorOriginal / numeroParcelas;
+
+      // Inserir o pagamento principal
+      const { data: pagamentoData, error: pagamentoError } = await supabase
         .from('pagamentos')
         .insert({
           atendimento_id: atendimentoId || 0,
@@ -71,17 +86,57 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
           consultor_id: parseInt(consultorId),
           servico_id: parseInt(servicoId),
           forma_pagamento_id: parseInt(formaPagamentoId),
-          valor: parseFloat(valor),
+          valor: valorPorParcela, // Valor da primeira parcela
+          valor_original: valorOriginal,
+          numero_parcelas: numeroParcelas,
           tipo_transacao: tipoTransacao,
           data_pagamento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
           observacoes: observacoes || null
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (pagamentoError) throw pagamentoError;
+
+      // Se for parcelado, criar as parcelas individuais
+      if (isParcelado && numeroParcelas > 1) {
+        const parcelas = [];
+        for (let i = 0; i < numeroParcelas; i++) {
+          const dataVencimento = addMonths(dataPagamento, i);
+          parcelas.push({
+            pagamento_id: pagamentoData.id,
+            numero_parcela: i + 1,
+            valor_parcela: valorPorParcela,
+            data_vencimento: format(dataVencimento, 'yyyy-MM-dd HH:mm:ss'),
+            data_pagamento: i === 0 ? format(dataPagamento, 'yyyy-MM-dd HH:mm:ss') : null,
+            status: i === 0 ? 'pago' : 'pendente'
+          });
+        }
+
+        const { error: parcelasError } = await supabase
+          .from('parcelas')
+          .insert(parcelas);
+
+        if (parcelasError) throw parcelasError;
+      } else {
+        // Criar uma única parcela para pagamento à vista
+        const { error: parcelaError } = await supabase
+          .from('parcelas')
+          .insert({
+            pagamento_id: pagamentoData.id,
+            numero_parcela: 1,
+            valor_parcela: valorOriginal,
+            data_vencimento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
+            data_pagamento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
+            status: 'pago'
+          });
+
+        if (parcelaError) throw parcelaError;
+      }
 
       toast({
         title: "Sucesso",
-        description: `${tipoTransacao === 'entrada' ? 'Recebimento' : 'Pagamento'} registrado com sucesso!`
+        description: `${tipoTransacao === 'entrada' ? 'Recebimento' : 'Pagamento'} ${isParcelado ? `em ${numeroParcelas}x` : ''} registrado com sucesso!`
       });
 
       // Limpar formulário
@@ -92,6 +147,8 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
       setValor("");
       setObservacoes("");
       setDataPagamento(new Date());
+      setNumeroParcelas(1);
+      setIsParcelado(false);
 
       onSuccess?.();
     } catch (error) {
@@ -114,6 +171,20 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
     }
   };
 
+  const handleFormaPagamentoChange = (value: string) => {
+    setFormaPagamentoId(value);
+    const formaPagamento = formasPagamento.find(f => f.id.toString() === value);
+    
+    // Se for cartão de crédito, permitir parcelamento
+    if (formaPagamento?.nome.toLowerCase().includes('cartão') || 
+        formaPagamento?.nome.toLowerCase().includes('credito')) {
+      setIsParcelado(true);
+    } else {
+      setIsParcelado(false);
+      setNumeroParcelas(1);
+    }
+  };
+
   return {
     isLoading,
     formasPagamento,
@@ -126,7 +197,7 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
     servicoId,
     handleServicoChange,
     formaPagamentoId,
-    setFormaPagamentoId,
+    handleFormaPagamentoChange,
     valor,
     setValor,
     tipoTransacao,
@@ -135,6 +206,10 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
     setDataPagamento,
     observacoes,
     setObservacoes,
+    numeroParcelas,
+    setNumeroParcelas,
+    isParcelado,
+    setIsParcelado,
     handleSubmit
   };
 };
