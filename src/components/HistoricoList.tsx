@@ -98,13 +98,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
     try {
       let query = supabase
         .from('historico')
-        .select(`
-          *,
-          clientes!historico_cliente_id_fkey(nome),
-          consultores!historico_consultor_id_fkey(nome),
-          servicos!historico_servico_id_fkey(nome, preco),
-          formas_pagamento!historico_forma_pagamento_fkey(nome)
-        `)
+        .select('*')
         .order('data_atendimento', { ascending: false });
 
       if (clienteId) {
@@ -119,36 +113,40 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
 
       if (error) throw error;
 
-      // Enriquecer dados com nomes
+      // Enriquecer dados com nomes dos relacionamentos
       const enrichedData = await Promise.all(
-        (historicoData || []).map(async (item) => {
+        (historicoData || []).map(async (item: any) => {
           // Buscar nome do consultor
           const { data: consultor } = await supabase
             .from('consultores')
             .select('nome')
             .eq('id', item.consultor_id)
-            .single();
+            .maybeSingle();
 
           // Buscar nome do serviço
           const { data: servico } = await supabase
             .from('servicos')
             .select('nome')
             .eq('id', item.servico_id)
-            .single();
+            .maybeSingle();
 
           // Buscar nome do cliente
           const { data: cliente } = await supabase
             .from('clientes')
             .select('nome')
             .eq('id', item.cliente_id)
-            .single();
+            .maybeSingle();
 
-          // Buscar nome da forma de pagamento
-          const { data: formaPagamento } = await supabase
-            .from('formas_pagamento')
-            .select('nome')
-            .eq('id', item.forma_pagamento)
-            .single();
+          // Buscar nome da forma de pagamento se existir
+          let formaPagamento = null;
+          if (item.forma_pagamento) {
+            const { data } = await supabase
+              .from('formas_pagamento')
+              .select('nome')
+              .eq('id', item.forma_pagamento)
+              .maybeSingle();
+            formaPagamento = data;
+          }
 
           return {
             ...item,
@@ -162,6 +160,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
 
       setHistorico(enrichedData);
     } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
       toast({
         variant: "destructive",
         title: "Erro ao carregar histórico",
