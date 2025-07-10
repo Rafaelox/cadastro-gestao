@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { db, Cliente, Categoria, Origem, formatCPF, formatCEP, formatPhone, validateCPF, validateEmail } from "@/lib/database";
-import { Save, Search, X } from "lucide-react";
+import { Save, Search } from "lucide-react";
 
 interface ClienteFormProps {
   cliente?: Cliente;
@@ -169,24 +169,12 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl text-foreground">
-              {cliente ? 'Editar Cliente' : 'Novo Cliente'}
-            </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {cliente ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente no sistema'}
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+        <CardTitle className="text-xl text-foreground">
+          {cliente ? 'Editar Cliente' : 'Novo Cliente'}
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
+          {cliente ? 'Atualize os dados do cliente' : 'Cadastre um novo cliente no sistema'}
+        </CardDescription>
       </CardHeader>
 
       <CardContent>
