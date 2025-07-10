@@ -8,12 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { UserPlus, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { TipoPermissao } from "@/contexts/AuthContext";
 
 interface Usuario {
   id: string;
   nome: string;
   email: string;
-  permissao: 'admin' | 'user';
+  permissao: TipoPermissao;
   ativo: boolean;
 }
 
@@ -27,7 +28,7 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
     nome: '',
     email: '',
     senha: '',
-    permissao: 'user' as 'admin' | 'user',
+    permissao: 'user' as TipoPermissao,
     ativo: true
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -166,7 +167,7 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
               <Label htmlFor="permissao">Permissão</Label>
               <Select
                 value={formData.permissao}
-                onValueChange={(value: 'admin' | 'user') => 
+                onValueChange={(value: TipoPermissao) => 
                   setFormData({ ...formData, permissao: value })
                 }
               >
@@ -175,7 +176,9 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="secretaria">Secretaria</SelectItem>
+                  <SelectItem value="gerente">Gerente</SelectItem>
+                  <SelectItem value="master">Master</SelectItem>
                 </SelectContent>
               </Select>
             </div>

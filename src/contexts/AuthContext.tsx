@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type TipoPermissao = 'master' | 'gerente' | 'secretaria' | 'user';
+
 interface Usuario {
   id: string;
   nome: string;
   email: string;
-  permissao: 'admin' | 'user';
+  permissao: TipoPermissao;
   ativo: boolean;
 }
 
@@ -14,7 +16,14 @@ interface AuthContextType {
   login: (email: string, senha: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
-  isAdmin: boolean;
+  isMaster: boolean;
+  isGerente: boolean;
+  isSecretaria: boolean;
+  isUser: boolean;
+  canManageUsers: boolean;
+  canManageSettings: boolean;
+  canViewReports: boolean;
+  canManagePayments: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         id: data.id,
         nome: data.nome,
         email: data.email,
-        permissao: data.permissao as 'admin' | 'user',
+        permissao: data.permissao as TipoPermissao,
         ativo: data.ativo
       };
 
@@ -84,7 +93,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     isAuthenticated: !!usuario,
-    isAdmin: usuario?.permissao === 'admin'
+    isMaster: usuario?.permissao === 'master',
+    isGerente: usuario?.permissao === 'gerente',
+    isSecretaria: usuario?.permissao === 'secretaria',
+    isUser: usuario?.permissao === 'user',
+    canManageUsers: ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canManageSettings: ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canViewReports: ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
+    canManagePayments: ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
   };
 
   if (isLoading) {

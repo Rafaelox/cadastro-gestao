@@ -24,7 +24,7 @@ export const Configuracoes = () => {
   const [editingConsultor, setEditingConsultor] = useState<Consultor | null>(null);
   const [showUsuarioForm, setShowUsuarioForm] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState<any>(null);
-  const { isAdmin } = useAuth();
+  const { canManageUsers } = useAuth();
 
   const handleEditServico = (servico: Servico) => {
     setEditingServico(servico);
@@ -195,7 +195,7 @@ export const Configuracoes = () => {
             <Settings className="h-4 w-4" />
             <span>Pagamentos</span>
           </TabsTrigger>
-          {isAdmin && (
+          {canManageUsers && (
             <TabsTrigger value="usuarios" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Usuários</span>
@@ -250,7 +250,7 @@ export const Configuracoes = () => {
             <Settings className="h-4 w-4" />
             <span>Pagamentos</span>
           </Button>
-          {isAdmin && (
+          {canManageUsers && (
             <Button 
               variant="outline" 
               size="sm"
@@ -333,7 +333,7 @@ export const Configuracoes = () => {
           </Card>
         </TabsContent>
 
-        {isAdmin && (
+        {canManageUsers && (
           <TabsContent value="usuarios" className="space-y-6">
             <Card>
               <CardHeader>

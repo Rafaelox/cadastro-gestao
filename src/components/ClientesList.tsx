@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { db, Cliente, Categoria, Origem } from "@/lib/database";
 import { Plus, Search, Edit, Trash2, Eye, Filter } from "lucide-react";
+import { ActionButtonGuard } from "@/components/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ClientesListProps {
   onEdit: (cliente: Cliente) => void;
@@ -20,6 +22,7 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
   const [origens, setOrigens] = useState<Origem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const { permissions } = usePermissions();
   
   // Filtros
   const [filters, setFilters] = useState({
@@ -145,13 +148,15 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filtros
               </Button>
-              <Button
-                onClick={onNew}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Cliente
-              </Button>
+              <ActionButtonGuard requiredPermissions={['canCreateClient']}>
+                <Button
+                  onClick={onNew}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              </ActionButtonGuard>
             </div>
           </div>
         </CardHeader>
@@ -331,22 +336,26 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
                   </div>
 
                   <div className="flex gap-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(cliente)}
-                      className="border-border hover:bg-muted/50"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(cliente.id!)}
-                      className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <ActionButtonGuard requiredPermissions={['canEditClient']}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(cliente)}
+                        className="border-border hover:bg-muted/50"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    </ActionButtonGuard>
+                    <ActionButtonGuard requiredPermissions={['canDeleteClient']}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(cliente.id!)}
+                        className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </ActionButtonGuard>
                   </div>
                 </div>
               </CardContent>

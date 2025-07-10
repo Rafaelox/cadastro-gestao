@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Plus, Edit, Trash2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, TipoPermissao } from "@/contexts/AuthContext";
 
 interface Usuario {
   id: string;
   nome: string;
   email: string;
-  permissao: 'admin' | 'user';
+  permissao: TipoPermissao;
   ativo: boolean;
   created_at: string;
 }
@@ -24,7 +24,7 @@ interface UsuariosListProps {
 export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAdmin } = useAuth();
+  const { canManageUsers } = useAuth();
 
   const loadUsuarios = async () => {
     try {
@@ -37,7 +37,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
 
       setUsuarios((data || []).map(user => ({
         ...user,
-        permissao: user.permissao as 'admin' | 'user'
+        permissao: user.permissao as TipoPermissao
       })));
     } catch (error) {
       toast({
@@ -118,7 +118,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
             <Users className="h-5 w-5" />
             <span>Usuários do Sistema</span>
           </CardTitle>
-          {isAdmin && (
+          {canManageUsers && (
             <Button onClick={onAdd} className="flex items-center space-x-2">
               <Plus className="h-4 w-4" />
               <span>Novo Usuário</span>
@@ -146,11 +146,15 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge 
-                          variant={usuario.permissao === 'admin' ? 'default' : 'secondary'}
+                          variant={usuario.permissao === 'master' ? 'default' : 'secondary'}
                           className="flex items-center space-x-1"
                         >
                           <Shield className="h-3 w-3" />
-                          <span>{usuario.permissao === 'admin' ? 'Administrador' : 'Usuário'}</span>
+                          <span>{
+                            usuario.permissao === 'master' ? 'Master' :
+                            usuario.permissao === 'gerente' ? 'Gerente' :
+                            usuario.permissao === 'secretaria' ? 'Secretaria' : 'Usuário'
+                          }</span>
                         </Badge>
                         <Badge 
                           variant={usuario.ativo ? 'default' : 'destructive'}
@@ -160,7 +164,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
                       </div>
                     </div>
                   </div>
-                  {isAdmin && (
+                  {canManageUsers && (
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"

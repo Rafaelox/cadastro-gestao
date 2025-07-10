@@ -35,7 +35,9 @@ export const Header = () => {
             <div className="text-right">
               <p className="text-sm font-medium">{usuario.nome}</p>
               <p className="text-xs text-muted-foreground">
-                {usuario.permissao === 'admin' ? 'Administrador' : 'Usuário'}
+                {usuario.permissao === 'master' ? 'Master' : 
+                 usuario.permissao === 'gerente' ? 'Gerente' :
+                 usuario.permissao === 'secretaria' ? 'Secretaria' : 'Usuário'}
               </p>
             </div>
             <Button 

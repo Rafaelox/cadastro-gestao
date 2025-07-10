@@ -18,6 +18,7 @@ import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { AuditLogs } from "@/components/AuditLogs";
 import { Cliente } from "@/lib/database";
 import { useAuth } from "@/contexts/AuthContext";
+import { ActionButtonGuard } from "@/components/PermissionGuard";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
