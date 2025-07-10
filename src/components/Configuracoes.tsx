@@ -7,12 +7,16 @@ import { ServicoForm } from "@/components/ServicoForm";
 import { ServicosList } from "@/components/ServicosList";
 import { CategoriasList } from "@/components/CategoriasList";
 import { OrigensList } from "@/components/OrigensList";
-import { type Servico } from "@/lib/database";
+import { ConsultorForm } from "@/components/ConsultorForm";
+import { ConsultoresList } from "@/components/ConsultoresList";
+import { type Servico, type Consultor } from "@/lib/database";
 
 export const Configuracoes = () => {
   const [activeTab, setActiveTab] = useState("servicos");
   const [showServicoForm, setShowServicoForm] = useState(false);
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
+  const [showConsultorForm, setShowConsultorForm] = useState(false);
+  const [editingConsultor, setEditingConsultor] = useState<Consultor | null>(null);
 
   const handleEditServico = (servico: Servico) => {
     setEditingServico(servico);
@@ -27,6 +31,21 @@ export const Configuracoes = () => {
   const handleServicoSuccess = () => {
     setShowServicoForm(false);
     setEditingServico(null);
+  };
+
+  const handleEditConsultor = (consultor: Consultor) => {
+    setEditingConsultor(consultor);
+    setShowConsultorForm(true);
+  };
+
+  const handleAddConsultor = () => {
+    setEditingConsultor(null);
+    setShowConsultorForm(true);
+  };
+
+  const handleConsultorSuccess = () => {
+    setShowConsultorForm(false);
+    setEditingConsultor(null);
   };
 
   const renderServicosContent = () => {
@@ -53,6 +72,37 @@ export const Configuracoes = () => {
       <ServicosList
         onEdit={handleEditServico}
         onAdd={handleAddServico}
+      />
+    );
+  };
+
+  const renderConsultoresContent = () => {
+    if (showConsultorForm) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">
+              {editingConsultor ? "Editar Consultor" : "Novo Consultor"}
+            </h3>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConsultorForm(false)}
+            >
+              Voltar
+            </Button>
+          </div>
+          <ConsultorForm 
+            editingConsultor={editingConsultor}
+            onSuccess={handleConsultorSuccess} 
+          />
+        </div>
+      );
+    }
+
+    return (
+      <ConsultoresList
+        onEdit={handleEditConsultor}
+        onAdd={handleAddConsultor}
       />
     );
   };
@@ -112,11 +162,7 @@ export const Configuracoes = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <UserCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Funcionalidade em desenvolvimento</p>
-                <p className="text-sm">Em breve você poderá gerenciar os consultores aqui.</p>
-              </div>
+              {renderConsultoresContent()}
             </CardContent>
           </Card>
         </TabsContent>
