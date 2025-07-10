@@ -11,13 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
-
-declare module "jspdf" {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from "jspdf-autotable";
 
 interface HistoricoComNomes extends Historico {
   cliente_nome?: string;
@@ -160,7 +154,7 @@ export const HistoricoDiario = () => {
           formatarMoeda(item.valor_final || item.valor_servico)
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
           startY: yPosition,
           head: [["Horário", "Cliente", "Serviço", "Valor"]],
           body: dadosTabela,
@@ -170,7 +164,7 @@ export const HistoricoDiario = () => {
           margin: { left: 20, right: 20 }
         });
 
-        yPosition = (doc as any).lastAutoTable.finalY + 15;
+        yPosition = (doc as any).autoTable.previous.finalY + 15;
 
         // Total do dia
         const totalDia = atendimentos.reduce((total, item) => total + (item.valor_final || item.valor_servico), 0);

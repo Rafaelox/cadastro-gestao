@@ -67,7 +67,7 @@ export const generateReportPDF = ({
     sum + (item.valor_final || item.valor_servico || 0), 0
   );
   
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = (doc as any).autoTable.previous.finalY + 10;
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
   doc.text(`Total: R$ ${total.toFixed(2)}`, 20, finalY);
