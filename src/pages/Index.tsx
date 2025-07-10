@@ -10,6 +10,8 @@ import { Agenda } from "@/components/Agenda";
 import { Dashboard } from "@/components/Dashboard";
 import { RelatorioForm } from "@/components/relatorios/RelatorioForm";
 import { HistoricoDiario } from "@/components/HistoricoDiario";
+import { CaixaForm } from "@/components/CaixaForm";
+import { CaixaList } from "@/components/CaixaList";
 import { Cliente } from "@/lib/database";
 
 const Index = () => {

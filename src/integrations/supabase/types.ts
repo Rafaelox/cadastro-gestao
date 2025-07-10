@@ -353,6 +353,59 @@ export type Database = {
         }
         Relationships: []
       }
+      pagamentos: {
+        Row: {
+          atendimento_id: number
+          cliente_id: number
+          consultor_id: number
+          created_at: string
+          data_pagamento: string
+          forma_pagamento_id: number
+          id: number
+          observacoes: string | null
+          servico_id: number
+          tipo_transacao: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          atendimento_id: number
+          cliente_id: number
+          consultor_id: number
+          created_at?: string
+          data_pagamento?: string
+          forma_pagamento_id: number
+          id?: number
+          observacoes?: string | null
+          servico_id: number
+          tipo_transacao: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          atendimento_id?: number
+          cliente_id?: number
+          consultor_id?: number
+          created_at?: string
+          data_pagamento?: string
+          forma_pagamento_id?: number
+          id?: number
+          observacoes?: string | null
+          servico_id?: number
+          tipo_transacao?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_forma_pagamento_id_fkey"
+            columns: ["forma_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "formas_pagamento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servicos: {
         Row: {
           ativo: boolean

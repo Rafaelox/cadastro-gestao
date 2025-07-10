@@ -14,6 +14,7 @@ import { Loader2, Save, Calendar as CalendarIcon, Clock, User, Briefcase } from 
 import { useToast } from "@/hooks/use-toast";
 import { db, type Consultor, type Servico } from "@/lib/database";
 import { cn } from "@/lib/utils";
+import { ClienteSearch } from "./ClienteSearch";
 
 interface AgendaFormProps {
   onSuccess?: () => void;
@@ -201,18 +202,13 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
           </div>
 
           {/* Cliente */}
-          <div className="space-y-2">
-            <Label htmlFor="cliente_id">Cliente *</Label>
-            <Input
-              id="cliente_id"
-              type="number"
-              {...register("cliente_id", { required: "Cliente é obrigatório" })}
-              placeholder="ID do cliente"
-            />
-            {errors.cliente_id && (
-              <p className="text-sm text-destructive">{errors.cliente_id.message}</p>
-            )}
-          </div>
+          <ClienteSearch
+            onClienteSelect={(cliente) => setValue("cliente_id", cliente.id)}
+            placeholder="Pesquisar cliente por nome, CPF, telefone ou email"
+          />
+          {errors.cliente_id && (
+            <p className="text-sm text-destructive">{errors.cliente_id.message}</p>
+          )}
 
           {/* Consultor */}
           <div className="space-y-2 p-4 bg-primary/5 rounded-lg border-l-4 border-primary">

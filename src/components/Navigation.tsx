@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History } from "lucide-react";
+import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign } from "lucide-react";
 
 interface NavigationProps {
   activeTab: string;
@@ -38,6 +38,12 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       label: 'Relatórios',
       icon: FileBarChart,
       description: 'Relatórios e PDF'
+    },
+    {
+      id: 'caixa',
+      label: 'Caixa',
+      icon: DollarSign,
+      description: 'Controle financeiro'
     },
     {
       id: 'categorias',

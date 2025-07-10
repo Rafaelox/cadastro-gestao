@@ -12,7 +12,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { db, FormaPagamento } from "@/lib/database";
 import { toast } from "@/hooks/use-toast";
 
 interface AtendimentoFormProps {
@@ -37,17 +36,13 @@ interface AgendaDetalhes {
 
 export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFormProps) => {
   const [agenda, setAgenda] = useState<AgendaDetalhes | null>(null);
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dataAtendimento, setDataAtendimento] = useState<Date>(new Date());
-  const [valorFinal, setValorFinal] = useState("");
-  const [formaPagamento, setFormaPagamento] = useState("");
   const [procedimentosRealizados, setProcedimentosRealizados] = useState("");
   const [observacoesAtendimento, setObservacoesAtendimento] = useState("");
 
   useEffect(() => {
     loadAgenda();
-    loadFormasPagamento();
   }, [agendaId]);
 
   const loadAgenda = async () => {
@@ -75,7 +70,6 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           servico_nome: data.servicos?.nome || '',
         };
         setAgenda(agendaFormatada);
-        setValorFinal(data.valor_servico?.toString() || '');
       }
     } catch (error) {
       console.error('Erro ao carregar agenda:', error);
@@ -89,19 +83,6 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
     }
   };
 
-  const loadFormasPagamento = async () => {
-    try {
-      const data = await db.getFormasPagamento();
-      setFormasPagamento(data.filter(fp => fp.ativo));
-    } catch (error) {
-      console.error('Erro ao carregar formas de pagamento:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível carregar as formas de pagamento."
-      });
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,9 +100,9 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
           data_agendamento: agenda.data_agendamento,
           valor_servico: agenda.valor_servico,
-          valor_final: parseFloat(valorFinal) || agenda.valor_servico,
+          valor_final: agenda.valor_servico,
           comissao_consultor: agenda.comissao_consultor,
-          forma_pagamento: parseInt(formaPagamento),
+          forma_pagamento: null,
           procedimentos_realizados: procedimentosRealizados,
           observacoes_atendimento: observacoesAtendimento
         });
@@ -212,61 +193,31 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           </div>
 
           {/* Dados do Atendimento */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="data_atendimento">Data do Atendimento *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dataAtendimento && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataAtendimento ? format(dataAtendimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dataAtendimento}
-                    onSelect={(date) => date && setDataAtendimento(date)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="valor_final">Valor Final</Label>
-              <Input
-                id="valor_final"
-                type="number"
-                step="0.01"
-                value={valorFinal}
-                onChange={(e) => setValorFinal(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
-            <Select value={formaPagamento} onValueChange={setFormaPagamento}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a forma de pagamento" />
-              </SelectTrigger>
-              <SelectContent>
-                {formasPagamento.map((fp) => (
-                  <SelectItem key={fp.id} value={fp.id!.toString()}>
-                    {fp.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="data_atendimento">Data do Atendimento *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dataAtendimento && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataAtendimento ? format(dataAtendimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={dataAtendimento}
+                  onSelect={(date) => date && setDataAtendimento(date)}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
