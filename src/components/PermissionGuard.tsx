@@ -58,17 +58,8 @@ export const ActionButtonGuard = ({
     ? hasAllPermissions(requiredPermissions as any)
     : hasAnyPermission(requiredPermissions as any);
 
-  console.log('ActionButtonGuard - Verificando permissões:', {
-    requiredPermissions,
-    hasPermission,
-    requireAll
-  });
-
   if (!hasPermission) {
-    console.log('ActionButtonGuard - Permissão negada, não renderizando botão');
     return null;
   }
-
-  console.log('ActionButtonGuard - Permissão concedida, renderizando botão');
   return <>{children}</>;
 };
