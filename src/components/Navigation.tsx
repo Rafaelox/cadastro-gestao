@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface NavigationProps {
   activeTab: string;
@@ -8,6 +10,8 @@ interface NavigationProps {
 }
 
 export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  
   const menuItems = [
     {
       id: 'dashboard',
@@ -45,30 +49,13 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       icon: DollarSign,
       description: 'Controle financeiro'
     },
-    {
-      id: 'comissoes',
-      label: 'Comissões',
-      icon: DollarSign,
-      description: 'Extrato de comissões'
-    },
-    {
-      id: 'categorias',
-      label: 'Categorias',
-      icon: Database,
-      description: 'Gerenciar categorias'
-    },
-    {
-      id: 'origens',
-      label: 'Origens',
-      icon: FileText,
-      description: 'Gerenciar origens'
-    },
-    {
-      id: 'configuracoes',
-      label: 'Configurações',
-      icon: Settings,
-      description: 'Gerenciar sistema'
-    }
+  ];
+
+  const configItems = [
+    { id: 'comissoes', label: 'Comissões', icon: DollarSign },
+    { id: 'categorias', label: 'Categorias', icon: Database },
+    { id: 'origens', label: 'Origens', icon: FileText },
+    { id: 'configuracoes', label: 'Configurações', icon: Settings }
   ];
 
   return (
@@ -101,6 +88,53 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
             </Button>
           );
         })}
+
+        {/* Configurações de Sistema com submenu */}
+        <Collapsible open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-12 hover:bg-muted/50 text-foreground"
+            >
+              <Settings className="w-5 h-5 mr-3" />
+              <div className="text-left flex-1">
+                <div className="font-medium">Configurações Sistema</div>
+                <div className="text-xs text-muted-foreground">
+                  Configurações gerais
+                </div>
+              </div>
+              {isConfigOpen ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="ml-4 mt-2 space-y-1">
+            {configItems.map((item) => {
+              const IconComponent = item.icon;
+              const isActive = activeTab === item.id;
+              
+              return (
+                <Button
+                  key={item.id}
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className={`w-full justify-start ${
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => onTabChange(item.id)}
+                >
+                  <IconComponent className="w-4 h-4 mr-2" />
+                  <span>{item.label}</span>
+                </Button>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </Card>
   );
