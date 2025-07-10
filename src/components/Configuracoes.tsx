@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Database, FileText, Briefcase, UserCheck } from "lucide-react";
+import { Settings, Users, Database, FileText, Briefcase, UserCheck, Shield } from "lucide-react";
 import { ServicoForm } from "@/components/ServicoForm";
 import { ServicosList } from "@/components/ServicosList";
 import { CategoriasList } from "@/components/CategoriasList";
@@ -10,7 +10,10 @@ import { OrigensList } from "@/components/OrigensList";
 import { ConsultorForm } from "@/components/ConsultorForm";
 import { ConsultoresList } from "@/components/ConsultoresList";
 import { FormasPagamentoList } from "@/components/FormasPagamentoList";
+import { UsuariosList } from "@/components/UsuariosList";
+import { UsuarioForm } from "@/components/UsuarioForm";
 import { type Servico, type Consultor } from "@/lib/database";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Configuracoes = () => {
   const [activeTab, setActiveTab] = useState("servicos");
@@ -18,6 +21,9 @@ export const Configuracoes = () => {
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
   const [showConsultorForm, setShowConsultorForm] = useState(false);
   const [editingConsultor, setEditingConsultor] = useState<Consultor | null>(null);
+  const [showUsuarioForm, setShowUsuarioForm] = useState(false);
+  const [editingUsuario, setEditingUsuario] = useState<any>(null);
+  const { isAdmin } = useAuth();
 
   const handleEditServico = (servico: Servico) => {
     setEditingServico(servico);
@@ -47,6 +53,21 @@ export const Configuracoes = () => {
   const handleConsultorSuccess = () => {
     setShowConsultorForm(false);
     setEditingConsultor(null);
+  };
+
+  const handleEditUsuario = (usuario: any) => {
+    setEditingUsuario(usuario);
+    setShowUsuarioForm(true);
+  };
+
+  const handleAddUsuario = () => {
+    setEditingUsuario(null);
+    setShowUsuarioForm(true);
+  };
+
+  const handleUsuarioSuccess = () => {
+    setShowUsuarioForm(false);
+    setEditingUsuario(null);
   };
 
   const renderServicosContent = () => {
@@ -108,6 +129,37 @@ export const Configuracoes = () => {
     );
   };
 
+  const renderUsuariosContent = () => {
+    if (showUsuarioForm) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">
+              {editingUsuario ? "Editar Usuário" : "Novo Usuário"}
+            </h3>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowUsuarioForm(false)}
+            >
+              Voltar
+            </Button>
+          </div>
+          <UsuarioForm 
+            usuario={editingUsuario}
+            onSuccess={handleUsuarioSuccess} 
+          />
+        </div>
+      );
+    }
+
+    return (
+      <UsuariosList
+        onEdit={handleEditUsuario}
+        onAdd={handleAddUsuario}
+      />
+    );
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center space-x-3">
@@ -121,7 +173,7 @@ export const Configuracoes = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="servicos" className="flex items-center space-x-2">
             <Briefcase className="h-4 w-4" />
             <span>Serviços</span>
@@ -140,12 +192,18 @@ export const Configuracoes = () => {
           </TabsTrigger>
           <TabsTrigger value="formas_pagamento" className="flex items-center space-x-2">
             <Settings className="h-4 w-4" />
-            <span>Formas de Pagamento</span>
+            <span>Pagamentos</span>
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="usuarios" className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span>Usuários</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Links rápidos */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 p-4 bg-muted/50 rounded-lg">
           <Button 
             variant="outline" 
             size="sm"
@@ -153,7 +211,7 @@ export const Configuracoes = () => {
             className="flex items-center space-x-2"
           >
             <Briefcase className="h-4 w-4" />
-            <span>Gerenciar Serviços</span>
+            <span>Serviços</span>
           </Button>
           <Button 
             variant="outline" 
@@ -162,7 +220,7 @@ export const Configuracoes = () => {
             className="flex items-center space-x-2"
           >
             <UserCheck className="h-4 w-4" />
-            <span>Gerenciar Consultores</span>
+            <span>Consultores</span>
           </Button>
           <Button 
             variant="outline" 
@@ -171,7 +229,7 @@ export const Configuracoes = () => {
             className="flex items-center space-x-2"
           >
             <Database className="h-4 w-4" />
-            <span>Gerenciar Categorias</span>
+            <span>Categorias</span>
           </Button>
           <Button 
             variant="outline" 
@@ -180,7 +238,7 @@ export const Configuracoes = () => {
             className="flex items-center space-x-2"
           >
             <FileText className="h-4 w-4" />
-            <span>Gerenciar Origens</span>
+            <span>Origens</span>
           </Button>
           <Button 
             variant="outline" 
@@ -189,8 +247,19 @@ export const Configuracoes = () => {
             className="flex items-center space-x-2"
           >
             <Settings className="h-4 w-4" />
-            <span>Formas de Pagamento</span>
+            <span>Pagamentos</span>
           </Button>
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab("usuarios")}
+              className="flex items-center space-x-2"
+            >
+              <Shield className="h-4 w-4" />
+              <span>Usuários</span>
+            </Button>
+          )}
         </div>
 
         <TabsContent value="servicos" className="space-y-6">
@@ -262,6 +331,22 @@ export const Configuracoes = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="usuarios" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Gerenciar Usuários</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderUsuariosContent()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

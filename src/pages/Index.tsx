@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Navigation } from "@/components/Navigation";
 import { ClientesList } from "@/components/ClientesList";
@@ -14,11 +15,20 @@ import { CaixaForm } from "@/components/CaixaForm";
 import { CaixaList } from "@/components/CaixaList";
 import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { Cliente } from "@/lib/database";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleEditCliente = (cliente: Cliente) => {
     setEditingCliente(cliente);
@@ -39,6 +49,10 @@ const Index = () => {
     setShowClienteForm(false);
     setEditingCliente(undefined);
   };
+
+  if (!isAuthenticated) {
+    return null; // Ou um loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
