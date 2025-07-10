@@ -51,11 +51,12 @@ interface HistoricoItem {
   comissao_consultor: number;
   observacoes_atendimento: string | null;
   procedimentos_realizados: string | null;
-  forma_pagamento: string;
+  forma_pagamento: number;
   created_at: string;
   consultor_nome?: string;
   servico_nome?: string;
   cliente_nome?: string;
+  forma_pagamento_nome?: string;
 }
 
 interface HistoricoListProps {
@@ -95,7 +96,13 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
     try {
       let query = supabase
         .from('historico')
-        .select('*')
+        .select(`
+          *,
+          clientes!historico_cliente_id_fkey(nome),
+          consultores!historico_consultor_id_fkey(nome),
+          servicos!historico_servico_id_fkey(nome, preco),
+          formas_pagamento!historico_forma_pagamento_fkey(nome)
+        `)
         .order('data_atendimento', { ascending: false });
 
       if (clienteId) {
@@ -134,11 +141,19 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
             .eq('id', item.cliente_id)
             .single();
 
+          // Buscar nome da forma de pagamento
+          const { data: formaPagamento } = await supabase
+            .from('formas_pagamento')
+            .select('nome')
+            .eq('id', item.forma_pagamento)
+            .single();
+
           return {
             ...item,
             consultor_nome: consultor?.nome || 'Não encontrado',
             servico_nome: servico?.nome || 'Não encontrado',
-            cliente_nome: cliente?.nome || 'Não encontrado'
+            cliente_nome: cliente?.nome || 'Não encontrado',
+            forma_pagamento_nome: formaPagamento?.nome || 'Não informado'
           };
         })
       );
@@ -346,7 +361,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
                           </span>
                         </div>
                         <Badge variant="outline" className="text-xs">
-                          {item.forma_pagamento?.replace('_', ' ').toUpperCase() || 'DINHEIRO'}
+                          {item.forma_pagamento_nome || 'N/A'}
                         </Badge>
                       </div>
                     </div>

@@ -234,6 +234,36 @@ export type Database = {
         }
         Relationships: []
       }
+      formas_pagamento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: number
+          nome: string
+          ordem: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: number
+          nome?: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       historico: {
         Row: {
           agenda_id: number
@@ -243,7 +273,7 @@ export type Database = {
           created_at: string
           data_agendamento: string | null
           data_atendimento: string
-          forma_pagamento: string | null
+          forma_pagamento: number | null
           id: number
           observacoes_atendimento: string | null
           procedimentos_realizados: string | null
@@ -260,7 +290,7 @@ export type Database = {
           created_at?: string
           data_agendamento?: string | null
           data_atendimento: string
-          forma_pagamento?: string | null
+          forma_pagamento?: number | null
           id?: number
           observacoes_atendimento?: string | null
           procedimentos_realizados?: string | null
@@ -277,7 +307,7 @@ export type Database = {
           created_at?: string
           data_agendamento?: string | null
           data_atendimento?: string
-          forma_pagamento?: string | null
+          forma_pagamento?: number | null
           id?: number
           observacoes_atendimento?: string | null
           procedimentos_realizados?: string | null
@@ -286,7 +316,15 @@ export type Database = {
           valor_final?: number | null
           valor_servico?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_historico_forma_pagamento"
+            columns: ["forma_pagamento"]
+            isOneToOne: false
+            referencedRelation: "formas_pagamento"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       origens: {
         Row: {

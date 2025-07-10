@@ -1,484 +1,306 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Loader2, 
-  Save, 
-  Calendar, 
-  Clock, 
-  User, 
-  Briefcase,
-  FileText,
-  Phone,
-  Mail,
-  MapPin,
-  History,
-  CreditCard
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { db, type Agenda, type Cliente, type Consultor, type Servico } from "@/lib/database";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { db, FormaPagamento } from "@/lib/database";
+import { toast } from "@/hooks/use-toast";
 
 interface AtendimentoFormProps {
-  agendamentoId: number;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  agendaId: number;
+  onCancel: () => void;
+  onSuccess: () => void;
 }
 
-interface AtendimentoFormData {
-  observacoes_atendimento: string;
-  procedimentos_realizados: string;
-  valor_final: number;
-  forma_pagamento: string;
+interface AgendaDetalhes {
+  id: number;
+  cliente_id: number;
+  consultor_id: number;
+  servico_id: number;
+  cliente_nome: string;
+  consultor_nome: string;
+  servico_nome: string;
+  data_agendamento: string;
+  valor_servico: number;
+  comissao_consultor: number;
+  observacoes?: string;
 }
 
-export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: AtendimentoFormProps) => {
+export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFormProps) => {
+  const [agenda, setAgenda] = useState<AgendaDetalhes | null>(null);
+  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [agendamento, setAgendamento] = useState<Agenda | null>(null);
-  const [cliente, setCliente] = useState<Cliente | null>(null);
-  const [consultor, setConsultor] = useState<Consultor | null>(null);
-  const [servico, setServico] = useState<Servico | null>(null);
-  const [historicoCliente, setHistoricoCliente] = useState<Agenda[]>([]);
-  const { toast } = useToast();
-
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AtendimentoFormData>({
-    defaultValues: {
-      observacoes_atendimento: "",
-      procedimentos_realizados: "",
-      valor_final: 0,
-      forma_pagamento: "dinheiro"
-    }
-  });
-
-  const formaPagamento = watch("forma_pagamento");
+  const [dataAtendimento, setDataAtendimento] = useState<Date>(new Date());
+  const [valorFinal, setValorFinal] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState("");
+  const [procedimentosRealizados, setProcedimentosRealizados] = useState("");
+  const [observacoesAtendimento, setObservacoesAtendimento] = useState("");
 
   useEffect(() => {
-    loadAtendimentoData();
-  }, [agendamentoId]);
+    loadAgenda();
+    loadFormasPagamento();
+  }, [agendaId]);
 
-  const loadAtendimentoData = async () => {
-    setIsLoading(true);
+  const loadAgenda = async () => {
     try {
-      // Buscar o agendamento
-      const agendamentos = await db.getAgenda();
-      const agendamentoEncontrado = agendamentos.find(a => a.id === agendamentoId);
-      
-      if (!agendamentoEncontrado) {
-        throw new Error("Agendamento não encontrado");
+      const { data, error } = await supabase
+        .from('agenda')
+        .select(`
+          *,
+          clientes!agenda_cliente_id_fkey(nome),
+          consultores!agenda_consultor_id_fkey(nome),
+          servicos!agenda_servico_id_fkey(nome, preco)
+        `)
+        .eq('id', agendaId)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
       }
-      
-      setAgendamento(agendamentoEncontrado);
-      setValue("valor_final", agendamentoEncontrado.valor_servico);
 
-      // Buscar dados do cliente
-      const clienteData = await db.getClienteById(agendamentoEncontrado.cliente_id);
-      setCliente(clienteData);
-
-      // Buscar dados do consultor
-      const consultores = await db.getConsultores();
-      const consultorData = consultores.find(c => c.id === agendamentoEncontrado.consultor_id);
-      setConsultor(consultorData || null);
-
-      // Buscar dados do serviço
-      const servicos = await db.getServicos();
-      const servicoData = servicos.find(s => s.id === agendamentoEncontrado.servico_id);
-      setServico(servicoData || null);
-
-      // Buscar histórico do cliente
-      const historicoData = agendamentos.filter(a => 
-        a.cliente_id === agendamentoEncontrado.cliente_id && 
-        a.id !== agendamentoId &&
-        a.status === 'realizado'
-      ).sort((a, b) => new Date(b.data_agendamento).getTime() - new Date(a.data_agendamento).getTime());
-      
-      setHistoricoCliente(historicoData);
-
+      if (data) {
+        const agendaFormatada = {
+          ...data,
+          cliente_nome: data.clientes?.nome || '',
+          consultor_nome: data.consultores?.nome || '',
+          servico_nome: data.servicos?.nome || '',
+        };
+        setAgenda(agendaFormatada);
+        setValorFinal(data.valor_servico?.toString() || '');
+      }
     } catch (error) {
+      console.error('Erro ao carregar agenda:', error);
       toast({
         variant: "destructive",
-        title: "Erro ao carregar dados",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
+        title: "Erro",
+        description: "Não foi possível carregar os dados do agendamento."
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onSubmit = async (data: AtendimentoFormData) => {
-    if (!agendamento) return;
-
-    setIsSaving(true);
+  const loadFormasPagamento = async () => {
     try {
-      // Calcular comissão do consultor baseado no valor final
-      const comissaoCalculada = (data.valor_final * (consultor?.percentual_comissao || 0)) / 100;
-
-      // Salvar no histórico
-      const { error: historicoError } = await supabase
-        .from('historico')
-        .insert({
-          agenda_id: agendamento.id,
-          consultor_id: agendamento.consultor_id,
-          servico_id: agendamento.servico_id,
-          cliente_id: agendamento.cliente_id,
-          data_atendimento: new Date().toISOString(),
-          data_agendamento: agendamento.data_agendamento,
-          valor_servico: agendamento.valor_servico,
-          valor_final: data.valor_final,
-          comissao_consultor: comissaoCalculada,
-          observacoes_atendimento: data.observacoes_atendimento,
-          procedimentos_realizados: data.procedimentos_realizados,
-          forma_pagamento: data.forma_pagamento
-        });
-
-      if (historicoError) throw historicoError;
-
-      // Atualizar o agendamento para status "realizado"
-      await db.updateAgenda(agendamento.id!, {
-        status: "realizado",
-        valor_servico: data.valor_final,
-        comissao_consultor: comissaoCalculada,
-        observacoes: `${agendamento.observacoes || ""}\n\nATENDIMENTO:\nProcedimentos: ${data.procedimentos_realizados}\nObservações: ${data.observacoes_atendimento}`.trim()
-      });
-
-      toast({
-        title: "Atendimento registrado",
-        description: "O atendimento foi registrado com sucesso no histórico.",
-      });
-      
-      onSuccess?.();
+      const data = await db.getFormasPagamento();
+      setFormasPagamento(data.filter(fp => fp.ativo));
     } catch (error) {
+      console.error('Erro ao carregar formas de pagamento:', error);
       toast({
         variant: "destructive",
-        title: "Erro ao salvar",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
+        title: "Erro",
+        description: "Não foi possível carregar as formas de pagamento."
       });
-    } finally {
-      setIsSaving(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!agenda) return;
+
+    try {
+      const { error } = await supabase
+        .from('historico')
+        .insert({
+          agenda_id: agendaId,
+          cliente_id: agenda.cliente_id,
+          consultor_id: agenda.consultor_id,
+          servico_id: agenda.servico_id,
+          data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
+          data_agendamento: agenda.data_agendamento,
+          valor_servico: agenda.valor_servico,
+          valor_final: parseFloat(valorFinal) || agenda.valor_servico,
+          comissao_consultor: agenda.comissao_consultor,
+          forma_pagamento: parseInt(formaPagamento),
+          procedimentos_realizados: procedimentosRealizados,
+          observacoes_atendimento: observacoesAtendimento
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Marcar o agendamento como concluído
+      await supabase
+        .from('agenda')
+        .update({ status: 'concluido' })
+        .eq('id', agendaId);
+
+      toast({
+        title: "Sucesso",
+        description: "Atendimento registrado com sucesso!"
+      });
+
+      onSuccess();
+    } catch (error) {
+      console.error('Erro ao registrar atendimento:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível registrar o atendimento."
+      });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Carregando dados do atendimento...</span>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <p>Carregando dados do agendamento...</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!agendamento || !cliente) {
+  if (!agenda) {
     return (
       <Card>
-        <CardContent className="text-center py-8">
-          <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <p>Dados do agendamento não encontrados.</p>
-          {onCancel && (
-            <Button onClick={onCancel} variant="outline" className="mt-4">
-              Voltar
-            </Button>
-          )}
+        <CardContent className="p-6">
+          <p>Agendamento não encontrado.</p>
+          <Button onClick={onCancel} className="mt-4">Voltar</Button>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Registro de Atendimento</h1>
-          <p className="text-muted-foreground">
-            {format(new Date(agendamento.data_agendamento), "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-          </p>
-        </div>
-        {onCancel && (
-          <Button onClick={onCancel} variant="outline">
-            Voltar para Agenda
-          </Button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Dados da Consulta */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5" />
-              <span>Dados da Consulta</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Informações do Agendamento */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>Data e Hora</span>
-                </Label>
-                <p className="font-medium">
-                  {format(new Date(agendamento.data_agendamento), "dd/MM/yyyy 'às' HH:mm")}
-                </p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Registrar Atendimento</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Informações do Agendamento */}
+          <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <h3 className="font-medium">Informações do Agendamento</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <strong>Cliente:</strong> {agenda.cliente_nome}
               </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center space-x-2">
-                  <Badge className="h-4 w-4" />
-                  <span>Status</span>
-                </Label>
-                <Badge variant={agendamento.status === 'agendado' ? 'default' : 'secondary'}>
-                  {agendamento.status}
-                </Badge>
+              <div>
+                <strong>Consultor:</strong> {agenda.consultor_nome}
               </div>
-
-              <div className="space-y-2 p-3 bg-primary/10 rounded-lg border-l-4 border-primary">
-                <Label className="flex items-center space-x-2 font-medium text-primary">
-                  <User className="h-4 w-4" />
-                  <span>Consultor Responsável</span>
-                </Label>
-                <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-lg">{consultor?.nome || 'Não encontrado'}</p>
-                    {consultor?.email && (
-                      <p className="text-sm text-muted-foreground">{consultor.email}</p>
-                    )}
-                    {consultor?.telefone && (
-                      <p className="text-sm text-muted-foreground">{consultor.telefone}</p>
-                    )}
-                  </div>
-                </div>
+              <div>
+                <strong>Serviço:</strong> {agenda.servico_nome}
               </div>
-
-              <div className="space-y-2">
-                <Label className="flex items-center space-x-2">
-                  <Briefcase className="h-4 w-4" />
-                  <span>Serviço</span>
-                </Label>
-                <p className="font-medium">{servico?.nome || 'Não encontrado'}</p>
-                {servico && (
-                  <p className="text-sm text-muted-foreground">
-                    R$ {servico.preco.toFixed(2)} - {servico.duracao_minutos}min
-                  </p>
-                )}
+              <div>
+                <strong>Data/Hora Agendada:</strong> {format(new Date(agenda.data_agendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </div>
+              <div>
+                <strong>Valor do Serviço:</strong> R$ {agenda.valor_servico?.toFixed(2)}
+              </div>
+              <div>
+                <strong>Comissão do Consultor:</strong> R$ {agenda.comissao_consultor?.toFixed(2)}
               </div>
             </div>
-
-            <Separator />
-
-            {/* Dados do Cliente */}
-            <div>
-              <h3 className="text-lg font-medium mb-4 flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Dados do Cliente</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Nome Completo</Label>
-                  <p className="font-medium">{cliente.nome}</p>
-                </div>
-                
-                {cliente.cpf && (
-                  <div>
-                    <Label>CPF</Label>
-                    <p className="font-medium">{cliente.cpf}</p>
-                  </div>
-                )}
-
-                {cliente.email && (
-                  <div className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{cliente.email}</span>
-                  </div>
-                )}
-
-                {cliente.telefone && (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4" />
-                    <span>{cliente.telefone}</span>
-                  </div>
-                )}
-
-                {(cliente.endereco || cliente.cidade) && (
-                  <div className="md:col-span-2">
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="h-4 w-4 mt-1" />
-                      <div>
-                        {cliente.endereco && <p>{cliente.endereco}</p>}
-                        {cliente.bairro && <p>{cliente.bairro}</p>}
-                        {cliente.cidade && cliente.estado && (
-                          <p>{cliente.cidade} - {cliente.estado}</p>
-                        )}
-                        {cliente.cep && <p>CEP: {cliente.cep}</p>}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Formulário de Atendimento */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <h3 className="text-lg font-medium flex items-center space-x-2">
-                <FileText className="h-5 w-5" />
-                <span>Registro do Atendimento</span>
-              </h3>
-
-              <div className="space-y-2">
-                <Label htmlFor="procedimentos_realizados">Procedimentos Realizados *</Label>
-                <Textarea
-                  id="procedimentos_realizados"
-                  {...register("procedimentos_realizados", { required: "Procedimentos são obrigatórios" })}
-                  placeholder="Descreva os procedimentos realizados durante o atendimento"
-                  rows={4}
-                />
-                {errors.procedimentos_realizados && (
-                  <p className="text-sm text-destructive">{errors.procedimentos_realizados.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="observacoes_atendimento">Observações do Atendimento</Label>
-                <Textarea
-                  id="observacoes_atendimento"
-                  {...register("observacoes_atendimento")}
-                  placeholder="Observações adicionais sobre o atendimento"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="valor_final">Valor Final (R$)</Label>
-                  <Input
-                    id="valor_final"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    {...register("valor_final", { 
-                      required: "Valor é obrigatório",
-                      valueAsNumber: true,
-                      min: { value: 0, message: "Valor deve ser maior que zero" }
-                    })}
-                  />
-                  {errors.valor_final && (
-                    <p className="text-sm text-destructive">{errors.valor_final.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Forma de Pagamento</span>
-                  </Label>
-                  <Select 
-                    value={formaPagamento} 
-                    onValueChange={(value) => setValue("forma_pagamento", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a forma de pagamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                      <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                      <SelectItem value="transferencia">Transferência</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                {onCancel && (
-                  <Button type="button" variant="outline" onClick={onCancel}>
-                    Cancelar
-                  </Button>
-                )}
-                <Button
-                  type="submit"
-                  disabled={isSaving}
-                  className="flex items-center space-x-2"
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  <span>Registrar Atendimento</span>
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Histórico do Cliente */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <History className="h-5 w-5" />
-              <span>Histórico do Cliente</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {historicoCliente.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Primeiro atendimento</p>
-                <p className="text-sm">Este é o primeiro atendimento deste cliente.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {historicoCliente.slice(0, 5).map((historico) => (
-                  <div key={historico.id} className="border-l-2 border-primary/20 pl-4 pb-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">
-                        {format(new Date(historico.data_agendamento), "dd/MM/yyyy")}
-                      </span>
-                      <Badge variant="secondary" className="text-xs">
-                        {historico.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Valor: R$ {historico.valor_servico.toFixed(2)}
-                    </p>
-                    {historico.observacoes && (
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {historico.observacoes}
-                      </p>
-                    )}
-                  </div>
-                ))}
-                
-                {historicoCliente.length > 5 && (
-                  <p className="text-sm text-muted-foreground text-center">
-                    + {historicoCliente.length - 5} atendimentos anteriores
-                  </p>
-                )}
+            {agenda.observacoes && (
+              <div>
+                <strong>Observações do Agendamento:</strong>
+                <p className="text-sm text-muted-foreground mt-1">{agenda.observacoes}</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          </div>
+
+          {/* Dados do Atendimento */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="data_atendimento">Data do Atendimento *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dataAtendimento && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dataAtendimento ? format(dataAtendimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={dataAtendimento}
+                    onSelect={(date) => date && setDataAtendimento(date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="valor_final">Valor Final</Label>
+              <Input
+                id="valor_final"
+                type="number"
+                step="0.01"
+                value={valorFinal}
+                onChange={(e) => setValorFinal(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
+            <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a forma de pagamento" />
+              </SelectTrigger>
+              <SelectContent>
+                {formasPagamento.map((fp) => (
+                  <SelectItem key={fp.id} value={fp.id!.toString()}>
+                    {fp.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="procedimentos_realizados">Procedimentos Realizados</Label>
+            <Textarea
+              id="procedimentos_realizados"
+              value={procedimentosRealizados}
+              onChange={(e) => setProcedimentosRealizados(e.target.value)}
+              placeholder="Descreva os procedimentos realizados durante o atendimento"
+              rows={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="observacoes_atendimento">Observações do Atendimento</Label>
+            <Textarea
+              id="observacoes_atendimento"
+              value={observacoesAtendimento}
+              onChange={(e) => setObservacoesAtendimento(e.target.value)}
+              placeholder="Observações adicionais sobre o atendimento"
+              rows={3}
+            />
+          </div>
+
+          <div className="flex space-x-2 pt-4">
+            <Button type="submit">
+              Registrar Atendimento
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

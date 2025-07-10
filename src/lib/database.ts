@@ -68,6 +68,16 @@ export interface Consultor {
   updated_at?: string;
 }
 
+export interface FormaPagamento {
+  id?: number;
+  nome: string;
+  descricao?: string;
+  ativo: boolean;
+  ordem: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Agenda {
   id?: number;
   cliente_id: number;
@@ -418,6 +428,63 @@ class DatabaseService {
   async deleteConsultor(id: number): Promise<void> {
     const { error } = await supabase
       .from('consultores')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  // ============================================
+  // FORMAS DE PAGAMENTO CRUD
+  // ============================================
+
+  async getFormasPagamento(): Promise<FormaPagamento[]> {
+    const { data, error } = await supabase
+      .from('formas_pagamento')
+      .select('*')
+      .order('ordem');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  }
+
+  async createFormaPagamento(formaPagamento: Omit<FormaPagamento, 'id' | 'created_at' | 'updated_at'>): Promise<FormaPagamento> {
+    const { data, error } = await supabase
+      .from('formas_pagamento')
+      .insert(formaPagamento)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async updateFormaPagamento(id: number, formaPagamento: Partial<FormaPagamento>): Promise<FormaPagamento> {
+    const { data, error } = await supabase
+      .from('formas_pagamento')
+      .update(formaPagamento)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async deleteFormaPagamento(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('formas_pagamento')
       .delete()
       .eq('id', id);
 

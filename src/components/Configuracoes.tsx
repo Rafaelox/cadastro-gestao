@@ -9,6 +9,7 @@ import { CategoriasList } from "@/components/CategoriasList";
 import { OrigensList } from "@/components/OrigensList";
 import { ConsultorForm } from "@/components/ConsultorForm";
 import { ConsultoresList } from "@/components/ConsultoresList";
+import { FormasPagamentoList } from "@/components/FormasPagamentoList";
 import { type Servico, type Consultor } from "@/lib/database";
 
 export const Configuracoes = () => {
@@ -120,7 +121,7 @@ export const Configuracoes = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="servicos" className="flex items-center space-x-2">
             <Briefcase className="h-4 w-4" />
             <span>Serviços</span>
@@ -137,10 +138,14 @@ export const Configuracoes = () => {
             <FileText className="h-4 w-4" />
             <span>Origens</span>
           </TabsTrigger>
+          <TabsTrigger value="formas_pagamento" className="flex items-center space-x-2">
+            <Settings className="h-4 w-4" />
+            <span>Formas de Pagamento</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Links rápidos */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
           <Button 
             variant="outline" 
             size="sm"
@@ -176,6 +181,15 @@ export const Configuracoes = () => {
           >
             <FileText className="h-4 w-4" />
             <span>Gerenciar Origens</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("formas_pagamento")}
+            className="flex items-center space-x-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Formas de Pagamento</span>
           </Button>
         </div>
 
@@ -231,6 +245,20 @@ export const Configuracoes = () => {
             </CardHeader>
             <CardContent>
               <OrigensList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="formas_pagamento" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="h-5 w-5" />
+                <span>Gerenciar Formas de Pagamento</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FormasPagamentoList />
             </CardContent>
           </Card>
         </TabsContent>

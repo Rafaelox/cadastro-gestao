@@ -223,7 +223,7 @@ export const Agenda = () => {
         <TabsContent value="atendimento" className="space-y-6">
           {atendimentoId ? (
             <AtendimentoForm
-              agendamentoId={atendimentoId}
+              agendaId={atendimentoId}
               onSuccess={handleAtendimentoSuccess}
               onCancel={handleAtendimentoCancel}
             />
