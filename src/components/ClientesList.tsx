@@ -29,10 +29,15 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
     nome: '',
     cpf: '',
     email: '',
+    telefone: '',
     categoria_id: '',
     origem_id: '',
     ativo: ''
   });
+
+  // Ordenação
+  const [orderBy, setOrderBy] = useState('created_at');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     loadData();
@@ -40,7 +45,7 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
 
   useEffect(() => {
     loadClientes();
-  }, [filters]);
+  }, [filters, orderBy, orderDirection]);
 
   const loadData = async () => {
     try {
@@ -67,7 +72,9 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
         ...cleanFilters,
         categoria_id: cleanFilters.categoria_id ? parseInt(cleanFilters.categoria_id) : undefined,
         origem_id: cleanFilters.origem_id ? parseInt(cleanFilters.origem_id) : undefined,
-        ativo: cleanFilters.ativo ? cleanFilters.ativo === 'true' : undefined
+        ativo: cleanFilters.ativo ? cleanFilters.ativo === 'true' : undefined,
+        orderBy,
+        orderDirection
       });
       
       setClientes(clientesData);
@@ -110,6 +117,7 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
       nome: '',
       cpf: '',
       email: '',
+      telefone: '',
       categoria_id: '',
       origem_id: '',
       ativo: ''
@@ -164,7 +172,36 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
         {/* Filtros */}
         {showFilters && (
           <CardContent className="border-t border-border/50">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Ordenação */}
+            <div className="mb-4 flex gap-4 items-end">
+              <div className="space-y-2">
+                <Label className="text-sm text-foreground">Ordenar por</Label>
+                <Select value={orderBy} onValueChange={setOrderBy}>
+                  <SelectTrigger className="bg-background/50 border-border h-9 w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at">Data de Cadastro</SelectItem>
+                    <SelectItem value="nome">Nome</SelectItem>
+                    <SelectItem value="cidade">Cidade</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm text-foreground">Direção</Label>
+                <Select value={orderDirection} onValueChange={(value: 'asc' | 'desc') => setOrderDirection(value)}>
+                  <SelectTrigger className="bg-background/50 border-border h-9 w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Crescente</SelectItem>
+                    <SelectItem value="desc">Decrescente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
               <div className="space-y-2">
                 <Label className="text-sm text-foreground">Nome</Label>
                 <Input
@@ -196,16 +233,26 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
               </div>
 
               <div className="space-y-2">
+                <Label className="text-sm text-foreground">Telefone</Label>
+                <Input
+                  placeholder="(11) 99999-9999"
+                  value={filters.telefone}
+                  onChange={(e) => handleFilterChange('telefone', e.target.value)}
+                  className="bg-background/50 border-border h-9"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label className="text-sm text-foreground">Categoria</Label>
                 <Select
-                  value={filters.categoria_id}
-                  onValueChange={(value) => handleFilterChange('categoria_id', value)}
+                  value={filters.categoria_id || "all"}
+                  onValueChange={(value) => handleFilterChange('categoria_id', value === "all" ? "" : value)}
                 >
                   <SelectTrigger className="bg-background/50 border-border h-9">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     {categorias.map((categoria) => (
                       <SelectItem key={categoria.id} value={categoria.id!.toString()}>
                         {categoria.nome}
@@ -218,14 +265,14 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
               <div className="space-y-2">
                 <Label className="text-sm text-foreground">Origem</Label>
                 <Select
-                  value={filters.origem_id}
-                  onValueChange={(value) => handleFilterChange('origem_id', value)}
+                  value={filters.origem_id || "all"}
+                  onValueChange={(value) => handleFilterChange('origem_id', value === "all" ? "" : value)}
                 >
                   <SelectTrigger className="bg-background/50 border-border h-9">
                     <SelectValue placeholder="Todas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
                     {origens.map((origem) => (
                       <SelectItem key={origem.id} value={origem.id!.toString()}>
                         {origem.nome}
@@ -238,14 +285,14 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
               <div className="space-y-2">
                 <Label className="text-sm text-foreground">Status</Label>
                 <Select
-                  value={filters.ativo}
-                  onValueChange={(value) => handleFilterChange('ativo', value)}
+                  value={filters.ativo || "all"}
+                  onValueChange={(value) => handleFilterChange('ativo', value === "all" ? "" : value)}
                 >
                   <SelectTrigger className="bg-background/50 border-border h-9">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="true">Ativo</SelectItem>
                     <SelectItem value="false">Inativo</SelectItem>
                   </SelectContent>

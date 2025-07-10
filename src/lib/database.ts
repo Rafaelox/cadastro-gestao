@@ -119,16 +119,18 @@ class DatabaseService {
     nome?: string;
     cpf?: string;
     email?: string;
+    telefone?: string;
     categoria_id?: number;
     origem_id?: number;
     ativo?: boolean;
+    orderBy?: string;
+    orderDirection?: 'asc' | 'desc';
     limit?: number;
     offset?: number;
   } = {}): Promise<Cliente[]> {
     let query = supabase
       .from('clientes')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
 
     if (filters.nome) {
       query = query.ilike('nome', `%${filters.nome}%`);
@@ -138,6 +140,9 @@ class DatabaseService {
     }
     if (filters.email) {
       query = query.ilike('email', `%${filters.email}%`);
+    }
+    if (filters.telefone) {
+      query = query.ilike('telefone', `%${filters.telefone}%`);
     }
     if (filters.categoria_id) {
       query = query.eq('categoria_id', filters.categoria_id);
@@ -154,6 +159,11 @@ class DatabaseService {
     if (filters.offset) {
       query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
     }
+
+    // Aplicar ordenação
+    const orderBy = filters.orderBy || 'created_at';
+    const ascending = filters.orderDirection === 'asc';
+    query = query.order(orderBy, { ascending });
 
     const { data, error } = await query;
 
