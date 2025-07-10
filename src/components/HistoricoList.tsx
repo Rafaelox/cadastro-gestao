@@ -81,6 +81,8 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const [showAgendaForm, setShowAgendaForm] = useState(false);
   const [selectedClienteForAgenda, setSelectedClienteForAgenda] = useState<number | null>(null);
   const [selectedConsultorForAgenda, setSelectedConsultorForAgenda] = useState<number | null>(null);
+  console.log('HistoricoList - selectedClienteForAgenda:', selectedClienteForAgenda);
+  console.log('HistoricoList - selectedConsultorForAgenda:', selectedConsultorForAgenda);
   const { toast } = useToast();
 
   const itemsPerPage = 10;
@@ -486,6 +488,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
             preSelectedClienteId={selectedClienteForAgenda}
             preSelectedConsultorId={selectedConsultorForAgenda}
             onSuccess={() => {
+              console.log('AgendaForm onSuccess - before clearing states');
               setShowAgendaForm(false);
               setSelectedClienteForAgenda(null);
               setSelectedConsultorForAgenda(null);
@@ -500,6 +503,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
             <Button
               variant="outline"
               onClick={() => {
+                console.log('Cancel button clicked - before clearing states');
                 setShowAgendaForm(false);
                 setSelectedClienteForAgenda(null);
                 setSelectedConsultorForAgenda(null);
