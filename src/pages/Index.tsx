@@ -8,6 +8,7 @@ import { OrigensList } from "@/components/OrigensList";
 import { Configuracoes } from "@/components/Configuracoes";
 import { Agenda } from "@/components/Agenda";
 import { Dashboard } from "@/components/Dashboard";
+import { RelatorioForm } from "@/components/RelatorioForm";
 import { Cliente } from "@/lib/database";
 
 const Index = () => {
@@ -62,6 +63,7 @@ const Index = () => {
                   />
                 )}
                 {activeTab === 'agenda' && <Agenda />}
+                {activeTab === 'relatorios' && <RelatorioForm />}
                 {activeTab === 'categorias' && <CategoriasList />}
                 {activeTab === 'origens' && <OrigensList />}
                 {activeTab === 'configuracoes' && <Configuracoes />}

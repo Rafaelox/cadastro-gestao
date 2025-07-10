@@ -92,6 +92,24 @@ export interface Agenda {
   updated_at?: string;
 }
 
+export interface Historico {
+  id?: number;
+  agenda_id: number;
+  cliente_id: number;
+  consultor_id: number;
+  servico_id: number;
+  data_agendamento?: string;
+  data_atendimento: string;
+  valor_servico: number;
+  valor_final?: number;
+  comissao_consultor: number;
+  forma_pagamento?: number;
+  observacoes_atendimento?: string;
+  procedimentos_realizados?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 class DatabaseService {
   // ============================================
   // CLIENTES CRUD
@@ -548,6 +566,45 @@ class DatabaseService {
     if (error) {
       throw new Error(error.message);
     }
+  }
+
+  // ============================================
+  // HISTÓRICO CRUD
+  // ============================================
+
+  async getHistorico(filters: {
+    servico_id?: number;
+    data_inicio?: string;
+    data_fim?: string;
+  } = {}): Promise<any[]> {
+    let query = supabase
+      .from('historico')
+      .select(`
+        *,
+        clientes(nome),
+        consultores(nome),
+        servicos(nome),
+        formas_pagamento(nome)
+      `)
+      .order('data_atendimento', { ascending: false });
+
+    if (filters.servico_id) {
+      query = query.eq('servico_id', filters.servico_id);
+    }
+    if (filters.data_inicio) {
+      query = query.gte('data_atendimento', filters.data_inicio);
+    }
+    if (filters.data_fim) {
+      query = query.lte('data_atendimento', filters.data_fim);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
   }
 
   // Getter para acessar supabase diretamente quando necessário
