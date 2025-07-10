@@ -63,13 +63,15 @@ interface HistoricoListProps {
   clienteId?: number;
   consultorId?: number;
   onNovoAgendamento?: () => void;
+  searchTerm?: string;
+  onNovoAtendimento?: (agendaId: number) => void;
 }
 
-export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: HistoricoListProps) => {
+export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searchTerm = "", onNovoAtendimento }: HistoricoListProps) => {
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [filteredHistorico, setFilteredHistorico] = useState<HistoricoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [selectedConsultor, setSelectedConsultor] = useState<string>("all");
   const [selectedServico, setSelectedServico] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,7 +91,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
 
   useEffect(() => {
     filterHistorico();
-  }, [historico, searchTerm, selectedConsultor, selectedServico]);
+  }, [historico, searchTerm, localSearchTerm, selectedConsultor, selectedServico]);
 
   const loadHistorico = async () => {
     setIsLoading(true);
@@ -189,12 +191,13 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
   const filterHistorico = () => {
     let filtered = [...historico];
 
-    if (searchTerm) {
+    if (searchTerm || localSearchTerm) {
+      const term = searchTerm || localSearchTerm;
       filtered = filtered.filter(item =>
-        item.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.consultor_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.servico_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.observacoes_atendimento?.toLowerCase().includes(searchTerm.toLowerCase())
+        item.cliente_nome?.toLowerCase().includes(term.toLowerCase()) ||
+        item.consultor_nome?.toLowerCase().includes(term.toLowerCase()) ||
+        item.servico_nome?.toLowerCase().includes(term.toLowerCase()) ||
+        item.observacoes_atendimento?.toLowerCase().includes(term.toLowerCase())
       );
     }
 
@@ -218,6 +221,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
   const totalPages = Math.ceil(filteredHistorico.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredHistorico.slice(startIndex, startIndex + itemsPerPage);
+
 
   if (isLoading) {
     return (
@@ -266,8 +270,8 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
                 <Input
                   id="search"
                   placeholder="Nome, serviço, observações..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -313,7 +317,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  setSearchTerm("");
+                  setLocalSearchTerm("");
                   setSelectedConsultor("all");
                   setSelectedServico("all");
                 }}
