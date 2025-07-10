@@ -20,8 +20,16 @@ import {
   Phone,
   Mail,
   MapPin,
-  History
+  History,
+  CreditCard
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { db, type Agenda, type Cliente, type Consultor, type Servico } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +44,7 @@ interface AtendimentoFormData {
   observacoes_atendimento: string;
   procedimentos_realizados: string;
   valor_final: number;
+  forma_pagamento: string;
 }
 
 export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: AtendimentoFormProps) => {
@@ -48,13 +57,16 @@ export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: Atendime
   const [historicoCliente, setHistoricoCliente] = useState<Agenda[]>([]);
   const { toast } = useToast();
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<AtendimentoFormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AtendimentoFormData>({
     defaultValues: {
       observacoes_atendimento: "",
       procedimentos_realizados: "",
-      valor_final: 0
+      valor_final: 0,
+      forma_pagamento: "dinheiro"
     }
   });
+
+  const formaPagamento = watch("forma_pagamento");
 
   useEffect(() => {
     loadAtendimentoData();
@@ -125,9 +137,13 @@ export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: Atendime
           servico_id: agendamento.servico_id,
           cliente_id: agendamento.cliente_id,
           data_atendimento: new Date().toISOString(),
-          valor_servico: data.valor_final,
+          data_agendamento: agendamento.data_agendamento,
+          valor_servico: agendamento.valor_servico,
+          valor_final: data.valor_final,
           comissao_consultor: comissaoCalculada,
-          observacoes_atendimento: `Procedimentos: ${data.procedimentos_realizados}\n\nObservações: ${data.observacoes_atendimento || 'Nenhuma observação adicional.'}`
+          observacoes_atendimento: data.observacoes_atendimento,
+          procedimentos_realizados: data.procedimentos_realizados,
+          forma_pagamento: data.forma_pagamento
         });
 
       if (historicoError) throw historicoError;
@@ -349,22 +365,46 @@ export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: Atendime
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="valor_final">Valor Final (R$)</Label>
-                <Input
-                  id="valor_final"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register("valor_final", { 
-                    required: "Valor é obrigatório",
-                    valueAsNumber: true,
-                    min: { value: 0, message: "Valor deve ser maior que zero" }
-                  })}
-                />
-                {errors.valor_final && (
-                  <p className="text-sm text-destructive">{errors.valor_final.message}</p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="valor_final">Valor Final (R$)</Label>
+                  <Input
+                    id="valor_final"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...register("valor_final", { 
+                      required: "Valor é obrigatório",
+                      valueAsNumber: true,
+                      min: { value: 0, message: "Valor deve ser maior que zero" }
+                    })}
+                  />
+                  {errors.valor_final && (
+                    <p className="text-sm text-destructive">{errors.valor_final.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center space-x-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Forma de Pagamento</span>
+                  </Label>
+                  <Select 
+                    value={formaPagamento} 
+                    onValueChange={(value) => setValue("forma_pagamento", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a forma de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                      <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">

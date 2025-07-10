@@ -45,9 +45,13 @@ interface HistoricoItem {
   servico_id: number;
   cliente_id: number;
   data_atendimento: string;
+  data_agendamento: string | null;
   valor_servico: number;
+  valor_final: number;
   comissao_consultor: number;
-  observacoes_atendimento: string;
+  observacoes_atendimento: string | null;
+  procedimentos_realizados: string | null;
+  forma_pagamento: string;
   created_at: string;
   consultor_nome?: string;
   servico_nome?: string;
@@ -334,11 +338,16 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
                         </span>
                         <Badge variant="secondary">Realizado</Badge>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-600">
-                          R$ {item.valor_servico.toFixed(2)}
-                        </span>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          <span className="font-medium text-green-600">
+                            R$ {(item.valor_final || item.valor_servico).toFixed(2)}
+                          </span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {item.forma_pagamento?.replace('_', ' ').toUpperCase() || 'DINHEIRO'}
+                        </Badge>
                       </div>
                     </div>
 
@@ -373,7 +382,14 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento }: His
                       </div>
                     </div>
 
-                    {/* Observações */}
+                    {/* Procedimentos e Observações */}
+                    {item.procedimentos_realizados && (
+                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-700 font-medium mb-1">Procedimentos Realizados:</p>
+                        <p className="text-sm text-blue-800">{item.procedimentos_realizados}</p>
+                      </div>
+                    )}
+                    
                     {item.observacoes_atendimento && (
                       <div className="mt-3 p-3 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground mb-1">Observações do Atendimento:</p>

@@ -241,11 +241,15 @@ export type Database = {
           comissao_consultor: number
           consultor_id: number
           created_at: string
+          data_agendamento: string | null
           data_atendimento: string
+          forma_pagamento: string | null
           id: number
           observacoes_atendimento: string | null
+          procedimentos_realizados: string | null
           servico_id: number
           updated_at: string
+          valor_final: number | null
           valor_servico: number
         }
         Insert: {
@@ -254,11 +258,15 @@ export type Database = {
           comissao_consultor?: number
           consultor_id: number
           created_at?: string
+          data_agendamento?: string | null
           data_atendimento: string
+          forma_pagamento?: string | null
           id?: number
           observacoes_atendimento?: string | null
+          procedimentos_realizados?: string | null
           servico_id: number
           updated_at?: string
+          valor_final?: number | null
           valor_servico?: number
         }
         Update: {
@@ -267,11 +275,15 @@ export type Database = {
           comissao_consultor?: number
           consultor_id?: number
           created_at?: string
+          data_agendamento?: string | null
           data_atendimento?: string
+          forma_pagamento?: string | null
           id?: number
           observacoes_atendimento?: string | null
+          procedimentos_realizados?: string | null
           servico_id?: number
           updated_at?: string
+          valor_final?: number | null
           valor_servico?: number
         }
         Relationships: []
