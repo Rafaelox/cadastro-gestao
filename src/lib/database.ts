@@ -68,6 +68,20 @@ export interface Consultor {
   updated_at?: string;
 }
 
+export interface Agenda {
+  id?: number;
+  cliente_id: number;
+  consultor_id: number;
+  servico_id: number;
+  data_agendamento: string;
+  status: string;
+  observacoes?: string;
+  valor_servico: number;
+  comissao_consultor: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 class DatabaseService {
   // ============================================
   // CLIENTES CRUD
@@ -410,6 +424,68 @@ class DatabaseService {
     if (error) {
       throw new Error(error.message);
     }
+  }
+
+  // ============================================
+  // AGENDA CRUD
+  // ============================================
+
+  async getAgenda(): Promise<Agenda[]> {
+    const { data, error } = await supabase
+      .from('agenda')
+      .select('*')
+      .order('data_agendamento', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  }
+
+  async createAgenda(agenda: Omit<Agenda, 'id' | 'created_at' | 'updated_at'>): Promise<Agenda> {
+    const { data, error } = await supabase
+      .from('agenda')
+      .insert(agenda)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async updateAgenda(id: number, agenda: Partial<Agenda>): Promise<Agenda> {
+    const { data, error } = await supabase
+      .from('agenda')
+      .update(agenda)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async deleteAgenda(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('agenda')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  }
+
+  // Getter para acessar supabase diretamente quando necessário
+  get supabase() {
+    return supabase;
   }
 
   // ============================================

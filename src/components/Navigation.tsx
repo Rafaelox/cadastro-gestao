@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck } from "lucide-react";
+import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar } from "lucide-react";
 
 interface NavigationProps {
   activeTab: string;
@@ -20,6 +20,12 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       label: 'Clientes',
       icon: Users,
       description: 'Gerenciar clientes'
+    },
+    {
+      id: 'agenda',
+      label: 'Agenda',
+      icon: Calendar,
+      description: 'Gerenciar agendamentos'
     },
     {
       id: 'categorias',

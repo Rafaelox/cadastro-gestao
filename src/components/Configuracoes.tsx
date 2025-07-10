@@ -139,6 +139,46 @@ export const Configuracoes = () => {
           </TabsTrigger>
         </TabsList>
 
+        {/* Links rápidos */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("servicos")}
+            className="flex items-center space-x-2"
+          >
+            <Briefcase className="h-4 w-4" />
+            <span>Gerenciar Serviços</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("consultores")}
+            className="flex items-center space-x-2"
+          >
+            <UserCheck className="h-4 w-4" />
+            <span>Gerenciar Consultores</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("categorias")}
+            className="flex items-center space-x-2"
+          >
+            <Database className="h-4 w-4" />
+            <span>Gerenciar Categorias</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveTab("origens")}
+            className="flex items-center space-x-2"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Gerenciar Origens</span>
+          </Button>
+        </div>
+
         <TabsContent value="servicos" className="space-y-6">
           <Card>
             <CardHeader>
