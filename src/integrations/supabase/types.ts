@@ -20,12 +20,14 @@ export type Database = {
           comissao_consultor: number
           consultor_id: number
           created_at: string
+          created_by: string | null
           data_agendamento: string
           id: number
           observacoes: string | null
           servico_id: number
           status: string
           updated_at: string
+          updated_by: string | null
           valor_servico: number
         }
         Insert: {
@@ -33,12 +35,14 @@ export type Database = {
           comissao_consultor?: number
           consultor_id: number
           created_at?: string
+          created_by?: string | null
           data_agendamento: string
           id?: number
           observacoes?: string | null
           servico_id: number
           status?: string
           updated_at?: string
+          updated_by?: string | null
           valor_servico?: number
         }
         Update: {
@@ -46,12 +50,14 @@ export type Database = {
           comissao_consultor?: number
           consultor_id?: number
           created_at?: string
+          created_by?: string | null
           data_agendamento?: string
           id?: number
           observacoes?: string | null
           servico_id?: number
           status?: string
           updated_at?: string
+          updated_by?: string | null
           valor_servico?: number
         }
         Relationships: [
@@ -77,6 +83,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_logs: {
+        Row: {
+          changed_fields: string[] | null
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          changed_fields?: string[] | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       categorias: {
         Row: {
@@ -114,6 +159,7 @@ export type Database = {
           cidade: string | null
           cpf: string | null
           created_at: string
+          created_by: string | null
           email: string | null
           endereco: string | null
           estado: string | null
@@ -125,6 +171,7 @@ export type Database = {
           recebe_whatsapp: boolean
           telefone: string | null
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           ativo?: boolean
@@ -134,6 +181,7 @@ export type Database = {
           cidade?: string | null
           cpf?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
@@ -145,6 +193,7 @@ export type Database = {
           recebe_whatsapp?: boolean
           telefone?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           ativo?: boolean
@@ -154,6 +203,7 @@ export type Database = {
           cidade?: string | null
           cpf?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
@@ -165,6 +215,7 @@ export type Database = {
           recebe_whatsapp?: boolean
           telefone?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -188,6 +239,7 @@ export type Database = {
           cliente_nome: string
           consultor_id: number
           created_at: string
+          created_by: string | null
           data_operacao: string
           id: number
           observacoes: string | null
@@ -196,6 +248,7 @@ export type Database = {
           servico_nome: string
           tipo_operacao: string
           updated_at: string
+          updated_by: string | null
           valor_comissao: number
           valor_servico: number
         }
@@ -203,6 +256,7 @@ export type Database = {
           cliente_nome: string
           consultor_id: number
           created_at?: string
+          created_by?: string | null
           data_operacao?: string
           id?: number
           observacoes?: string | null
@@ -211,6 +265,7 @@ export type Database = {
           servico_nome: string
           tipo_operacao?: string
           updated_at?: string
+          updated_by?: string | null
           valor_comissao?: number
           valor_servico?: number
         }
@@ -218,6 +273,7 @@ export type Database = {
           cliente_nome?: string
           consultor_id?: number
           created_at?: string
+          created_by?: string | null
           data_operacao?: string
           id?: number
           observacoes?: string | null
@@ -226,6 +282,7 @@ export type Database = {
           servico_nome?: string
           tipo_operacao?: string
           updated_at?: string
+          updated_by?: string | null
           valor_comissao?: number
           valor_servico?: number
         }
@@ -254,6 +311,7 @@ export type Database = {
           cidade: string | null
           cpf: string | null
           created_at: string
+          created_by: string | null
           email: string | null
           endereco: string | null
           estado: string | null
@@ -262,6 +320,7 @@ export type Database = {
           percentual_comissao: number
           telefone: string | null
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           ativo?: boolean
@@ -270,6 +329,7 @@ export type Database = {
           cidade?: string | null
           cpf?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
@@ -278,6 +338,7 @@ export type Database = {
           percentual_comissao?: number
           telefone?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           ativo?: boolean
@@ -286,6 +347,7 @@ export type Database = {
           cidade?: string | null
           cpf?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
@@ -294,6 +356,7 @@ export type Database = {
           percentual_comissao?: number
           telefone?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -422,6 +485,7 @@ export type Database = {
           cliente_id: number
           consultor_id: number
           created_at: string
+          created_by: string | null
           data_pagamento: string
           forma_pagamento_id: number
           id: number
@@ -430,6 +494,7 @@ export type Database = {
           servico_id: number
           tipo_transacao: string
           updated_at: string
+          updated_by: string | null
           valor: number
           valor_original: number | null
         }
@@ -438,6 +503,7 @@ export type Database = {
           cliente_id: number
           consultor_id: number
           created_at?: string
+          created_by?: string | null
           data_pagamento?: string
           forma_pagamento_id: number
           id?: number
@@ -446,6 +512,7 @@ export type Database = {
           servico_id: number
           tipo_transacao: string
           updated_at?: string
+          updated_by?: string | null
           valor?: number
           valor_original?: number | null
         }
@@ -454,6 +521,7 @@ export type Database = {
           cliente_id?: number
           consultor_id?: number
           created_at?: string
+          created_by?: string | null
           data_pagamento?: string
           forma_pagamento_id?: number
           id?: number
@@ -462,6 +530,7 @@ export type Database = {
           servico_id?: number
           tipo_transacao?: string
           updated_at?: string
+          updated_by?: string | null
           valor?: number
           valor_original?: number | null
         }
@@ -547,32 +616,38 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          created_by: string | null
           descricao: string | null
           duracao_minutos: number
           id: number
           nome: string
           preco: number
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           ativo?: boolean
           created_at?: string
+          created_by?: string | null
           descricao?: string | null
           duracao_minutos?: number
           id?: number
           nome: string
           preco?: number
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           ativo?: boolean
           created_at?: string
+          created_by?: string | null
           descricao?: string | null
           duracao_minutos?: number
           id?: number
           nome?: string
           preco?: number
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -614,7 +689,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_info: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          user_email: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

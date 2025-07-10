@@ -61,6 +61,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: 'comissoes', label: 'Comissões', icon: DollarSign },
     { id: 'categorias', label: 'Categorias', icon: Database },
     { id: 'origens', label: 'Origens', icon: FileText },
+    { id: 'auditoria', label: 'Logs de Auditoria', icon: History },
     { id: 'configuracoes', label: 'Configurações', icon: Settings }
   ];
 

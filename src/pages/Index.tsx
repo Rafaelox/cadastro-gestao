@@ -15,6 +15,7 @@ import { HistoricoDiario } from "@/components/HistoricoDiario";
 import { CaixaForm } from "@/components/CaixaForm";
 import { CaixaList } from "@/components/CaixaList";
 import { ComissaoExtrato } from "@/components/ComissaoExtrato";
+import { AuditLogs } from "@/components/AuditLogs";
 import { Cliente } from "@/lib/database";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -94,6 +95,7 @@ const Index = () => {
                 {activeTab === 'comissoes' && <ComissaoExtrato />}
                 {activeTab === 'categorias' && <CategoriasList />}
                 {activeTab === 'origens' && <OrigensList />}
+                {activeTab === 'auditoria' && <AuditLogs />}
                 {activeTab === 'configuracoes' && <Configuracoes />}
               </>
             )}
