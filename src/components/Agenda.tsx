@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, Clock, Plus, List, FileText } from "lucide-react";
+import { CalendarIcon, Clock, Plus, List, FileText, User } from "lucide-react";
 import { AgendaForm } from "@/components/AgendaForm";
 import { AgendaList } from "@/components/AgendaList";
 import { AtendimentoForm } from "@/components/AtendimentoForm";
@@ -119,7 +119,7 @@ export const Agenda = () => {
                         <Clock className="h-4 w-4" />
                         <span>Horários disponíveis:</span>
                       </h4>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {timeSlots.map((time) => (
                           <Button
                             key={time}
@@ -134,6 +134,16 @@ export const Agenda = () => {
                             {time}
                           </Button>
                         ))}
+                      </div>
+                      
+                      <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                        <p className="text-sm font-medium text-primary flex items-center space-x-1">
+                          <User className="h-4 w-4" />
+                          <span>Lembre-se de selecionar o consultor responsável</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          O consultor escolhido será responsável pelo atendimento
+                        </p>
                       </div>
                     </div>
                   </div>

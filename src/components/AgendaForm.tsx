@@ -215,12 +215,18 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
           </div>
 
           {/* Consultor */}
-          <div className="space-y-2">
-            <Label>Consultor *</Label>
+          <div className="space-y-2 p-4 bg-primary/5 rounded-lg border-l-4 border-primary">
+            <Label className="flex items-center space-x-2 font-medium text-primary">
+              <User className="h-4 w-4" />
+              <span>Consultor Responsável *</span>
+            </Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Selecione o consultor que irá realizar o atendimento
+            </p>
             <Select onValueChange={(value) => setValue("consultor_id", Number(value))}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <User className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Selecione um consultor" />
+                <SelectValue placeholder="Selecione o consultor responsável" />
               </SelectTrigger>
               <SelectContent>
                 {consultores.map((consultor) => (
@@ -228,7 +234,7 @@ export const AgendaForm = ({ onSuccess, selectedDate, selectedTime }: AgendaForm
                     <div className="text-left">
                       <div className="font-medium">{consultor.nome}</div>
                       <div className="text-sm text-muted-foreground">
-                        Comissão: {consultor.percentual_comissao}%
+                        Comissão: {consultor.percentual_comissao}% | Email: {consultor.email || 'Não informado'}
                       </div>
                     </div>
                   </SelectItem>

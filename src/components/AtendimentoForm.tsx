@@ -210,12 +210,23 @@ export const AtendimentoForm = ({ agendamentoId, onSuccess, onCancel }: Atendime
                 </Badge>
               </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center space-x-2">
+              <div className="space-y-2 p-3 bg-primary/10 rounded-lg border-l-4 border-primary">
+                <Label className="flex items-center space-x-2 font-medium text-primary">
                   <User className="h-4 w-4" />
-                  <span>Consultor</span>
+                  <span>Consultor Responsável</span>
                 </Label>
-                <p className="font-medium">{consultor?.nome || 'Não encontrado'}</p>
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-lg">{consultor?.nome || 'Não encontrado'}</p>
+                    {consultor?.email && (
+                      <p className="text-sm text-muted-foreground">{consultor.email}</p>
+                    )}
+                    {consultor?.telefone && (
+                      <p className="text-sm text-muted-foreground">{consultor.telefone}</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">

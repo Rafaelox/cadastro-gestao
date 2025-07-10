@@ -222,9 +222,16 @@ export const AgendaList = ({ selectedDate, onRefresh, onAtendimento }: AgendaLis
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <User className="h-3 w-3" />
-                        <span>{consultores[agenda.consultor_id] || `Consultor #${agenda.consultor_id}`}</span>
+                      <div className="flex items-center space-x-2 p-2 bg-primary/5 rounded-md border-l-2 border-primary">
+                        <User className="h-4 w-4 text-primary" />
+                        <div>
+                          <div className="font-medium text-primary">
+                            {consultores[agenda.consultor_id] || `Consultor #${agenda.consultor_id}`}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Responsável pelo atendimento
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
