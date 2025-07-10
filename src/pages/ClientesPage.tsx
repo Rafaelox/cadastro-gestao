@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientesList } from "@/components/ClientesList";
@@ -19,14 +18,10 @@ export const ClientesPage = () => {
     return (
       <div className="container mx-auto p-4 pb-20">
         <ClienteForm 
+          cliente={selectedCliente}
           onSave={handleSuccess}
           onCancel={() => setShowForm(false)} 
         />
-        <div className="mt-4">
-          <Button variant="outline" onClick={() => setShowForm(false)}>
-            Cancelar
-          </Button>
-        </div>
       </div>
     );
   }
@@ -35,13 +30,7 @@ export const ClientesPage = () => {
     <div className="container mx-auto p-4 pb-20 space-y-4">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>Clientes</CardTitle>
-            <Button onClick={() => setShowForm(true)} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Cliente
-            </Button>
-          </div>
+          <CardTitle>Clientes</CardTitle>
         </CardHeader>
         <CardContent>
           <ClientesList 
