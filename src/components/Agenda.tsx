@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, Clock, Plus, List, FileText, User } from "lucide-react";
+import { CalendarIcon, Clock, Plus, List, FileText, User, History } from "lucide-react";
 import { AgendaForm } from "@/components/AgendaForm";
 import { AgendaList } from "@/components/AgendaList";
 import { AtendimentoForm } from "@/components/AtendimentoForm";
+import { HistoricoList } from "@/components/HistoricoList";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ export const Agenda = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="calendario" className="flex items-center space-x-2">
             <CalendarIcon className="h-4 w-4" />
             <span>Calendário</span>
@@ -80,6 +81,10 @@ export const Agenda = () => {
           <TabsTrigger value="lista" className="flex items-center space-x-2">
             <List className="h-4 w-4" />
             <span>Lista</span>
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="flex items-center space-x-2">
+            <History className="h-4 w-4" />
+            <span>Histórico</span>
           </TabsTrigger>
           <TabsTrigger value="atendimento" className="flex items-center space-x-2" disabled={!atendimentoId}>
             <FileText className="h-4 w-4" />
@@ -206,6 +211,12 @@ export const Agenda = () => {
           <AgendaList 
             key={refreshList} 
             onAtendimento={handleAtendimento}
+          />
+        </TabsContent>
+
+        <TabsContent value="historico" className="space-y-6">
+          <HistoricoList 
+            onNovoAgendamento={() => setRefreshList(prev => prev + 1)}
           />
         </TabsContent>
 
