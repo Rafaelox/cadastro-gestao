@@ -51,9 +51,6 @@ export function ReciboForm() {
   const form = useForm<ReciboFormData>({
     resolver: zodResolver(reciboSchema),
     defaultValues: {
-      tipo_recibo_id: 0,
-      cliente_id: 0,
-      valor: 0,
       descricao: '',
       observacoes: '',
     },
@@ -71,6 +68,11 @@ export function ReciboForm() {
         supabase.from('consultores').select('id, nome').eq('ativo', true),
         supabase.from('pagamentos').select('id, valor, cliente_id, consultor_id'),
       ]);
+
+      console.log('Tipos de recibo carregados:', tiposResult.data);
+      console.log('Clientes carregados:', clientesResult.data);
+      console.log('Consultores carregados:', consultoresResult.data);
+      console.log('Pagamentos carregados:', pagamentosResult.data);
 
       if (tiposResult.data) setTiposRecibo(tiposResult.data as TipoRecibo[]);
       if (clientesResult.data) setClientes(clientesResult.data);
@@ -204,7 +206,7 @@ export function ReciboForm() {
             <div className="space-y-2">
               <Label htmlFor="tipo_recibo">Tipo de Recibo *</Label>
               <Select
-                value={form.watch('tipo_recibo_id')?.toString()}
+                value={form.watch('tipo_recibo_id')?.toString() || ''}
                 onValueChange={(value) => form.setValue('tipo_recibo_id', parseInt(value))}
               >
                 <SelectTrigger>
@@ -218,6 +220,9 @@ export function ReciboForm() {
                   ))}
                 </SelectContent>
               </Select>
+              {form.formState.errors.tipo_recibo_id && (
+                <p className="text-sm text-destructive">{form.formState.errors.tipo_recibo_id.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -239,7 +244,7 @@ export function ReciboForm() {
             <div className="space-y-2">
               <Label htmlFor="cliente">Cliente *</Label>
               <Select
-                value={form.watch('cliente_id')?.toString()}
+                value={form.watch('cliente_id')?.toString() || ''}
                 onValueChange={(value) => form.setValue('cliente_id', parseInt(value))}
               >
                 <SelectTrigger>
@@ -253,6 +258,9 @@ export function ReciboForm() {
                   ))}
                 </SelectContent>
               </Select>
+              {form.formState.errors.cliente_id && (
+                <p className="text-sm text-destructive">{form.formState.errors.cliente_id.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">

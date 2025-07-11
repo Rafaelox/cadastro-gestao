@@ -134,6 +134,21 @@ export function generateReciboNormalPDF(recibo: Recibo) {
   doc.setFont('helvetica', 'normal');
   doc.text(`Valor por extenso: ${numeroParaExtenso(recibo.valor)}`, 20, yPosition);
   
+  // Informações do pagamento e parcelas (se houver)
+  if (recibo.pagamento_id) {
+    yPosition += 15;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INFORMAÇÕES DO PAGAMENTO:', 20, yPosition);
+    
+    yPosition += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Referente ao Pagamento #${recibo.pagamento_id}`, 20, yPosition);
+    yPosition += 5;
+    doc.text('Este recibo comprova o recebimento referente ao pagamento registrado no sistema.', 20, yPosition);
+  }
+  
   // Observações
   if (recibo.observacoes) {
     yPosition += 15;
