@@ -4,6 +4,10 @@ npm-debug.log
 .gitignore
 README.md
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .nyc_output
 coverage
 .DS_Store
@@ -13,3 +17,7 @@ dist
 .idea
 .cache
 temp
+*.md
+.dockerignore
+Dockerfile
+supabase
