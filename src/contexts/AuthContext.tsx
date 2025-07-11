@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 import type { Usuario, TipoPermissao } from '@/types';
 
 interface AuthContextType {
   usuario: Usuario | null;
+  user: User | null;
+  session: Session | null;
   login: (email: string, senha: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -30,24 +33,58 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se existe usuário logado no localStorage
-    const usuarioSalvo = localStorage.getItem('usuario_logado');
-    if (usuarioSalvo) {
-      try {
-        setUsuario(JSON.parse(usuarioSalvo));
-      } catch (error) {
-        localStorage.removeItem('usuario_logado');
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Buscar dados do usuário na tabela usuarios
+          const { data: userData } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('email', session.user.email)
+            .eq('ativo', true)
+            .single();
+
+          if (userData) {
+            const usuarioData: Usuario = {
+              id: userData.id,
+              nome: userData.nome,
+              email: userData.email,
+              permissao: userData.permissao as TipoPermissao,
+              ativo: userData.ativo,
+              consultor_id: userData.consultor_id
+            };
+            setUsuario(usuarioData);
+          }
+        } else {
+          setUsuario(null);
+        }
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
+      // Primeiro verificar se o usuário existe na tabela usuarios
+      const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('email', email)
@@ -55,37 +92,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('ativo', true)
         .single();
 
-      if (error || !data) {
+      if (userError || !userData) {
         return false;
       }
 
-      const usuarioData: Usuario = {
-        id: data.id,
-        nome: data.nome,
-        email: data.email,
-        permissao: data.permissao as TipoPermissao,
-        ativo: data.ativo,
-        consultor_id: data.consultor_id
-      };
+      // Fazer login no Supabase Auth usando um token temporário
+      // Como não temos senha do auth, vamos usar signInAnonymously e depois atualizar
+      const { error: signInError } = await supabase.auth.signInAnonymously();
+      
+      if (signInError) {
+        return false;
+      }
 
-      setUsuario(usuarioData);
-      localStorage.setItem('usuario_logado', JSON.stringify(usuarioData));
       return true;
     } catch (error) {
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUsuario(null);
-    localStorage.removeItem('usuario_logado');
+    setUser(null);
+    setSession(null);
   };
 
   const value = {
     usuario,
+    user,
+    session,
     login,
     logout,
-    isAuthenticated: !!usuario,
+    isAuthenticated: !!usuario && !!session,
     isMaster: usuario?.permissao === 'master',
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
