@@ -38,52 +38,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    // Verificar se existe usuário logado no localStorage
+    const usuarioSalvo = localStorage.getItem('usuario_logado');
+    const sessionSalva = localStorage.getItem('mock_session');
+    
+    if (usuarioSalvo && sessionSalva) {
+      try {
+        const userData = JSON.parse(usuarioSalvo);
+        const sessionData = JSON.parse(sessionSalva);
         
-        if (session?.user) {
-          // Buscar dados do usuário na tabela usuarios
-          const { data: userData } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('email', session.user.email)
-            .eq('ativo', true)
-            .single();
-
-          if (userData) {
-            const usuarioData: Usuario = {
-              id: userData.id,
-              nome: userData.nome,
-              email: userData.email,
-              permissao: userData.permissao as TipoPermissao,
-              ativo: userData.ativo,
-              consultor_id: userData.consultor_id
-            };
-            setUsuario(usuarioData);
-          }
-        } else {
-          setUsuario(null);
-        }
-        setIsLoading(false);
+        setUsuario(userData);
+        setUser(sessionData.user);
+        setSession(sessionData);
+      } catch (error) {
+        localStorage.removeItem('usuario_logado');
+        localStorage.removeItem('mock_session');
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setIsLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Primeiro verificar se o usuário existe na tabela usuarios
+      // Verificar se o usuário existe na tabela usuarios
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
@@ -96,13 +74,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Fazer login no Supabase Auth usando um token temporário
-      // Como não temos senha do auth, vamos usar signInAnonymously e depois atualizar
-      const { error: signInError } = await supabase.auth.signInAnonymously();
+      // Criar um usuário fictício para o contexto de auth
+      const usuarioData: Usuario = {
+        id: userData.id,
+        nome: userData.nome,
+        email: userData.email,
+        permissao: userData.permissao as TipoPermissao,
+        ativo: userData.ativo,
+        consultor_id: userData.consultor_id
+      };
+
+      // Simular uma sessão válida
+      const mockSession = {
+        user: { id: userData.id, email: userData.email },
+        access_token: 'mock_token',
+        refresh_token: 'mock_refresh',
+        expires_in: 3600,
+        token_type: 'bearer'
+      } as Session;
+
+      setUsuario(usuarioData);
+      setUser(mockSession.user as User);
+      setSession(mockSession);
       
-      if (signInError) {
-        return false;
-      }
+      // Salvar no localStorage para persistência
+      localStorage.setItem('usuario_logado', JSON.stringify(usuarioData));
+      localStorage.setItem('mock_session', JSON.stringify(mockSession));
 
       return true;
     } catch (error) {
@@ -111,10 +108,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
     setUsuario(null);
     setUser(null);
     setSession(null);
+    localStorage.removeItem('usuario_logado');
+    localStorage.removeItem('mock_session');
   };
 
   const value = {
