@@ -1,15 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-export type TipoPermissao = 'master' | 'gerente' | 'secretaria' | 'user';
-
-interface Usuario {
-  id: string;
-  nome: string;
-  email: string;
-  permissao: TipoPermissao;
-  ativo: boolean;
-}
+import type { Usuario, TipoPermissao } from '@/types';
 
 interface AuthContextType {
   usuario: Usuario | null;

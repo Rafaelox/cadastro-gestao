@@ -13,7 +13,7 @@ import { FormasPagamentoList } from "@/components/FormasPagamentoList";
 import { UsuariosList } from "@/components/UsuariosList";
 import { UsuarioForm } from "@/components/UsuarioForm";
 import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
-import { type Servico, type Consultor } from "@/lib/database";
+import type { Servico, Consultor } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Configuracoes = () => {

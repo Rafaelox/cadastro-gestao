@@ -1,4 +1,4 @@
-import { Cliente } from "@/lib/database";
+import type { Cliente } from "@/types";
 import { PeriodoType } from "./types";
 
 export const generatePeriodData = (clientes: Cliente[], periodo: PeriodoType) => {

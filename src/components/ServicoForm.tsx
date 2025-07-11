@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { db, Servico } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Servico } from "@/types";
 
 interface ServicoFormData {
   nome: string;

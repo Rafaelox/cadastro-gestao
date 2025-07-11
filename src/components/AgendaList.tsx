@@ -37,7 +37,8 @@ import {
   Stethoscope
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db, type Agenda } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Agenda } from "@/types";
 
 interface AgendaListProps {
   selectedDate?: Date;

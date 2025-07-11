@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Servico } from "@/lib/database";
+import type { Servico } from "@/types";
 
 interface GeneratePDFParams {
   historicoData: any[];

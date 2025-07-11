@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save, Phone, Mail, MapPin, Percent } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db, type Consultor } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Consultor } from "@/types";
 
 interface ConsultorFormProps {
   onSuccess?: () => void;

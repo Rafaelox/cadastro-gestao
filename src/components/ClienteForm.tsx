@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { db, Cliente, Categoria, Origem, formatCPF, formatCEP, formatPhone, validateCPF, validateEmail } from "@/lib/database";
+import { db, formatCPF, formatCEP, formatPhone, validateCPF, validateEmail } from "@/lib/database";
+import type { Cliente, Categoria, Origem } from "@/types";
 import { Save, Search } from "lucide-react";
 
 interface ClienteFormProps {

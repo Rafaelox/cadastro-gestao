@@ -12,7 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Save, Calendar as CalendarIcon, Clock, User, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db, type Consultor, type Servico } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Consultor, Servico } from "@/types";
 import { cn } from "@/lib/utils";
 import { ClienteSearch } from "./ClienteSearch";
 

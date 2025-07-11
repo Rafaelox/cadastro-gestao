@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { db, Origem } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Origem } from "@/types";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
 
 export const OrigensList = () => {

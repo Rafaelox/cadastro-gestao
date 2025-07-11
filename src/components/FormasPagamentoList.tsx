@@ -8,7 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
-import { db, FormaPagamento } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { FormaPagamento } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 export const FormasPagamentoList = () => {

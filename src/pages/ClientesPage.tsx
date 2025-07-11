@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
-import { Cliente } from "@/lib/database";
+import type { Cliente } from "@/types";
 
 export const ClientesPage = () => {
   const [showForm, setShowForm] = useState(false);

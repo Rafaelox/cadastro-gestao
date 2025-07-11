@@ -14,7 +14,7 @@ import { CaixaForm } from "@/components/CaixaForm";
 import { CaixaList } from "@/components/CaixaList";
 import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { AuditLogs } from "@/components/AuditLogs";
-import { Cliente } from "@/lib/database";
+import type { Cliente } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface IndexProps {

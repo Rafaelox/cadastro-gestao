@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Search, Edit, Trash2, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { db, type Servico } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Servico } from "@/types";
 
 interface ServicosListProps {
   onEdit?: (servicoId: number) => void;

@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { UserPlus, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { TipoPermissao } from "@/contexts/AuthContext";
+import type { TipoPermissao } from "@/types";
 
 interface Usuario {
   id: string;

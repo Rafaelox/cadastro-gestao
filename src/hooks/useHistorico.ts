@@ -1,39 +1,16 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { HistoricoItem, HistoricoFilters } from '@/types';
 
-export interface HistoricoItem {
-  id: number;
-  agenda_id: number;
-  consultor_id: number;
-  servico_id: number;
-  cliente_id: number;
-  data_atendimento: string;
-  data_agendamento: string | null;
-  valor_servico: number;
-  valor_final: number;
-  comissao_consultor: number;
-  observacoes_atendimento: string | null;
-  procedimentos_realizados: string | null;
-  forma_pagamento: number;
-  created_at: string;
-  consultor_nome?: string;
-  servico_nome?: string;
-  cliente_nome?: string;
-  forma_pagamento_nome?: string;
-}
+export type { HistoricoItem };
 
 export const useHistorico = () => {
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const loadHistorico = useCallback(async (filters: {
-    clienteId?: number;
-    consultorId?: number;
-    data_inicio?: string;
-    data_fim?: string;
-  } = {}) => {
+  const loadHistorico = useCallback(async (filters: HistoricoFilters = {}) => {
     setIsLoading(true);
     try {
       let query = supabase

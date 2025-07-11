@@ -34,7 +34,8 @@ import {
   Percent
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db, type Consultor } from "@/lib/database";
+import { db } from "@/lib/database";
+import type { Consultor } from "@/types";
 
 interface ConsultoresListProps {
   onEdit?: (consultor: Consultor) => void;

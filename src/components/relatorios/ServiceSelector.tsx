@@ -1,6 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Servico } from "@/lib/database";
+import type { Servico } from "@/types";
 
 interface ServiceSelectorProps {
   servicos: Servico[];
