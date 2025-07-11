@@ -16,7 +16,8 @@ import { toast } from "@/hooks/use-toast";
 import { CameraCapture } from "@/components/mobile/CameraCapture";
 
 interface AtendimentoFormProps {
-  agendaId: number;
+  agendaId?: number;
+  atendimentoId?: number;
   onCancel: () => void;
   onSuccess: () => void;
 }
@@ -38,9 +39,11 @@ interface AgendaDetalhes {
   observacoes?: string;
 }
 
-export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFormProps) => {
+export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }: AtendimentoFormProps) => {
   const [agenda, setAgenda] = useState<AgendaDetalhes | null>(null);
+  const [atendimento, setAtendimento] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(!!atendimentoId);
   const [dataAtendimento, setDataAtendimento] = useState<Date>(new Date());
   const [procedimentosRealizados, setProcedimentosRealizados] = useState("");
   const [observacoesAtendimento, setObservacoesAtendimento] = useState("");
@@ -50,10 +53,16 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
   const [valorFinal, setValorFinal] = useState<number>(0);
 
   useEffect(() => {
-    loadAgenda();
-  }, [agendaId]);
+    if (agendaId) {
+      loadAgenda();
+    } else if (atendimentoId) {
+      loadAtendimento();
+    }
+  }, [agendaId, atendimentoId]);
 
   const loadAgenda = async () => {
+    if (!agendaId) return;
+    
     try {
       const { data, error } = await supabase
         .from('agenda')
@@ -89,6 +98,66 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível carregar os dados do agendamento."
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadAtendimento = async () => {
+    if (!atendimentoId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('historico')
+        .select(`
+          *,
+          clientes!fk_historico_cliente(nome, email, cpf),
+          consultores!fk_historico_consultor(nome),
+          servicos!fk_historico_servico(nome)
+        `)
+        .eq('id', atendimentoId)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setAtendimento(data);
+        
+        // Preencher campos do formulário com dados existentes
+        setDataAtendimento(new Date(data.data_atendimento));
+        setProcedimentosRealizados(data.procedimentos_realizados || "");
+        setObservacoesAtendimento(data.observacoes_atendimento || "");
+        setValorFinal(data.valor_final || data.valor_servico || 0);
+        setFotosUrls(data.fotos_urls || []);
+
+        // Criar objeto agenda para compatibilidade
+        const agendaSimulada = {
+          id: data.agenda_id,
+          cliente_id: data.cliente_id,
+          consultor_id: data.consultor_id,
+          servico_id: data.servico_id,
+          cliente_nome: data.clientes?.nome || '',
+          cliente_email: data.clientes?.email || '',
+          cliente_cpf: data.clientes?.cpf || '',
+          cliente_data_nascimento: '',
+          consultor_nome: data.consultores?.nome || '',
+          servico_nome: data.servicos?.nome || '',
+          data_agendamento: data.data_agendamento || '',
+          valor_servico: data.valor_servico,
+          comissao_consultor: data.comissao_consultor,
+          observacoes: ''
+        };
+        setAgenda(agendaSimulada);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar atendimento:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar os dados do atendimento."
       });
     } finally {
       setIsLoading(false);
@@ -145,46 +214,70 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
     if (!agenda) return;
 
     try {
-      const { error } = await supabase
-        .from('historico')
-        .insert({
-          agenda_id: agendaId,
-          cliente_id: agenda.cliente_id,
-          consultor_id: agenda.consultor_id,
-          servico_id: agenda.servico_id,
-          data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
-          data_agendamento: agenda.data_agendamento,
-          valor_servico: agenda.valor_servico,
-          valor_final: valorFinal,
-          comissao_consultor: agenda.comissao_consultor,
-          forma_pagamento: null,
-          procedimentos_realizados: procedimentosRealizados,
-          observacoes_atendimento: observacoesAtendimento,
-          fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
+      if (isEditing && atendimentoId) {
+        // Atualizar atendimento existente
+        const { error } = await supabase
+          .from('historico')
+          .update({
+            data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
+            valor_final: valorFinal,
+            procedimentos_realizados: procedimentosRealizados,
+            observacoes_atendimento: observacoesAtendimento,
+            fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
+          })
+          .eq('id', atendimentoId);
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Atendimento atualizado com sucesso!"
         });
+      } else {
+        // Criar novo atendimento
+        const { error } = await supabase
+          .from('historico')
+          .insert({
+            agenda_id: agendaId!,
+            cliente_id: agenda.cliente_id,
+            consultor_id: agenda.consultor_id,
+            servico_id: agenda.servico_id,
+            data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
+            data_agendamento: agenda.data_agendamento,
+            valor_servico: agenda.valor_servico,
+            valor_final: valorFinal,
+            comissao_consultor: agenda.comissao_consultor,
+            forma_pagamento: null,
+            procedimentos_realizados: procedimentosRealizados,
+            observacoes_atendimento: observacoesAtendimento,
+            fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
+          });
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        // Marcar o agendamento como concluído apenas para novos atendimentos
+        await supabase
+          .from('agenda')
+          .update({ status: 'concluido' })
+          .eq('id', agendaId);
+
+        toast({
+          title: "Sucesso",
+          description: "Atendimento registrado com sucesso!"
+        });
       }
-
-      // Marcar o agendamento como concluído
-      await supabase
-        .from('agenda')
-        .update({ status: 'concluido' })
-        .eq('id', agendaId);
-
-      toast({
-        title: "Sucesso",
-        description: "Atendimento registrado com sucesso!"
-      });
 
       onSuccess();
     } catch (error) {
-      console.error('Erro ao registrar atendimento:', error);
+      console.error('Erro ao salvar atendimento:', error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível registrar o atendimento."
+        description: `Não foi possível ${isEditing ? 'atualizar' : 'registrar'} o atendimento.`
       });
     }
   };
@@ -203,7 +296,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
     return (
       <Card>
         <CardContent className="p-6">
-          <p>Agendamento não encontrado.</p>
+          <p>{isEditing ? 'Atendimento não encontrado.' : 'Agendamento não encontrado.'}</p>
           <Button onClick={onCancel} className="mt-4">Voltar</Button>
         </CardContent>
       </Card>
@@ -213,7 +306,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Formulário de Atendimento</CardTitle>
+        <CardTitle>{isEditing ? 'Editar Atendimento' : 'Formulário de Atendimento'}</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Header com dados do cliente */}
@@ -398,7 +491,7 @@ ${agenda.observacoes ? `Observações: ${agenda.observacoes}` : ''}`}
             
             <Button type="submit" className="bg-green-600 hover:bg-green-700">
               <Save className="mr-2 h-4 w-4" />
-              Gravar
+              {isEditing ? 'Atualizar' : 'Gravar'}
             </Button>
             
             <Button type="button" variant="outline">

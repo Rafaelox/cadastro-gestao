@@ -8,11 +8,17 @@ import { AtendimentoForm } from "@/components/AtendimentoForm";
 export const AtendimentosPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAgendaId, setSelectedAgendaId] = useState<number | null>(null);
+  const [selectedAtendimentoId, setSelectedAtendimentoId] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleAtendimentoSuccess = () => {
     setSelectedAgendaId(null);
+    setSelectedAtendimentoId(null);
     setRefreshKey(prev => prev + 1);
+  };
+
+  const handleEditarAtendimento = (atendimentoId: number) => {
+    setSelectedAtendimentoId(atendimentoId);
   };
 
   if (selectedAgendaId) {
@@ -21,6 +27,18 @@ export const AtendimentosPage = () => {
         <AtendimentoForm
           agendaId={selectedAgendaId}
           onCancel={() => setSelectedAgendaId(null)}
+          onSuccess={handleAtendimentoSuccess}
+        />
+      </div>
+    );
+  }
+
+  if (selectedAtendimentoId) {
+    return (
+      <div className="container mx-auto p-4 pb-20">
+        <AtendimentoForm
+          atendimentoId={selectedAtendimentoId}
+          onCancel={() => setSelectedAtendimentoId(null)}
           onSuccess={handleAtendimentoSuccess}
         />
       </div>
@@ -54,6 +72,7 @@ export const AtendimentosPage = () => {
             searchTerm={searchTerm} 
             key={refreshKey}
             onNovoAtendimento={(agendaId) => setSelectedAgendaId(agendaId)}
+            onEditarAtendimento={handleEditarAtendimento}
           />
         </CardContent>
       </Card>

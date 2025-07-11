@@ -18,7 +18,9 @@ import {
   Eye,
   Filter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Edit3,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useHistorico, type HistoricoItem } from "@/hooks/useHistorico";
@@ -47,9 +49,10 @@ interface HistoricoListProps {
   onNovoAgendamento?: () => void;
   searchTerm?: string;
   onNovoAtendimento?: (agendaId: number) => void;
+  onEditarAtendimento?: (atendimentoId: number) => void;
 }
 
-export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searchTerm = "", onNovoAtendimento }: HistoricoListProps) => {
+export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searchTerm = "", onNovoAtendimento, onEditarAtendimento }: HistoricoListProps) => {
   const [filteredHistorico, setFilteredHistorico] = useState<HistoricoItem[]>([]);
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const [selectedConsultor, setSelectedConsultor] = useState<string>("all");
@@ -120,6 +123,47 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
 
     setFilteredHistorico(filtered);
     setCurrentPage(1);
+  };
+
+  const handleEditarAtendimento = (atendimentoId: number) => {
+    if (onEditarAtendimento) {
+      onEditarAtendimento(atendimentoId);
+    } else {
+      toast({
+        title: "Editar Atendimento",
+        description: "Funcionalidade de edição de atendimentos será implementada."
+      });
+    }
+  };
+
+  const handleExcluirAtendimento = async (atendimentoId: number) => {
+    if (window.confirm("Tem certeza que deseja excluir este atendimento?")) {
+      try {
+        const { error } = await supabase
+          .from('historico')
+          .delete()
+          .eq('id', atendimentoId);
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Atendimento excluído com sucesso!"
+        });
+
+        // Recarregar a lista
+        loadHistorico({ clienteId, consultorId });
+      } catch (error) {
+        console.error('Erro ao excluir atendimento:', error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível excluir o atendimento."
+        });
+      }
+    }
   };
 
   const handleAgendarNovo = (clienteIdForAgenda: number, consultorIdForAgenda: number) => {
@@ -335,6 +379,28 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
 
                   {/* Ações */}
                   <div className="flex flex-col space-y-2 ml-4">
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditarAtendimento(item.id!)}
+                        className="flex items-center space-x-1"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                        <span>Editar</span>
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleExcluirAtendimento(item.id!)}
+                        className="flex items-center space-x-1"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        <span>Excluir</span>
+                      </Button>
+                    </div>
+                    
                     <Button
                       size="sm"
                       onClick={() => handleAgendarNovo(item.cliente_id, item.consultor_id)}
