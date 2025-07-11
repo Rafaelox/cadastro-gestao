@@ -112,6 +112,18 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
   const onSubmit = async (data: ConfiguracaoFormData) => {
     setLoading(true);
     try {
+      // Verificar se usuário está autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('User:', user);
+      
+      if (!user) {
+        toast({
+          title: 'Erro',
+          description: 'Você precisa estar logado para salvar configurações',
+          variant: 'destructive',
+        });
+        return;
+      }
       if (configuracao) {
         // Atualizar configuração existente
         const { error } = await supabase
