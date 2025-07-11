@@ -39,6 +39,16 @@ interface Pagamento {
   valor_original: number;
   cliente_id: number;
   consultor_id: number;
+  data_pagamento: string;
+  parcelas?: Parcela[];
+}
+
+interface Parcela {
+  id: number;
+  numero_parcela: number;
+  valor_parcela: number;
+  data_vencimento: string;
+  status: string;
 }
 
 export function ReciboForm() {
@@ -47,6 +57,7 @@ export function ReciboForm() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [consultores, setConsultores] = useState<Consultor[]>([]);
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [pagamentoSelecionado, setPagamentoSelecionado] = useState<Pagamento | null>(null);
   const { toast } = useToast();
 
   const form = useForm<ReciboFormData>({
@@ -69,7 +80,21 @@ export function ReciboForm() {
         supabase.from('tipos_recibo').select('*').eq('ativo', true),
         supabase.from('clientes').select('id, nome').eq('ativo', true),
         supabase.from('consultores').select('id, nome').eq('ativo', true),
-        supabase.from('pagamentos').select('id, valor, valor_original, cliente_id, consultor_id'),
+        supabase.from('pagamentos').select(`
+          id, 
+          valor, 
+          valor_original, 
+          cliente_id, 
+          consultor_id, 
+          data_pagamento,
+          parcelas (
+            id,
+            numero_parcela,
+            valor_parcela,
+            data_vencimento,
+            status
+          )
+        `),
       ]);
 
       console.log('Tipos de recibo carregados:', tiposResult);
@@ -217,10 +242,12 @@ export function ReciboForm() {
   const handlePagamentoChange = (pagamentoId: string) => {
     const pagamento = pagamentos.find(p => p.id === parseInt(pagamentoId));
     if (pagamento) {
+      setPagamentoSelecionado(pagamento);
       form.setValue('cliente_id', pagamento.cliente_id);
       form.setValue('consultor_id', pagamento.consultor_id);
       // Usar valor_original se disponível, senão usar valor
       form.setValue('valor', pagamento.valor_original || pagamento.valor);
+      form.setValue('pagamento_id', pagamento.id);
     }
   };
 
@@ -287,6 +314,31 @@ export function ReciboForm() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Exibir detalhes das parcelas se um pagamento for selecionado */}
+              {pagamentoSelecionado && pagamentoSelecionado.parcelas && pagamentoSelecionado.parcelas.length > 0 && (
+                <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+                  <h4 className="text-sm font-medium mb-3">Parcelas do Pagamento #{pagamentoSelecionado.id}</h4>
+                  <div className="text-sm mb-2">
+                    <strong>Data do Pagamento:</strong> {new Date(pagamentoSelecionado.data_pagamento).toLocaleDateString('pt-BR')}
+                  </div>
+                  <div className="text-sm mb-2">
+                    <strong>Valor Total:</strong> R$ {(pagamentoSelecionado.valor_original || pagamentoSelecionado.valor).toFixed(2).replace('.', ',')}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Detalhamento das Parcelas:</div>
+                    {pagamentoSelecionado.parcelas.map((parcela) => (
+                      <div key={parcela.id} className="text-xs p-2 bg-background rounded border">
+                        <span className="font-medium">Parcela {parcela.numero_parcela}:</span> R$ {parcela.valor_parcela.toFixed(2).replace('.', ',')} - 
+                        Vencimento: {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')} - 
+                        Status: <span className={`capitalize ${parcela.status === 'pago' ? 'text-green-600' : 'text-orange-600'}`}>
+                          {parcela.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
