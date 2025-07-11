@@ -26,7 +26,18 @@ export function RecibosList() {
       const [recibosResult, tiposResult] = await Promise.all([
         supabase
           .from('recibos')
-          .select('*')
+          .select(`
+            *,
+            pagamentos:pagamento_id (
+              data_pagamento,
+              parcelas (
+                numero_parcela,
+                valor_parcela,
+                data_vencimento,
+                status
+              )
+            )
+          `)
           .order('created_at', { ascending: false }),
         supabase
           .from('tipos_recibo')
@@ -135,7 +146,10 @@ export function RecibosList() {
                       R$ {recibo.valor.toFixed(2).replace('.', ',')}
                     </TableCell>
                     <TableCell>
-                      {format(new Date(recibo.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      {recibo.pagamentos?.data_pagamento 
+                        ? format(new Date(recibo.pagamentos.data_pagamento), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                        : format(new Date(recibo.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                      }
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">

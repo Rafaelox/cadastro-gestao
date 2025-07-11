@@ -37,6 +37,15 @@ export interface Recibo {
   pdf_url?: string;
   created_at: string;
   updated_at: string;
+  pagamentos?: {
+    data_pagamento: string;
+    parcelas: {
+      numero_parcela: number;
+      valor_parcela: number;
+      data_vencimento: string;
+      status: string;
+    }[];
+  };
 }
 
 export interface ReciboFormData {
