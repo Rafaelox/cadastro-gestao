@@ -62,6 +62,8 @@ export function ReciboForm() {
 
   const loadData = async () => {
     try {
+      console.log('Iniciando carregamento de dados...');
+      
       const [tiposResult, clientesResult, consultoresResult, pagamentosResult] = await Promise.all([
         supabase.from('tipos_recibo').select('*').eq('ativo', true),
         supabase.from('clientes').select('id, nome').eq('ativo', true),
@@ -69,12 +71,18 @@ export function ReciboForm() {
         supabase.from('pagamentos').select('id, valor, cliente_id, consultor_id'),
       ]);
 
-      console.log('Tipos de recibo carregados:', tiposResult.data);
+      console.log('Tipos de recibo carregados:', tiposResult);
       console.log('Clientes carregados:', clientesResult.data);
       console.log('Consultores carregados:', consultoresResult.data);
       console.log('Pagamentos carregados:', pagamentosResult.data);
 
-      if (tiposResult.data) setTiposRecibo(tiposResult.data as TipoRecibo[]);
+      if (tiposResult.error) {
+        console.error('Erro ao carregar tipos de recibo:', tiposResult.error);
+      } else if (tiposResult.data) {
+        console.log('Definindo tipos de recibo:', tiposResult.data);
+        setTiposRecibo(tiposResult.data as TipoRecibo[]);
+      }
+
       if (clientesResult.data) setClientes(clientesResult.data);
       if (consultoresResult.data) setConsultores(consultoresResult.data);
       if (pagamentosResult.data) setPagamentos(pagamentosResult.data);
