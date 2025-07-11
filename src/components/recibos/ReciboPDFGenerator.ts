@@ -27,79 +27,89 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   
-  // Header da empresa
+  // ========== CABEÇALHO COM DADOS DA EMPRESA ==========
+  let yPosition = 15;
+  
+  // Logo da empresa (se houver)
   if (recibo.dados_empresa.logo_url) {
     try {
-      // Aqui seria necessário carregar a imagem, por simplicidade vamos omitir
-      // doc.addImage(recibo.dados_empresa.logo_url, 'JPEG', 15, 20, 40, 20);
+      // Reservar espaço para logo no futuro
+      // doc.addImage(recibo.dados_empresa.logo_url, 'JPEG', 15, yPosition, 40, 20);
     } catch (error) {
       console.warn('Erro ao carregar logo:', error);
     }
   }
   
-  // Título
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RECIBO', pageWidth / 2, 30, { align: 'center' });
-  
-  // Número do recibo
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Nº ${recibo.numero_recibo}`, pageWidth - 50, 20);
-  
-  // Data
-  const dataAtual = format(new Date(recibo.created_at), 'dd/MM/yyyy', { locale: ptBR });
-  doc.text(`Data: ${dataAtual}`, pageWidth - 50, 30);
-  
-  // Dados completos da empresa/recebedor no topo
-  let yPosition = 50;
+  // Nome da empresa em destaque no topo
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('RECEBEDOR:', 20, yPosition);
-  
+  doc.text(recibo.dados_empresa.nome, pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 8;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(recibo.dados_empresa.nome, 20, yPosition);
   
-  yPosition += 6;
-  doc.setFontSize(10);
+  // Linha com dados principais da empresa
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   
+  let linhaDados = '';
   if (recibo.dados_empresa.cpf_cnpj) {
     const labelDoc = recibo.dados_empresa.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ';
-    doc.text(`${labelDoc}: ${recibo.dados_empresa.cpf_cnpj}`, 20, yPosition);
-    yPosition += 4;
-  }
-  
-  if (recibo.dados_empresa.endereco) {
-    doc.text(`Endereço: ${recibo.dados_empresa.endereco}`, 20, yPosition);
-    yPosition += 4;
-  }
-  
-  if (recibo.dados_empresa.cidade && recibo.dados_empresa.estado) {
-    doc.text(`${recibo.dados_empresa.cidade} - ${recibo.dados_empresa.estado}`, 20, yPosition);
-    if (recibo.dados_empresa.cep) {
-      doc.text(`CEP: ${recibo.dados_empresa.cep}`, 120, yPosition);
-    }
-    yPosition += 4;
+    linhaDados += `${labelDoc}: ${recibo.dados_empresa.cpf_cnpj}`;
   }
   
   if (recibo.dados_empresa.telefone) {
-    doc.text(`Telefone: ${recibo.dados_empresa.telefone}`, 20, yPosition);
-    if (recibo.dados_empresa.email) {
-      doc.text(`Email: ${recibo.dados_empresa.email}`, 120, yPosition);
-    }
-    yPosition += 4;
-  } else if (recibo.dados_empresa.email) {
-    doc.text(`Email: ${recibo.dados_empresa.email}`, 20, yPosition);
-    yPosition += 4;
+    linhaDados += linhaDados ? ` • Tel: ${recibo.dados_empresa.telefone}` : `Tel: ${recibo.dados_empresa.telefone}`;
   }
   
-  // Linha separadora
-  yPosition += 10;
-  doc.setLineWidth(0.5);
+  if (recibo.dados_empresa.email) {
+    linhaDados += linhaDados ? ` • Email: ${recibo.dados_empresa.email}` : `Email: ${recibo.dados_empresa.email}`;
+  }
+  
+  if (linhaDados) {
+    doc.text(linhaDados, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 6;
+  }
+  
+  // Endereço da empresa
+  let linhaEndereco = '';
+  if (recibo.dados_empresa.endereco) {
+    linhaEndereco = recibo.dados_empresa.endereco;
+    
+    if (recibo.dados_empresa.cidade && recibo.dados_empresa.estado) {
+      linhaEndereco += ` - ${recibo.dados_empresa.cidade}/${recibo.dados_empresa.estado}`;
+    }
+    
+    if (recibo.dados_empresa.cep) {
+      linhaEndereco += ` - CEP: ${recibo.dados_empresa.cep}`;
+    }
+    
+    doc.text(linhaEndereco, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 8;
+  }
+  
+  // Linha separadora dupla
+  yPosition += 5;
+  doc.setLineWidth(1);
   doc.line(20, yPosition, pageWidth - 20, yPosition);
+  yPosition += 2;
+  doc.setLineWidth(0.3);
+  doc.line(20, yPosition, pageWidth - 20, yPosition);
+  yPosition += 15;
+  
+  // ========== TÍTULO DO RECIBO ==========
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RECIBO', pageWidth / 2, yPosition, { align: 'center' });
+  
+  // Número do recibo no canto superior direito
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Nº ${recibo.numero_recibo}`, pageWidth - 15, 20, { align: 'right' });
+  
+  // Data atual
+  const dataAtual = format(new Date(recibo.created_at), 'dd/MM/yyyy', { locale: ptBR });
+  doc.text(`Data: ${dataAtual}`, pageWidth - 15, 30, { align: 'right' });
+  
+  yPosition += 20;
   
   // Dados do pagador (cliente)
   yPosition += 15;
@@ -334,58 +344,89 @@ export function generateReciboDoacaoPDF(recibo: ReciboComParcelas) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   
-  // Header da empresa
+  // ========== CABEÇALHO COM DADOS DA EMPRESA ==========
+  let yPosition = 15;
+  
+  // Logo da empresa (se houver)
   if (recibo.dados_empresa.logo_url) {
     try {
-      // Aqui seria necessário carregar a imagem, por simplicidade vamos omitir
-      // doc.addImage(recibo.dados_empresa.logo_url, 'JPEG', 15, 20, 40, 20);
+      // Reservar espaço para logo no futuro
+      // doc.addImage(recibo.dados_empresa.logo_url, 'JPEG', 15, yPosition, 40, 20);
     } catch (error) {
       console.warn('Erro ao carregar logo:', error);
     }
   }
   
-  // Título
-  doc.setFontSize(20);
+  // Nome da empresa em destaque no topo
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('RECIBO DE DOAÇÃO', pageWidth / 2, 30, { align: 'center' });
+  doc.text(recibo.dados_empresa.nome, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 8;
   
-  // Número do recibo
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Nº ${recibo.numero_recibo}`, pageWidth - 50, 20);
-  
-  // Data
-  const dataAtual = format(new Date(recibo.created_at), 'dd/MM/yyyy', { locale: ptBR });
-  doc.text(`Data: ${dataAtual}`, pageWidth - 50, 30);
-  
-  // Dados da organização receptora
-  let yPosition = 50;
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('ORGANIZAÇÃO RECEPTORA:', 20, yPosition);
-  
-  yPosition += 10;
-  doc.setFontSize(10);
+  // Linha com dados principais da empresa
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   
-  doc.text(`Nome/Razão Social: ${recibo.dados_empresa.nome}`, 20, yPosition);
-  yPosition += 5;
-  
+  let linhaDados = '';
   if (recibo.dados_empresa.cpf_cnpj) {
     const labelDoc = recibo.dados_empresa.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ';
-    doc.text(`${labelDoc}: ${recibo.dados_empresa.cpf_cnpj}`, 20, yPosition);
-    yPosition += 5;
+    linhaDados += `${labelDoc}: ${recibo.dados_empresa.cpf_cnpj}`;
   }
   
+  if (recibo.dados_empresa.telefone) {
+    linhaDados += linhaDados ? ` • Tel: ${recibo.dados_empresa.telefone}` : `Tel: ${recibo.dados_empresa.telefone}`;
+  }
+  
+  if (recibo.dados_empresa.email) {
+    linhaDados += linhaDados ? ` • Email: ${recibo.dados_empresa.email}` : `Email: ${recibo.dados_empresa.email}`;
+  }
+  
+  if (linhaDados) {
+    doc.text(linhaDados, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 6;
+  }
+  
+  // Endereço da empresa
+  let linhaEndereco = '';
   if (recibo.dados_empresa.endereco) {
-    doc.text(`Endereço: ${recibo.dados_empresa.endereco}`, 20, yPosition);
-    yPosition += 5;
+    linhaEndereco = recibo.dados_empresa.endereco;
+    
+    if (recibo.dados_empresa.cidade && recibo.dados_empresa.estado) {
+      linhaEndereco += ` - ${recibo.dados_empresa.cidade}/${recibo.dados_empresa.estado}`;
+    }
+    
+    if (recibo.dados_empresa.cep) {
+      linhaEndereco += ` - CEP: ${recibo.dados_empresa.cep}`;
+    }
+    
+    doc.text(linhaEndereco, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 8;
   }
   
-  // Linha separadora
-  yPosition += 10;
-  doc.setLineWidth(0.5);
+  // Linha separadora dupla
+  yPosition += 5;
+  doc.setLineWidth(1);
   doc.line(20, yPosition, pageWidth - 20, yPosition);
+  yPosition += 2;
+  doc.setLineWidth(0.3);
+  doc.line(20, yPosition, pageWidth - 20, yPosition);
+  yPosition += 15;
+  
+  // ========== TÍTULO DO RECIBO ==========
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('RECIBO DE DOAÇÃO', pageWidth / 2, yPosition, { align: 'center' });
+  
+  // Número do recibo no canto superior direito
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Nº ${recibo.numero_recibo}`, pageWidth - 15, 20, { align: 'right' });
+  
+  // Data atual
+  const dataAtual = format(new Date(recibo.created_at), 'dd/MM/yyyy', { locale: ptBR });
+  doc.text(`Data: ${dataAtual}`, pageWidth - 15, 30, { align: 'right' });
+  
+  yPosition += 20;
   
   // Dados do doador
   yPosition += 15;
