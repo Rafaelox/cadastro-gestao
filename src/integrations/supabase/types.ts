@@ -968,6 +968,25 @@ export type Database = {
           user_email: string
         }[]
       }
+      get_empresa_ativa: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: number
+          nome: string
+          tipo_pessoa: string
+          cpf_cnpj: string
+          endereco: string
+          cidade: string
+          estado: string
+          cep: string
+          telefone: string
+          email: string
+          logo_url: string
+          ativo: boolean
+          created_at: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

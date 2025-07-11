@@ -14,7 +14,9 @@ import { UsuariosList } from "@/components/UsuariosList";
 import { UsuarioForm } from "@/components/UsuarioForm";
 import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
 import { ConfiguracaoEmpresaForm } from "@/components/ConfiguracaoEmpresaForm";
+import { EmpresasList } from "@/components/EmpresasList";
 import type { Servico, Consultor } from "@/types";
+import type { ConfiguracaoEmpresa } from "@/types/recibo";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Configuracoes = () => {
@@ -25,6 +27,9 @@ export const Configuracoes = () => {
   const [editingConsultor, setEditingConsultor] = useState<Consultor | null>(null);
   const [showUsuarioForm, setShowUsuarioForm] = useState(false);
   const [editingUsuario, setEditingUsuario] = useState<any>(null);
+  const [showEmpresaForm, setShowEmpresaForm] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<ConfiguracaoEmpresa | null>(null);
+  const [refreshEmpresasKey, setRefreshEmpresasKey] = useState(0);
   const { canManageUsers } = useAuth();
 
   const handleEditServico = (servicoId: number) => {
@@ -70,6 +75,22 @@ export const Configuracoes = () => {
   const handleUsuarioSuccess = () => {
     setShowUsuarioForm(false);
     setEditingUsuario(null);
+  };
+
+  const handleEditEmpresa = (empresa: ConfiguracaoEmpresa) => {
+    setEditingEmpresa(empresa);
+    setShowEmpresaForm(true);
+  };
+
+  const handleAddEmpresa = () => {
+    setEditingEmpresa(null);
+    setShowEmpresaForm(true);
+  };
+
+  const handleEmpresaSuccess = () => {
+    setShowEmpresaForm(false);
+    setEditingEmpresa(null);
+    setRefreshEmpresasKey(prev => prev + 1);
   };
 
   const renderServicosContent = () => {
@@ -158,6 +179,38 @@ export const Configuracoes = () => {
       <UsuariosList
         onEdit={handleEditUsuario}
         onAdd={handleAddUsuario}
+      />
+    );
+  };
+
+  const renderEmpresasContent = () => {
+    if (showEmpresaForm) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">
+              {editingEmpresa ? "Editar Empresa" : "Nova Empresa"}
+            </h3>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEmpresaForm(false)}
+            >
+              Voltar
+            </Button>
+          </div>
+          <ConfiguracaoEmpresaForm 
+            empresaData={editingEmpresa}
+            onSuccess={handleEmpresaSuccess} 
+          />
+        </div>
+      );
+    }
+
+    return (
+      <EmpresasList
+        onEdit={handleEditEmpresa}
+        onAdd={handleAddEmpresa}
+        refreshKey={refreshEmpresasKey}
       />
     );
   };
@@ -352,11 +405,11 @@ export const Configuracoes = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Building2 className="h-5 w-5" />
-                <span>Configurações da Empresa</span>
+                <span>Gerenciar Empresas</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ConfiguracaoEmpresaForm />
+              {renderEmpresasContent()}
             </CardContent>
           </Card>
         </TabsContent>

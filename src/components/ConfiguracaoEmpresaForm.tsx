@@ -28,7 +28,12 @@ const configuracaoSchema = z.object({
 
 type ConfiguracaoFormData = z.infer<typeof configuracaoSchema>;
 
-export function ConfiguracaoEmpresaForm() {
+interface ConfiguracaoEmpresaFormProps {
+  empresaData?: ConfiguracaoEmpresa | null;
+  onSuccess?: () => void;
+}
+
+export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: ConfiguracaoEmpresaFormProps) {
   const [loading, setLoading] = useState(false);
   const [configuracao, setConfiguracao] = useState<ConfiguracaoEmpresa | null>(null);
   const { toast } = useToast();
@@ -50,8 +55,24 @@ export function ConfiguracaoEmpresaForm() {
   });
 
   useEffect(() => {
-    loadConfiguracao();
-  }, []);
+    if (empresaData) {
+      setConfiguracao(empresaData);
+      form.reset({
+        nome: empresaData.nome || '',
+        tipo_pessoa: empresaData.tipo_pessoa as 'fisica' | 'juridica',
+        cpf_cnpj: empresaData.cpf_cnpj || '',
+        endereco: empresaData.endereco || '',
+        cidade: empresaData.cidade || '',
+        estado: empresaData.estado || '',
+        cep: empresaData.cep || '',
+        telefone: empresaData.telefone || '',
+        email: empresaData.email || '',
+        logo_url: empresaData.logo_url || '',
+      });
+    } else {
+      loadConfiguracao();
+    }
+  }, [empresaData]);
 
   const loadConfiguracao = async () => {
     try {
@@ -113,7 +134,11 @@ export function ConfiguracaoEmpresaForm() {
         description: 'Configurações da empresa salvas com sucesso',
       });
 
-      loadConfiguracao();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        loadConfiguracao();
+      }
     } catch (error) {
       console.error('Erro ao salvar:', error);
       toast({
