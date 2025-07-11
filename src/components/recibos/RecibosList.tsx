@@ -30,6 +30,8 @@ export function RecibosList() {
             *,
             pagamentos:pagamento_id (
               data_pagamento,
+              valor,
+              valor_original,
               parcelas (
                 numero_parcela,
                 valor_parcela,

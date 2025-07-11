@@ -3,13 +3,24 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Recibo } from '@/types/recibo';
 
-interface ReciboComParcelas extends Recibo {
+interface ReciboComParcelas extends Omit<Recibo, 'pagamentos'> {
   parcelas?: {
     numero_parcela: number;
     valor_parcela: number;
     data_vencimento: string;
     status: string;
   }[];
+  pagamentos?: {
+    data_pagamento: string;
+    valor?: number;
+    valor_original?: number;
+    parcelas?: {
+      numero_parcela: number;
+      valor_parcela: number;
+      data_vencimento: string;
+      status: string;
+    }[];
+  };
 }
 
 export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
@@ -131,19 +142,30 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
   const dataHoraCompleta = format(new Date(recibo.created_at), "dd 'de' MMMM 'de' yyyy', às' HH:mm", { locale: ptBR });
   const cidadeTexto = recibo.dados_empresa.cidade || 'Porto Alegre';
   
-  // Texto formatado do recibo com VALOR TOTAL
-  const valorExtenso = numeroParaExtenso(recibo.valor);
+  // Obter valor total correto (priorizar valor_original do pagamento, depois valor do pagamento, por último valor do recibo)
+  let valorTotal = recibo.valor;
+  if (recibo.pagamentos?.valor_original) {
+    valorTotal = recibo.pagamentos.valor_original;
+  } else if (recibo.pagamentos?.valor) {
+    valorTotal = recibo.pagamentos.valor;
+  }
+  const valorExtenso = numeroParaExtenso(valorTotal);
   const cpfCliente = recibo.dados_cliente.cpf ? `, CPF nº ${recibo.dados_cliente.cpf}` : '';
   
   // Verificar se é parcelado para ajustar o texto
   const parcelas = recibo.parcelas || recibo.pagamentos?.parcelas || [];
   const isParcelado = parcelas && parcelas.length > 0;
   
+  // Data do pagamento como referência principal
+  const dataPagamento = recibo.pagamentos?.data_pagamento ? 
+    format(new Date(recibo.pagamentos.data_pagamento), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) :
+    format(new Date(recibo.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  
   let textoRecibo = '';
   if (isParcelado) {
-    textoRecibo = `Recebemos de ${recibo.dados_cliente.nome}${cpfCliente}, o valor total de R$ ${recibo.valor.toFixed(2).replace('.', ',')} (${valorExtenso}), referente aos serviços prestados, conforme parcelamento detalhado abaixo.`;
+    textoRecibo = `Recebemos de ${recibo.dados_cliente.nome}${cpfCliente}, o valor total de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${valorExtenso}), em ${dataPagamento}, referente aos serviços prestados, conforme parcelamento detalhado abaixo.`;
   } else {
-    textoRecibo = `Recebemos de ${recibo.dados_cliente.nome}${cpfCliente}, o valor total de R$ ${recibo.valor.toFixed(2).replace('.', ',')} (${valorExtenso}), referente aos serviços prestados.`;
+    textoRecibo = `Recebemos de ${recibo.dados_cliente.nome}${cpfCliente}, o valor de R$ ${valorTotal.toFixed(2).replace('.', ',')} (${valorExtenso}), em ${dataPagamento}, referente aos serviços prestados.`;
   }
   
   // Quebrar texto em linhas
@@ -201,15 +223,15 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
       const totalParcelas = parcelas.length;
       const valorTotalParcelamento = parcelas.reduce((total: number, parcela: any) => total + parcela.valor_parcela, 0);
       
-      doc.setFontSize(11);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.text(`VALOR TOTAL DO PARCELAMENTO: R$ ${recibo.valor.toFixed(2).replace('.', ',')}`, 20, yPosition);
-      yPosition += 6;
+      doc.text(`VALOR TOTAL DO PAGAMENTO: R$ ${valorTotal.toFixed(2).replace('.', ',')}`, 20, yPosition);
+      yPosition += 8;
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Dividido em ${totalParcelas} parcelas conforme detalhado abaixo:`, 20, yPosition);
-      yPosition += 8;
+      doc.text(`Parcelado em ${totalParcelas} vezes:`, 20, yPosition);
+      yPosition += 10;
       
       // Tabela de parcelas
       doc.setFontSize(9);
@@ -246,13 +268,21 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
       yPosition += 10;
       
       // Resumo final
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`TOTAL GERAL: R$ ${recibo.valor.toFixed(2).replace('.', ',')} (${numeroParaExtenso(recibo.valor)})`, 20, yPosition);
       yPosition += 5;
+      doc.setLineWidth(0.3);
+      doc.line(20, yPosition, pageWidth - 20, yPosition);
+      yPosition += 10;
       
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`VALOR TOTAL GERAL: R$ ${valorTotal.toFixed(2).replace('.', ',')}`, 20, yPosition);
+      yPosition += 5;
+      doc.text(`POR EXTENSO: ${valorExtenso}`, 20, yPosition);
+      yPosition += 8;
+      
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'italic');
-      doc.text('Este recibo comprova o recebimento do valor total conforme parcelamento detalhado acima.', 20, yPosition);
+      doc.text('Este recibo comprova o recebimento do valor total conforme detalhamento das parcelas acima.', 20, yPosition);
     } else {
       // Pagamento à vista
       yPosition += 15;
