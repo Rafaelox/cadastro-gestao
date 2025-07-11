@@ -40,43 +40,49 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
   const dataAtual = format(new Date(recibo.created_at), 'dd/MM/yyyy', { locale: ptBR });
   doc.text(`Data: ${dataAtual}`, pageWidth - 50, 30);
   
-  // Dados da empresa
+  // Dados completos da empresa/recebedor no topo
   let yPosition = 50;
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('DADOS DO EMITENTE:', 20, yPosition);
+  doc.text('RECEBEDOR:', 20, yPosition);
   
-  yPosition += 10;
+  yPosition += 8;
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(recibo.dados_empresa.nome, 20, yPosition);
+  
+  yPosition += 6;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  
-  doc.text(`Nome/Razão Social: ${recibo.dados_empresa.nome}`, 20, yPosition);
-  yPosition += 5;
   
   if (recibo.dados_empresa.cpf_cnpj) {
     const labelDoc = recibo.dados_empresa.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ';
     doc.text(`${labelDoc}: ${recibo.dados_empresa.cpf_cnpj}`, 20, yPosition);
-    yPosition += 5;
+    yPosition += 4;
   }
   
   if (recibo.dados_empresa.endereco) {
     doc.text(`Endereço: ${recibo.dados_empresa.endereco}`, 20, yPosition);
-    yPosition += 5;
+    yPosition += 4;
   }
   
   if (recibo.dados_empresa.cidade && recibo.dados_empresa.estado) {
-    doc.text(`Cidade: ${recibo.dados_empresa.cidade} - ${recibo.dados_empresa.estado}`, 20, yPosition);
-    yPosition += 5;
+    doc.text(`${recibo.dados_empresa.cidade} - ${recibo.dados_empresa.estado}`, 20, yPosition);
+    if (recibo.dados_empresa.cep) {
+      doc.text(`CEP: ${recibo.dados_empresa.cep}`, 120, yPosition);
+    }
+    yPosition += 4;
   }
   
   if (recibo.dados_empresa.telefone) {
     doc.text(`Telefone: ${recibo.dados_empresa.telefone}`, 20, yPosition);
-    yPosition += 5;
-  }
-  
-  if (recibo.dados_empresa.email) {
+    if (recibo.dados_empresa.email) {
+      doc.text(`Email: ${recibo.dados_empresa.email}`, 120, yPosition);
+    }
+    yPosition += 4;
+  } else if (recibo.dados_empresa.email) {
     doc.text(`Email: ${recibo.dados_empresa.email}`, 20, yPosition);
-    yPosition += 5;
+    yPosition += 4;
   }
   
   // Linha separadora
@@ -173,16 +179,24 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
     // Exibir informações das parcelas se disponível
     if ((recibo.parcelas && recibo.parcelas.length > 0) || (recibo.pagamentos?.parcelas && recibo.pagamentos.parcelas.length > 0)) {
       const parcelas = recibo.parcelas || recibo.pagamentos?.parcelas || [];
-      yPosition += 10;
-      doc.setFontSize(11);
+      yPosition += 15;
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('DETALHAMENTO DAS PARCELAS:', 20, yPosition);
+      doc.text('DETALHAMENTO DO PARCELAMENTO:', 20, yPosition);
       
-      yPosition += 8;
-      doc.setFontSize(9);
+      yPosition += 10;
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       
-      // Cabeçalho da tabela de parcelas
+      // Informações gerais do parcelamento
+      const totalParcelas = parcelas.length;
+      const valorParcela = parcelas[0]?.valor_parcela || 0;
+      doc.text(`Valor total parcelado em ${totalParcelas}x de R$ ${valorParcela.toFixed(2).replace('.', ',')}`, 20, yPosition);
+      yPosition += 8;
+      
+      // Tabela de parcelas
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
       doc.text('Parcela', 20, yPosition);
       doc.text('Valor', 70, yPosition);
       doc.text('Vencimento', 120, yPosition);
@@ -194,29 +208,40 @@ export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
       yPosition += 5;
       
       // Listar cada parcela
-      parcelas.forEach((parcela: any) => {
+      doc.setFont('helvetica', 'normal');
+      parcelas.forEach((parcela: any, index: number) => {
         const dataVencimento = format(new Date(parcela.data_vencimento), 'dd/MM/yyyy', { locale: ptBR });
         const statusParcela = parcela.status === 'pago' ? 'Pago' : 'Pendente';
         
-        doc.text(`${parcela.numero_parcela}/${parcelas.length}`, 20, yPosition);
+        doc.text(`${parcela.numero_parcela}/${totalParcelas}`, 20, yPosition);
         doc.text(`R$ ${parcela.valor_parcela.toFixed(2).replace('.', ',')}`, 70, yPosition);
         doc.text(dataVencimento, 120, yPosition);
         doc.text(statusParcela, 170, yPosition);
         yPosition += 5;
+        
+        // Verificar se precisa de nova página
+        if (yPosition > doc.internal.pageSize.height - 50 && index < parcelas.length - 1) {
+          doc.addPage();
+          yPosition = 20;
+        }
       });
       
       yPosition += 10;
       
-      // Resumo do parcelamento
-      const totalParcelas = parcelas.length;
-      const valorParcela = parcelas[0]?.valor_parcela || 0;
+      // Resumo final
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Este recibo comprova o recebimento referente ao parcelamento detalhado acima.', 20, yPosition);
+    } else {
+      // Pagamento à vista
+      yPosition += 15;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('FORMA DE PAGAMENTO:', 20, yPosition);
       
+      yPosition += 8;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Parcelamento: ${totalParcelas}x de R$ ${valorParcela.toFixed(2).replace('.', ',')} - Total: R$ ${recibo.valor.toFixed(2).replace('.', ',')}`, 20, yPosition);
-      yPosition += 5;
-      doc.text('Este recibo comprova o recebimento referente às parcelas do pagamento acima.', 20, yPosition);
-    } else {
       doc.text('Pagamento à vista - valor integral recebido.', 20, yPosition);
     }
   }
