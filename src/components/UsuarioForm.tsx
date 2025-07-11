@@ -16,6 +16,7 @@ interface Usuario {
   email: string;
   permissao: TipoPermissao;
   ativo: boolean;
+  consultor_id?: number;
 }
 
 interface UsuarioFormProps {
@@ -29,18 +30,36 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
     email: '',
     senha: '',
     permissao: 'user' as TipoPermissao,
-    ativo: true
+    ativo: true,
+    consultor_id: undefined as number | undefined
   });
+  const [consultores, setConsultores] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Carregar consultores
+    const loadConsultores = async () => {
+      const { data } = await supabase
+        .from('consultores')
+        .select('id, nome')
+        .eq('ativo', true)
+        .order('nome');
+      
+      if (data) {
+        setConsultores(data);
+      }
+    };
+    
+    loadConsultores();
+    
     if (usuario) {
       setFormData({
         nome: usuario.nome,
         email: usuario.email,
         senha: '', // Não carregar senha por segurança
         permissao: usuario.permissao,
-        ativo: usuario.ativo
+        ativo: usuario.ativo,
+        consultor_id: usuario.consultor_id
       });
     }
   }, [usuario]);
@@ -56,7 +75,8 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
           nome: formData.nome,
           email: formData.email,
           permissao: formData.permissao,
-          ativo: formData.ativo
+          ativo: formData.ativo,
+          consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
         };
 
         // Só atualizar senha se foi informada
@@ -176,12 +196,36 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="consultor">Consultor</SelectItem>
                   <SelectItem value="secretaria">Secretaria</SelectItem>
                   <SelectItem value="gerente">Gerente</SelectItem>
                   <SelectItem value="master">Master</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {formData.permissao === 'consultor' && (
+              <div className="space-y-2">
+                <Label htmlFor="consultor_id">Consultor Associado *</Label>
+                <Select
+                  value={formData.consultor_id?.toString() || ''}
+                  onValueChange={(value) => 
+                    setFormData({ ...formData, consultor_id: value ? parseInt(value) : undefined })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um consultor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {consultores.map((consultor) => (
+                      <SelectItem key={consultor.id} value={consultor.id.toString()}>
+                        {consultor.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">

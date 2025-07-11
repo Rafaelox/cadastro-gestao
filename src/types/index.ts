@@ -117,7 +117,7 @@ export interface HistoricoItem extends Historico {
 }
 
 // Auth types
-export type TipoPermissao = 'master' | 'gerente' | 'secretaria' | 'user';
+export type TipoPermissao = 'master' | 'gerente' | 'secretaria' | 'user' | 'consultor';
 
 export interface Usuario {
   id: string;
@@ -125,6 +125,7 @@ export interface Usuario {
   email: string;
   permissao: TipoPermissao;
   ativo: boolean;
+  consultor_id?: number;
 }
 
 // API Response types

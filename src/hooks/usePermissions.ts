@@ -7,6 +7,7 @@ export const usePermissions = () => {
     isGerente, 
     isSecretaria, 
     isUser,
+    isConsultor,
     canManageUsers,
     canManageSettings,
     canViewReports,
@@ -37,7 +38,8 @@ export const usePermissions = () => {
     canCreateClient: canManagePayments,
     canEditClient: canManagePayments,
     canDeleteClient: isMaster || isGerente,
-    canViewAllClients: canViewReports,
+    canViewAllClients: canViewReports && !isConsultor, // Consultores veem apenas seus clientes
+    canViewMyClients: isConsultor, // Consultor pode ver seus próprios clientes
 
     // Pagamentos
     canCreatePayment: canManagePayments,

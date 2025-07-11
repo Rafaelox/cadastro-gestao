@@ -11,6 +11,8 @@ import type { Cliente, Categoria, Origem } from "@/types";
 import { Plus, Search, Edit, Trash2, Eye, Filter } from "lucide-react";
 import { ActionButtonGuard } from "@/components/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
+import { clientesService } from "@/services/clientes.service";
 
 interface ClientesListProps {
   onEdit: (cliente: Cliente) => void;
@@ -24,6 +26,7 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { permissions } = usePermissions();
+  const { usuario } = useAuth();
   
   // Filtros
   const [filters, setFilters] = useState({
@@ -69,7 +72,7 @@ export const ClientesList = ({ onEdit, onNew }: ClientesListProps) => {
         Object.entries(filters).filter(([_, value]) => value !== '')
       );
       
-      const clientesData = await db.getClientes({
+      const clientesData = await clientesService.getClientesByUser(usuario, {
         ...cleanFilters,
         categoria_id: cleanFilters.categoria_id ? parseInt(cleanFilters.categoria_id) : undefined,
         origem_id: cleanFilters.origem_id ? parseInt(cleanFilters.origem_id) : undefined,

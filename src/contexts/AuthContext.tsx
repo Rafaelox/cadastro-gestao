@@ -11,6 +11,7 @@ interface AuthContextType {
   isGerente: boolean;
   isSecretaria: boolean;
   isUser: boolean;
+  isConsultor: boolean;
   canManageUsers: boolean;
   canManageSettings: boolean;
   canViewReports: boolean;
@@ -63,7 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         nome: data.nome,
         email: data.email,
         permissao: data.permissao as TipoPermissao,
-        ativo: data.ativo
+        ativo: data.ativo,
+        consultor_id: data.consultor_id
       };
 
       setUsuario(usuarioData);
@@ -88,10 +90,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
+    isConsultor: usuario?.permissao === 'consultor',
     canManageUsers: ['master', 'gerente'].includes(usuario?.permissao || ''),
     canManageSettings: ['master', 'gerente'].includes(usuario?.permissao || ''),
     canViewReports: ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
-    canManagePayments: ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
+    canManagePayments: ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
   };
 
   if (isLoading) {

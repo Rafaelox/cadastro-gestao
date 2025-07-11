@@ -741,6 +741,7 @@ export type Database = {
       usuarios: {
         Row: {
           ativo: boolean
+          consultor_id: number | null
           created_at: string
           email: string
           id: string
@@ -751,6 +752,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          consultor_id?: number | null
           created_at?: string
           email: string
           id?: string
@@ -761,6 +763,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          consultor_id?: number | null
           created_at?: string
           email?: string
           id?: string
@@ -769,7 +772,15 @@ export type Database = {
           senha?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "consultores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
