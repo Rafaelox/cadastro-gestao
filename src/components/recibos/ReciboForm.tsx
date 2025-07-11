@@ -91,21 +91,23 @@ export function ReciboForm() {
   const onSubmit = async (data: ReciboFormData) => {
     setLoading(true);
     try {
-      // Buscar dados da empresa
-      const { data: empresa } = await supabase
-        .from('configuracoes_empresa')
-        .select('*')
-        .eq('ativo', true)
-        .single();
+      // Buscar dados da empresa ativa usando a função do banco
+      const { data: empresaResult, error: empresaError } = await supabase
+        .rpc('get_empresa_ativa');
 
+      if (empresaError) throw empresaError;
+
+      const empresa = empresaResult?.[0];
       if (!empresa) {
         toast({
           title: 'Erro',
-          description: 'Configure os dados da empresa antes de gerar recibos',
+          description: 'Configure uma empresa ativa antes de gerar recibos. Acesse as Configurações > Empresas.',
           variant: 'destructive',
         });
         return;
       }
+
+      console.log('Empresa ativa encontrada:', empresa);
 
       // Buscar dados do cliente
       const { data: cliente } = await supabase

@@ -112,18 +112,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
   const onSubmit = async (data: ConfiguracaoFormData) => {
     setLoading(true);
     try {
-      // Verificar se usuário está autenticado
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('User:', user);
-      
-      if (!user) {
-        toast({
-          title: 'Erro',
-          description: 'Você precisa estar logado para salvar configurações',
-          variant: 'destructive',
-        });
-        return;
-      }
+      console.log('Salvando configuração da empresa:', data);
       if (configuracao) {
         // Atualizar configuração existente
         const { error } = await supabase
@@ -133,10 +122,30 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
 
         if (error) throw error;
       } else {
-        // Criar nova configuração
+        // Desativar empresas existentes primeiro
+        await supabase
+          .from('configuracoes_empresa')
+          .update({ ativo: false })
+          .neq('id', 0);
+
+        // Criar nova configuração como ativa
+        const insertData = {
+          nome: data.nome,
+          tipo_pessoa: data.tipo_pessoa,
+          cpf_cnpj: data.cpf_cnpj || null,
+          endereco: data.endereco || null,
+          cidade: data.cidade || null,
+          estado: data.estado || null,
+          cep: data.cep || null,
+          telefone: data.telefone || null,
+          email: data.email || null,
+          logo_url: data.logo_url || null,
+          ativo: true
+        };
+        
         const { error } = await supabase
           .from('configuracoes_empresa')
-          .insert(data as any);
+          .insert(insertData);
 
         if (error) throw error;
       }
