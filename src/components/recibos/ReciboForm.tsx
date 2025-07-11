@@ -36,6 +36,7 @@ interface Consultor {
 interface Pagamento {
   id: number;
   valor: number;
+  valor_original: number;
   cliente_id: number;
   consultor_id: number;
 }
@@ -68,7 +69,7 @@ export function ReciboForm() {
         supabase.from('tipos_recibo').select('*').eq('ativo', true),
         supabase.from('clientes').select('id, nome').eq('ativo', true),
         supabase.from('consultores').select('id, nome').eq('ativo', true),
-        supabase.from('pagamentos').select('id, valor, cliente_id, consultor_id'),
+        supabase.from('pagamentos').select('id, valor, valor_original, cliente_id, consultor_id'),
       ]);
 
       console.log('Tipos de recibo carregados:', tiposResult);
@@ -218,7 +219,8 @@ export function ReciboForm() {
     if (pagamento) {
       form.setValue('cliente_id', pagamento.cliente_id);
       form.setValue('consultor_id', pagamento.consultor_id);
-      form.setValue('valor', pagamento.valor);
+      // Usar valor_original se disponível, senão usar valor
+      form.setValue('valor', pagamento.valor_original || pagamento.valor);
     }
   };
 
@@ -280,7 +282,7 @@ export function ReciboForm() {
                 <SelectContent>
                   {pagamentos.map((pagamento) => (
                     <SelectItem key={pagamento.id} value={pagamento.id.toString()}>
-                      Pagamento #{pagamento.id} - R$ {pagamento.valor.toFixed(2)}
+                      Pagamento #{pagamento.id} - R$ {(pagamento.valor_original || pagamento.valor).toFixed(2)}
                     </SelectItem>
                   ))}
                 </SelectContent>
