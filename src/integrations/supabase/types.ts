@@ -359,6 +359,63 @@ export type Database = {
           },
         ]
       }
+      configuracoes_empresa: {
+        Row: {
+          ativo: boolean
+          cep: string | null
+          cidade: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: number
+          logo_url: string | null
+          nome: string
+          telefone: string | null
+          tipo_pessoa: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: never
+          logo_url?: string | null
+          nome: string
+          telefone?: string | null
+          tipo_pessoa: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: never
+          logo_url?: string | null
+          nome?: string
+          telefone?: string | null
+          tipo_pessoa?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       consultores: {
         Row: {
           ativo: boolean
@@ -699,6 +756,92 @@ export type Database = {
           },
         ]
       }
+      recibos: {
+        Row: {
+          cliente_id: number
+          consultor_id: number | null
+          created_at: string
+          created_by: string | null
+          dados_cliente: Json | null
+          dados_empresa: Json | null
+          descricao: string | null
+          id: number
+          numero_recibo: string
+          observacoes: string | null
+          pagamento_id: number | null
+          pdf_url: string | null
+          tipo_recibo_id: number
+          updated_at: string
+          updated_by: string | null
+          valor: number
+        }
+        Insert: {
+          cliente_id: number
+          consultor_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          dados_cliente?: Json | null
+          dados_empresa?: Json | null
+          descricao?: string | null
+          id?: never
+          numero_recibo: string
+          observacoes?: string | null
+          pagamento_id?: number | null
+          pdf_url?: string | null
+          tipo_recibo_id: number
+          updated_at?: string
+          updated_by?: string | null
+          valor: number
+        }
+        Update: {
+          cliente_id?: number
+          consultor_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          dados_cliente?: Json | null
+          dados_empresa?: Json | null
+          descricao?: string | null
+          id?: never
+          numero_recibo?: string
+          observacoes?: string | null
+          pagamento_id?: number | null
+          pdf_url?: string | null
+          tipo_recibo_id?: number
+          updated_at?: string
+          updated_by?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recibos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "consultores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_pagamento_id_fkey"
+            columns: ["pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "pagamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_tipo_recibo_id_fkey"
+            columns: ["tipo_recibo_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_recibo"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servicos: {
         Row: {
           ativo: boolean
@@ -735,6 +878,33 @@ export type Database = {
           preco?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      tipos_recibo: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: number
+          nome: string
+          template: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: never
+          nome: string
+          template: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: never
+          nome?: string
+          template?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -787,6 +957,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_numero_recibo: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_info: {
         Args: Record<PropertyKey, never>
         Returns: {

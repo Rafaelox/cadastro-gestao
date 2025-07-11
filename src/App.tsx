@@ -15,6 +15,7 @@ import { AgendaPage } from "./pages/AgendaPage";
 import { ClientesPage } from "./pages/ClientesPage";
 import { AtendimentosPage } from "./pages/AtendimentosPage";
 import { CaixaPage } from "./pages/CaixaPage";
+import RecibosPage from "./pages/RecibosPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -83,6 +84,7 @@ const AppContent = () => {
                     <Route path="/clientes" element={<ClientesPage />} />
                     <Route path="/atendimentos" element={<AtendimentosPage />} />
                     <Route path="/caixa" element={<CaixaPage />} />
+                    <Route path="/recibos" element={<RecibosPage />} />
                     <Route path="/sistema" element={<Index activeTab={activeTab} />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
@@ -99,6 +101,7 @@ const AppContent = () => {
               <Route path="/clientes" element={<ClientesPage />} />
               <Route path="/atendimentos" element={<AtendimentosPage />} />
               <Route path="/caixa" element={<CaixaPage />} />
+              <Route path="/recibos" element={<RecibosPage />} />
               <Route path="/sistema" element={<Index activeTab={activeTab} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
