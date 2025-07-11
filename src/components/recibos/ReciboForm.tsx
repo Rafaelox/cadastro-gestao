@@ -174,14 +174,34 @@ export function ReciboForm() {
 
   const generateReciboPDF = async (recibo: any) => {
     try {
+      // Buscar informações das parcelas se houver pagamento associado
+      let parcelasInfo = null;
+      if (recibo.pagamento_id) {
+        const { data: parcelas } = await supabase
+          .from('parcelas')
+          .select('*')
+          .eq('pagamento_id', recibo.pagamento_id)
+          .order('numero_parcela');
+        
+        if (parcelas && parcelas.length > 0) {
+          parcelasInfo = parcelas;
+        }
+      }
+
       const { generateReciboNormalPDF, generateReciboDoacaoPDF } = await import('./ReciboPDFGenerator');
       
       const tipoRecibo = tiposRecibo.find(t => t.id === recibo.tipo_recibo_id);
       
+      // Adicionar informações das parcelas ao recibo
+      const reciboComParcelas = {
+        ...recibo,
+        parcelas: parcelasInfo
+      };
+      
       if (tipoRecibo?.template === 'doacao') {
-        generateReciboDoacaoPDF(recibo);
+        generateReciboDoacaoPDF(reciboComParcelas);
       } else {
-        generateReciboNormalPDF(recibo);
+        generateReciboNormalPDF(reciboComParcelas);
       }
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);

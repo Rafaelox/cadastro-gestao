@@ -3,7 +3,16 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Recibo } from '@/types/recibo';
 
-export function generateReciboNormalPDF(recibo: Recibo) {
+interface ReciboComParcelas extends Recibo {
+  parcelas?: {
+    numero_parcela: number;
+    valor_parcela: number;
+    data_vencimento: string;
+    status: string;
+  }[];
+}
+
+export function generateReciboNormalPDF(recibo: ReciboComParcelas) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   
@@ -126,7 +135,7 @@ export function generateReciboNormalPDF(recibo: Recibo) {
   yPosition += 15;
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(`VALOR: R$ ${recibo.valor.toFixed(2).replace('.', ',')}`, 20, yPosition);
+  doc.text(`VALOR TOTAL: R$ ${recibo.valor.toFixed(2).replace('.', ',')}`, 20, yPosition);
   
   // Valor por extenso (simplificado)
   yPosition += 10;
@@ -146,7 +155,46 @@ export function generateReciboNormalPDF(recibo: Recibo) {
     doc.setFont('helvetica', 'normal');
     doc.text(`Referente ao Pagamento #${recibo.pagamento_id}`, 20, yPosition);
     yPosition += 5;
-    doc.text('Este recibo comprova o recebimento referente ao pagamento registrado no sistema.', 20, yPosition);
+    
+    // Exibir informações das parcelas se disponível
+    if (recibo.parcelas && recibo.parcelas.length > 0) {
+      yPosition += 10;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DETALHAMENTO DAS PARCELAS:', 20, yPosition);
+      
+      yPosition += 8;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      
+      // Cabeçalho da tabela de parcelas
+      doc.text('Parcela', 20, yPosition);
+      doc.text('Valor', 70, yPosition);
+      doc.text('Vencimento', 120, yPosition);
+      doc.text('Status', 170, yPosition);
+      
+      yPosition += 3;
+      doc.setLineWidth(0.3);
+      doc.line(20, yPosition, pageWidth - 20, yPosition);
+      yPosition += 5;
+      
+      // Listar cada parcela
+      recibo.parcelas.forEach((parcela: any) => {
+        const dataVencimento = format(new Date(parcela.data_vencimento), 'dd/MM/yyyy', { locale: ptBR });
+        const statusParcela = parcela.status === 'pago' ? 'Pago' : 'Pendente';
+        
+        doc.text(`${parcela.numero_parcela}/${recibo.parcelas.length}`, 20, yPosition);
+        doc.text(`R$ ${parcela.valor_parcela.toFixed(2).replace('.', ',')}`, 70, yPosition);
+        doc.text(dataVencimento, 120, yPosition);
+        doc.text(statusParcela, 170, yPosition);
+        yPosition += 5;
+      });
+      
+      yPosition += 5;
+      doc.text('Este recibo comprova o recebimento das parcelas relacionadas ao pagamento.', 20, yPosition);
+    } else {
+      doc.text('Pagamento à vista - valor integral recebido.', 20, yPosition);
+    }
   }
   
   // Observações
@@ -182,7 +230,7 @@ export function generateReciboNormalPDF(recibo: Recibo) {
   doc.save(`recibo-${recibo.numero_recibo}.pdf`);
 }
 
-export function generateReciboDoacaoPDF(recibo: Recibo) {
+export function generateReciboDoacaoPDF(recibo: ReciboComParcelas) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   
