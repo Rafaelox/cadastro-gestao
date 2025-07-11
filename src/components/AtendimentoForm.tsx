@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, FolderOpen, CreditCard, History, UserCheck, Mail, Edit3, Trash2, Plus, Save } from "lucide-react";
+import { format, differenceInYears, differenceInMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,9 @@ interface AgendaDetalhes {
   consultor_id: number;
   servico_id: number;
   cliente_nome: string;
+  cliente_email: string;
+  cliente_cpf: string;
+  cliente_data_nascimento: string;
   consultor_nome: string;
   servico_nome: string;
   data_agendamento: string;
@@ -41,7 +44,10 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
   const [dataAtendimento, setDataAtendimento] = useState<Date>(new Date());
   const [procedimentosRealizados, setProcedimentosRealizados] = useState("");
   const [observacoesAtendimento, setObservacoesAtendimento] = useState("");
+  const [tipoTrabalho, setTipoTrabalho] = useState("");
   const [fotosUrls, setFotosUrls] = useState<string[]>([]);
+  const [atendente, setAtendente] = useState("");
+  const [valorFinal, setValorFinal] = useState<number>(0);
 
   useEffect(() => {
     loadAgenda();
@@ -53,7 +59,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
         .from('agenda')
         .select(`
           *,
-          clientes!agenda_cliente_id_fkey(nome),
+          clientes!agenda_cliente_id_fkey(nome, email, cpf, foto_url),
           consultores!agenda_consultor_id_fkey(nome),
           servicos!agenda_servico_id_fkey(nome, preco)
         `)
@@ -68,10 +74,14 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
         const agendaFormatada = {
           ...data,
           cliente_nome: data.clientes?.nome || '',
+          cliente_email: data.clientes?.email || '',
+          cliente_cpf: data.clientes?.cpf || '',
+          cliente_data_nascimento: '', // Seria necessário adicionar na tabela clientes
           consultor_nome: data.consultores?.nome || '',
           servico_nome: data.servicos?.nome || '',
         };
         setAgenda(agendaFormatada);
+        setValorFinal(data.valor_servico || 0);
       }
     } catch (error) {
       console.error('Erro ao carregar agenda:', error);
@@ -83,6 +93,49 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calcularIdade = (dataNascimento: string) => {
+    if (!dataNascimento) return "-";
+    
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    
+    const anos = differenceInYears(hoje, nascimento);
+    const mesesData = new Date(nascimento.getFullYear() + anos, nascimento.getMonth(), nascimento.getDate());
+    const meses = differenceInMonths(hoje, mesesData);
+    const diasData = new Date(mesesData.getFullYear(), mesesData.getMonth() + meses, mesesData.getDate());
+    const dias = differenceInDays(hoje, diasData);
+    
+    return `${anos} anos, ${meses} meses, ${dias} dias`;
+  };
+
+  const abrirDadosCliente = () => {
+    toast({
+      title: "Dados do Cliente",
+      description: "Funcionalidade de acesso aos dados do cliente será implementada."
+    });
+  };
+
+  const abrirPagamentos = () => {
+    toast({
+      title: "Histórico de Pagamentos",
+      description: "Funcionalidade de pagamentos será implementada."
+    });
+  };
+
+  const abrirHistorico = () => {
+    toast({
+      title: "Histórico do Cliente",
+      description: "Funcionalidade de histórico será implementada."
+    });
+  };
+
+  const marcarServicoAdicional = () => {
+    toast({
+      title: "Serviço Adicional",
+      description: "Funcionalidade de serviços adicionais será implementada."
+    });
   };
 
 
@@ -102,7 +155,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
           data_agendamento: agenda.data_agendamento,
           valor_servico: agenda.valor_servico,
-          valor_final: agenda.valor_servico,
+          valor_final: valorFinal,
           comissao_consultor: agenda.comissao_consultor,
           forma_pagamento: null,
           procedimentos_realizados: procedimentosRealizados,
@@ -160,82 +213,152 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Registrar Atendimento</CardTitle>
+        <CardTitle>Formulário de Atendimento</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informações do Agendamento */}
-          <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-            <h3 className="font-medium">Informações do Agendamento</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <strong>Cliente:</strong> {agenda.cliente_nome}
-              </div>
-              <div>
-                <strong>Consultor:</strong> {agenda.consultor_nome}
-              </div>
-              <div>
-                <strong>Serviço:</strong> {agenda.servico_nome}
-              </div>
-              <div>
-                <strong>Data/Hora Agendada:</strong> {format(new Date(agenda.data_agendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-              </div>
-              <div>
-                <strong>Valor do Serviço:</strong> R$ {agenda.valor_servico?.toFixed(2)}
-              </div>
-              <div>
-                <strong>Comissão do Consultor:</strong> R$ {agenda.comissao_consultor?.toFixed(2)}
-              </div>
+        {/* Header com dados do cliente */}
+        <div className="bg-muted/50 p-4 rounded-lg mb-6 space-y-3">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label>Data de Nascimento do Cliente:</Label>
+              <Input
+                type="date"
+                value={agenda.cliente_data_nascimento}
+                className="mt-1"
+                disabled
+              />
             </div>
-            {agenda.observacoes && (
-              <div>
-                <strong>Observações do Agendamento:</strong>
-                <p className="text-sm text-muted-foreground mt-1">{agenda.observacoes}</p>
-              </div>
-            )}
+            <div className="flex-1">
+              <Label>Idade:</Label>
+              <p className="mt-1 font-medium">{calcularIdade(agenda.cliente_data_nascimento)}</p>
+            </div>
+          </div>
+          
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={abrirDadosCliente}
+            className="w-full"
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Acessar Dados do Cliente
+          </Button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Informações básicas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="atendente">1) Atendente Nome:</Label>
+              <Input
+                id="atendente"
+                value={atendente}
+                onChange={(e) => setAtendente(e.target.value)}
+                placeholder="Nome do atendente"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>2) Data Completa:</Label>
+              <Input
+                type="datetime-local"
+                value={format(dataAtendimento, "yyyy-MM-dd'T'HH:mm")}
+                onChange={(e) => setDataAtendimento(new Date(e.target.value))}
+              />
+            </div>
           </div>
 
-          {/* Dados do Atendimento */}
           <div className="space-y-2">
-            <Label htmlFor="data_atendimento">Data do Atendimento *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dataAtendimento && "text-muted-foreground"
-                  )}
+            <Label>3) Nome do Serviço:</Label>
+            <Input value={agenda.servico_nome} disabled />
+          </div>
+
+          <div className="space-y-2">
+            <Label>4) Nome do Cliente:</Label>
+            <div className="flex gap-2">
+              <Input value={agenda.cliente_nome} disabled className="flex-1" />
+              {agenda.cliente_email && (
+                <a 
+                  href={`mailto:${agenda.cliente_email}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dataAtendimento ? format(dataAtendimento, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={dataAtendimento}
-                  onSelect={(date) => date && setDataAtendimento(date)}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+                  <Mail className="h-4 w-4" />
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="procedimentos_realizados">Procedimentos Realizados</Label>
+            <Label>5) Dados do Agendamento:</Label>
+            <Textarea
+              value={`Data: ${format(new Date(agenda.data_agendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+Consultor: ${agenda.consultor_nome}
+Valor: R$ ${agenda.valor_servico?.toFixed(2)}
+${agenda.observacoes ? `Observações: ${agenda.observacoes}` : ''}`}
+              rows={3}
+              disabled
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="procedimentos_realizados">6) Descrição da Consulta:</Label>
             <Textarea
               id="procedimentos_realizados"
               value={procedimentosRealizados}
               onChange={(e) => setProcedimentosRealizados(e.target.value)}
-              placeholder="Descreva os procedimentos realizados durante o atendimento"
+              placeholder="Descreva detalhadamente os procedimentos realizados"
               rows={4}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="observacoes_atendimento">Observações do Atendimento</Label>
+            <Label htmlFor="tipo_trabalho">7) Tipo de Trabalho:</Label>
+            <Select value={tipoTrabalho} onValueChange={setTipoTrabalho}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="consulta">Consulta</SelectItem>
+                <SelectItem value="trabalho1">Trabalho Espiritual 1</SelectItem>
+                <SelectItem value="trabalho2">Trabalho Espiritual 2</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>8) E-mail do Cliente:</Label>
+              <Input 
+                type="email" 
+                value={agenda.cliente_email} 
+                disabled 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>CPF do Cliente:</Label>
+              <Input 
+                value={agenda.cliente_cpf} 
+                disabled 
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="valor_final">Valor Final:</Label>
+            <Input
+              id="valor_final"
+              type="number"
+              step="0.01"
+              value={valorFinal}
+              onChange={(e) => setValorFinal(Number(e.target.value))}
+              placeholder="Valor final do atendimento"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="observacoes_atendimento">Observações do Atendimento:</Label>
             <Textarea
               id="observacoes_atendimento"
               value={observacoesAtendimento}
@@ -246,7 +369,7 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
           </div>
 
           <div className="space-y-2">
-            <Label>Fotos do Atendimento</Label>
+            <Label>Fotos do Atendimento:</Label>
             <CameraCapture
               onPhotoTaken={(photoUrl) => setFotosUrls(prev => [...prev, photoUrl])}
               onPhotoRemoved={() => setFotosUrls([])}
@@ -261,10 +384,38 @@ export const AtendimentoForm = ({ agendaId, onCancel, onSuccess }: AtendimentoFo
             )}
           </div>
 
-          <div className="flex space-x-2 pt-4">
-            <Button type="submit">
-              Registrar Atendimento
+          {/* Botões de ação */}
+          <div className="flex flex-wrap gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={abrirPagamentos}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pagamentos
             </Button>
+            
+            <Button type="button" variant="outline" onClick={abrirHistorico}>
+              <History className="mr-2 h-4 w-4" />
+              Histórico
+            </Button>
+            
+            <Button type="submit" className="bg-green-600 hover:bg-green-700">
+              <Save className="mr-2 h-4 w-4" />
+              Gravar
+            </Button>
+            
+            <Button type="button" variant="outline">
+              <Edit3 className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
+            
+            <Button type="button" variant="destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Excluir
+            </Button>
+            
+            <Button type="button" variant="outline" onClick={marcarServicoAdicional}>
+              <Plus className="mr-2 h-4 w-4" />
+              Marcar Serviço Adicional
+            </Button>
+            
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancelar
             </Button>
