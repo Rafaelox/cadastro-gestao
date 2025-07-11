@@ -113,20 +113,32 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
     setLoading(true);
     try {
       console.log('Salvando configuração da empresa:', data);
+      
       if (configuracao) {
         // Atualizar configuração existente
-        const { error } = await supabase
+        console.log('Atualizando configuração existente com ID:', configuracao.id);
+        const { data: result, error } = await supabase
           .from('configuracoes_empresa')
           .update(data)
-          .eq('id', configuracao.id);
+          .eq('id', configuracao.id)
+          .select();
 
-        if (error) throw error;
+        console.log('Resultado da atualização:', result);
+        if (error) {
+          console.error('Erro na atualização:', error);
+          throw error;
+        }
       } else {
         // Desativar empresas existentes primeiro
-        await supabase
+        console.log('Desativando empresas existentes...');
+        const { error: deactivateError } = await supabase
           .from('configuracoes_empresa')
           .update({ ativo: false })
           .neq('id', 0);
+
+        if (deactivateError) {
+          console.error('Erro ao desativar empresas:', deactivateError);
+        }
 
         // Criar nova configuração como ativa
         const insertData = {
@@ -143,11 +155,17 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
           ativo: true
         };
         
-        const { error } = await supabase
+        console.log('Inserindo nova configuração:', insertData);
+        const { data: result, error } = await supabase
           .from('configuracoes_empresa')
-          .insert(insertData);
+          .insert(insertData)
+          .select();
 
-        if (error) throw error;
+        console.log('Resultado da inserção:', result);
+        if (error) {
+          console.error('Erro na inserção:', error);
+          throw error;
+        }
       }
 
       toast({
@@ -160,11 +178,17 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       } else {
         loadConfiguracao();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
+      
+      let errorMessage = 'Erro ao salvar configurações da empresa';
+      if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
       toast({
         title: 'Erro',
-        description: 'Erro ao salvar configurações da empresa',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
