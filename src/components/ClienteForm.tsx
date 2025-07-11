@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { db, formatCPF, formatCEP, formatPhone, validateCPF, validateEmail } from "@/lib/database";
 import type { Cliente, Categoria, Origem } from "@/types";
-import { Save, Search } from "lucide-react";
+import { Save, Search, User, FileText, Camera } from "lucide-react";
+import { DocumentCapture } from "@/components/mobile/DocumentCapture";
 
 interface ClienteFormProps {
   cliente?: Cliente;
@@ -170,7 +172,8 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-border/50">
       <CardHeader>
-        <CardTitle className="text-xl text-foreground">
+        <CardTitle className="text-xl text-foreground flex items-center gap-2">
+          <User className="h-5 w-5" />
           {cliente ? 'Editar Cliente' : 'Novo Cliente'}
         </CardTitle>
         <CardDescription className="text-muted-foreground">
@@ -179,245 +182,278 @@ export const ClienteForm = ({ cliente, onSave, onCancel }: ClienteFormProps) => 
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Dados Pessoais */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
-              Dados Pessoais
-            </h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="nome" className="text-foreground">
-                Nome <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => handleInputChange('nome', e.target.value)}
-                placeholder="Nome completo do cliente"
-                className="bg-background/50 border-border"
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cpf" className="text-foreground">
-                  CPF
-                </Label>
-                <Input
-                  id="cpf"
-                  value={formData.cpf}
-                  onChange={(e) => handleCpfChange(e.target.value)}
-                  placeholder="000.000.000-00"
-                  className="bg-background/50 border-border"
-                  disabled={isLoading}
-                  maxLength={14}
-                />
-              </div>
+        <Tabs defaultValue="dados" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="dados" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Dados do Cliente
+            </TabsTrigger>
+            <TabsTrigger value="documentos" className="flex items-center gap-2" disabled={!cliente?.id}>
+              <FileText className="h-4 w-4" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
 
-              <div className="space-y-2">
-                <Label htmlFor="telefone" className="text-foreground">
-                  Telefone
-                </Label>
-                <Input
-                  id="telefone"
-                  value={formData.telefone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  placeholder="(00) 00000-0000"
-                  className="bg-background/50 border-border"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="email@exemplo.com"
-                className="bg-background/50 border-border"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Endereço */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
-              Endereço
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cep" className="text-foreground">
-                  CEP
-                </Label>
-                <div className="flex gap-2">
+          <TabsContent value="dados" className="mt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Dados Pessoais */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
+                  Dados Pessoais
+                </h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="nome" className="text-foreground">
+                    Nome <span className="text-destructive">*</span>
+                  </Label>
                   <Input
-                    id="cep"
-                    value={formData.cep}
-                    onChange={(e) => handleCepChange(e.target.value)}
-                    placeholder="00000-000"
-                    className="bg-background/50 border-border flex-1"
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => handleInputChange('nome', e.target.value)}
+                    placeholder="Nome completo do cliente"
+                    className="bg-background/50 border-border"
                     disabled={isLoading}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={buscarCep}
-                    disabled={isLoading || isLoadingCep}
-                    className="px-3"
-                  >
-                    <Search className="w-4 h-4" />
-                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf" className="text-foreground">
+                      CPF
+                    </Label>
+                    <Input
+                      id="cpf"
+                      value={formData.cpf}
+                      onChange={(e) => handleCpfChange(e.target.value)}
+                      placeholder="000.000.000-00"
+                      className="bg-background/50 border-border"
+                      disabled={isLoading}
+                      maxLength={14}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="telefone" className="text-foreground">
+                      Telefone
+                    </Label>
+                    <Input
+                      id="telefone"
+                      value={formData.telefone}
+                      onChange={(e) => handlePhoneChange(e.target.value)}
+                      placeholder="(00) 00000-0000"
+                      className="bg-background/50 border-border"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-foreground">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="email@exemplo.com"
+                    className="bg-background/50 border-border"
+                    disabled={isLoading}
+                  />
                 </div>
               </div>
 
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="endereco" className="text-foreground">
-                  Endereço Completo
-                </Label>
-                <Input
-                  id="endereco"
-                  value={formData.endereco}
-                  onChange={(e) => handleInputChange('endereco', e.target.value)}
-                  placeholder="Rua, número, bairro, cidade/UF"
-                  className="bg-background/50 border-border"
+              {/* Endereço */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
+                  Endereço
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cep" className="text-foreground">
+                      CEP
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="cep"
+                        value={formData.cep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        placeholder="00000-000"
+                        className="bg-background/50 border-border flex-1"
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={buscarCep}
+                        disabled={isLoading || isLoadingCep}
+                        className="px-3"
+                      >
+                        <Search className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <Label htmlFor="endereco" className="text-foreground">
+                      Endereço Completo
+                    </Label>
+                    <Input
+                      id="endereco"
+                      value={formData.endereco}
+                      onChange={(e) => handleInputChange('endereco', e.target.value)}
+                      placeholder="Rua, número, bairro, cidade/UF"
+                      className="bg-background/50 border-border"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Classificação */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
+                  Classificação
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Categoria</Label>
+                    <Select
+                      value={formData.categoria_id?.toString()}
+                      onValueChange={(value) => handleInputChange('categoria_id', parseInt(value))}
+                    >
+                      <SelectTrigger className="bg-background/50 border-border">
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categorias.map((categoria) => (
+                          <SelectItem key={categoria.id} value={categoria.id!.toString()}>
+                            {categoria.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Origem</Label>
+                    <Select
+                      value={formData.origem_id?.toString()}
+                      onValueChange={(value) => handleInputChange('origem_id', parseInt(value))}
+                    >
+                      <SelectTrigger className="bg-background/50 border-border">
+                        <SelectValue placeholder="Selecione uma origem" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {origens.map((origem) => (
+                          <SelectItem key={origem.id} value={origem.id!.toString()}>
+                            {origem.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Configurações */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
+                  Configurações
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="ativo" className="text-foreground">
+                      Cliente Ativo
+                    </Label>
+                    <Switch
+                      id="ativo"
+                      checked={formData.ativo}
+                      onCheckedChange={(checked) => handleInputChange('ativo', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="recebe_email" className="text-foreground">
+                      Recebe Email
+                    </Label>
+                    <Switch
+                      id="recebe_email"
+                      checked={formData.recebe_email}
+                      onCheckedChange={(checked) => handleInputChange('recebe_email', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="recebe_whatsapp" className="text-foreground">
+                      Recebe WhatsApp
+                    </Label>
+                    <Switch
+                      id="recebe_whatsapp"
+                      checked={formData.recebe_whatsapp}
+                      onCheckedChange={(checked) => handleInputChange('recebe_whatsapp', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="recebe_sms" className="text-foreground">
+                      Recebe SMS
+                    </Label>
+                    <Switch
+                      id="recebe_sms"
+                      checked={formData.recebe_sms}
+                      onCheckedChange={(checked) => handleInputChange('recebe_sms', checked)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="submit"
                   disabled={isLoading}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Classificação */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
-              Classificação
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-foreground">Categoria</Label>
-                <Select
-                  value={formData.categoria_id?.toString()}
-                  onValueChange={(value) => handleInputChange('categoria_id', parseInt(value))}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
-                  <SelectTrigger className="bg-background/50 border-border">
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categorias.map((categoria) => (
-                      <SelectItem key={categoria.id} value={categoria.id!.toString()}>
-                        {categoria.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-foreground">Origem</Label>
-                <Select
-                  value={formData.origem_id?.toString()}
-                  onValueChange={(value) => handleInputChange('origem_id', parseInt(value))}
+                  <Save className="w-4 h-4 mr-2" />
+                  {isLoading ? 'Salvando...' : cliente ? 'Atualizar' : 'Cadastrar'}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="border-border hover:bg-muted/50"
                 >
-                  <SelectTrigger className="bg-background/50 border-border">
-                    <SelectValue placeholder="Selecione uma origem" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {origens.map((origem) => (
-                      <SelectItem key={origem.id} value={origem.id!.toString()}>
-                        {origem.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  Cancelar
+                </Button>
               </div>
-            </div>
-          </div>
+            </form>
+          </TabsContent>
 
-          {/* Configurações */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground border-b border-border/50 pb-2">
-              Configurações
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="ativo" className="text-foreground">
-                  Cliente Ativo
-                </Label>
-                <Switch
-                  id="ativo"
-                  checked={formData.ativo}
-                  onCheckedChange={(checked) => handleInputChange('ativo', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="recebe_email" className="text-foreground">
-                  Recebe Email
-                </Label>
-                <Switch
-                  id="recebe_email"
-                  checked={formData.recebe_email}
-                  onCheckedChange={(checked) => handleInputChange('recebe_email', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="recebe_whatsapp" className="text-foreground">
-                  Recebe WhatsApp
-                </Label>
-                <Switch
-                  id="recebe_whatsapp"
-                  checked={formData.recebe_whatsapp}
-                  onCheckedChange={(checked) => handleInputChange('recebe_whatsapp', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="recebe_sms" className="text-foreground">
-                  Recebe SMS
-                </Label>
-                <Switch
-                  id="recebe_sms"
-                  checked={formData.recebe_sms}
-                  onCheckedChange={(checked) => handleInputChange('recebe_sms', checked)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isLoading ? 'Salvando...' : cliente ? 'Atualizar' : 'Cadastrar'}
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-              className="border-border hover:bg-muted/50"
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
+          <TabsContent value="documentos" className="mt-6">
+            {cliente?.id ? (
+              <DocumentCapture
+                clienteId={cliente.id}
+                clienteNome={cliente.nome}
+              />
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground">
+                    Salve os dados do cliente primeiro para gerenciar documentos.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

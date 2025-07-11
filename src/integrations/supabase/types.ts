@@ -150,6 +150,59 @@ export type Database = {
         }
         Relationships: []
       }
+      cliente_documentos: {
+        Row: {
+          ativo: boolean
+          cliente_id: number
+          created_at: string
+          data_upload: string
+          id: number
+          nome_documento: string
+          observacoes: string | null
+          tamanho_arquivo: number | null
+          tipo_documento: string
+          updated_at: string
+          uploaded_by: string | null
+          url_arquivo: string
+        }
+        Insert: {
+          ativo?: boolean
+          cliente_id: number
+          created_at?: string
+          data_upload?: string
+          id?: number
+          nome_documento: string
+          observacoes?: string | null
+          tamanho_arquivo?: number | null
+          tipo_documento: string
+          updated_at?: string
+          uploaded_by?: string | null
+          url_arquivo: string
+        }
+        Update: {
+          ativo?: boolean
+          cliente_id?: number
+          created_at?: string
+          data_upload?: string
+          id?: number
+          nome_documento?: string
+          observacoes?: string | null
+          tamanho_arquivo?: number | null
+          tipo_documento?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          url_arquivo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_documentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ativo: boolean

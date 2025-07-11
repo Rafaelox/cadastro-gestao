@@ -5,15 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, FolderOpen, CreditCard, History, UserCheck, Mail, Edit3, Trash2, Plus, Save } from "lucide-react";
+import { CalendarIcon, FolderOpen, CreditCard, History, UserCheck, Mail, Edit3, Trash2, Plus, Save, FileText } from "lucide-react";
 import { format, differenceInYears, differenceInMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CameraCapture } from "@/components/mobile/CameraCapture";
+import { DocumentCapture } from "@/components/mobile/DocumentCapture";
 
 interface AtendimentoFormProps {
   agendaId?: number;
@@ -309,211 +311,233 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
         <CardTitle>{isEditing ? 'Editar Atendimento' : 'Formulário de Atendimento'}</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Header com dados do cliente */}
-        <div className="bg-muted/50 p-4 rounded-lg mb-6 space-y-3">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Label>Data de Nascimento do Cliente:</Label>
-              <Input
-                type="date"
-                value={agenda.cliente_data_nascimento}
-                className="mt-1"
-                disabled
-              />
-            </div>
-            <div className="flex-1">
-              <Label>Idade:</Label>
-              <p className="mt-1 font-medium">{calcularIdade(agenda.cliente_data_nascimento)}</p>
-            </div>
-          </div>
-          
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={abrirDadosCliente}
-            className="w-full"
-          >
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Acessar Dados do Cliente
-          </Button>
-        </div>
+        <Tabs defaultValue="atendimento" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="atendimento" className="flex items-center gap-2">
+              <UserCheck className="h-4 w-4" />
+              Dados do Atendimento
+            </TabsTrigger>
+            <TabsTrigger value="documentos" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informações básicas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="atendente">1) Atendente Nome:</Label>
-              <Input
-                id="atendente"
-                value={atendente}
-                onChange={(e) => setAtendente(e.target.value)}
-                placeholder="Nome do atendente"
-              />
+          <TabsContent value="atendimento" className="mt-6">
+            {/* Header com dados do cliente */}
+            <div className="bg-muted/50 p-4 rounded-lg mb-6 space-y-3">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <Label>Data de Nascimento do Cliente:</Label>
+                  <Input
+                    type="date"
+                    value={agenda.cliente_data_nascimento}
+                    className="mt-1"
+                    disabled
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label>Idade:</Label>
+                  <p className="mt-1 font-medium">{calcularIdade(agenda.cliente_data_nascimento)}</p>
+                </div>
+              </div>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={abrirDadosCliente}
+                className="w-full"
+              >
+                <FolderOpen className="mr-2 h-4 w-4" />
+                Acessar Dados do Cliente
+              </Button>
             </div>
-            
-            <div className="space-y-2">
-              <Label>2) Data Completa:</Label>
-              <Input
-                type="datetime-local"
-                value={format(dataAtendimento, "yyyy-MM-dd'T'HH:mm")}
-                onChange={(e) => setDataAtendimento(new Date(e.target.value))}
-              />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>3) Nome do Serviço:</Label>
-            <Input value={agenda.servico_nome} disabled />
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Informações básicas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="atendente">1) Atendente Nome:</Label>
+                  <Input
+                    id="atendente"
+                    value={atendente}
+                    onChange={(e) => setAtendente(e.target.value)}
+                    placeholder="Nome do atendente"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>2) Data Completa:</Label>
+                  <Input
+                    type="datetime-local"
+                    value={format(dataAtendimento, "yyyy-MM-dd'T'HH:mm")}
+                    onChange={(e) => setDataAtendimento(new Date(e.target.value))}
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label>4) Nome do Cliente:</Label>
-            <div className="flex gap-2">
-              <Input value={agenda.cliente_nome} disabled className="flex-1" />
-              {agenda.cliente_email && (
-                <a 
-                  href={`mailto:${agenda.cliente_email}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                >
-                  <Mail className="h-4 w-4" />
-                </a>
-              )}
-            </div>
-          </div>
+              <div className="space-y-2">
+                <Label>3) Nome do Serviço:</Label>
+                <Input value={agenda.servico_nome} disabled />
+              </div>
 
-          <div className="space-y-2">
-            <Label>5) Dados do Agendamento:</Label>
-            <Textarea
-              value={`Data: ${format(new Date(agenda.data_agendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              <div className="space-y-2">
+                <Label>4) Nome do Cliente:</Label>
+                <div className="flex gap-2">
+                  <Input value={agenda.cliente_nome} disabled className="flex-1" />
+                  {agenda.cliente_email && (
+                    <a 
+                      href={`mailto:${agenda.cliente_email}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>5) Dados do Agendamento:</Label>
+                <Textarea
+                  value={`Data: ${format(new Date(agenda.data_agendamento), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
 Consultor: ${agenda.consultor_nome}
 Valor: R$ ${agenda.valor_servico?.toFixed(2)}
 ${agenda.observacoes ? `Observações: ${agenda.observacoes}` : ''}`}
-              rows={3}
-              disabled
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="procedimentos_realizados">6) Descrição da Consulta:</Label>
-            <Textarea
-              id="procedimentos_realizados"
-              value={procedimentosRealizados}
-              onChange={(e) => setProcedimentosRealizados(e.target.value)}
-              placeholder="Descreva detalhadamente os procedimentos realizados"
-              rows={4}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tipo_trabalho">7) Tipo de Trabalho:</Label>
-            <Select value={tipoTrabalho} onValueChange={setTipoTrabalho}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="consulta">Consulta</SelectItem>
-                <SelectItem value="trabalho1">Trabalho Espiritual 1</SelectItem>
-                <SelectItem value="trabalho2">Trabalho Espiritual 2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>8) E-mail do Cliente:</Label>
-              <Input 
-                type="email" 
-                value={agenda.cliente_email} 
-                disabled 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>CPF do Cliente:</Label>
-              <Input 
-                value={agenda.cliente_cpf} 
-                disabled 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="valor_final">Valor Final:</Label>
-            <Input
-              id="valor_final"
-              type="number"
-              step="0.01"
-              value={valorFinal}
-              onChange={(e) => setValorFinal(Number(e.target.value))}
-              placeholder="Valor final do atendimento"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="observacoes_atendimento">Observações do Atendimento:</Label>
-            <Textarea
-              id="observacoes_atendimento"
-              value={observacoesAtendimento}
-              onChange={(e) => setObservacoesAtendimento(e.target.value)}
-              placeholder="Observações adicionais sobre o atendimento"
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Fotos do Atendimento:</Label>
-            <CameraCapture
-              onPhotoTaken={(photoUrl) => setFotosUrls(prev => [...prev, photoUrl])}
-              onPhotoRemoved={() => setFotosUrls([])}
-              label="Adicionar Foto do Atendimento"
-            />
-            {fotosUrls.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm text-muted-foreground">
-                  {fotosUrls.length} foto(s) adicionada(s)
-                </p>
+                  rows={3}
+                  disabled
+                />
               </div>
-            )}
-          </div>
 
-          {/* Botões de ação */}
-          <div className="flex flex-wrap gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={abrirPagamentos}>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Pagamentos
-            </Button>
-            
-            <Button type="button" variant="outline" onClick={abrirHistorico}>
-              <History className="mr-2 h-4 w-4" />
-              Histórico
-            </Button>
-            
-            <Button type="submit" className="bg-green-600 hover:bg-green-700">
-              <Save className="mr-2 h-4 w-4" />
-              {isEditing ? 'Atualizar' : 'Gravar'}
-            </Button>
-            
-            <Button type="button" variant="outline">
-              <Edit3 className="mr-2 h-4 w-4" />
-              Editar
-            </Button>
-            
-            <Button type="button" variant="destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Excluir
-            </Button>
-            
-            <Button type="button" variant="outline" onClick={marcarServicoAdicional}>
-              <Plus className="mr-2 h-4 w-4" />
-              Marcar Serviço Adicional
-            </Button>
-            
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
+              <div className="space-y-2">
+                <Label htmlFor="procedimentos_realizados">6) Descrição da Consulta:</Label>
+                <Textarea
+                  id="procedimentos_realizados"
+                  value={procedimentosRealizados}
+                  onChange={(e) => setProcedimentosRealizados(e.target.value)}
+                  placeholder="Descreva detalhadamente os procedimentos realizados"
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tipo_trabalho">7) Tipo de Trabalho:</Label>
+                <Select value={tipoTrabalho} onValueChange={setTipoTrabalho}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="consulta">Consulta</SelectItem>
+                    <SelectItem value="trabalho1">Trabalho Espiritual 1</SelectItem>
+                    <SelectItem value="trabalho2">Trabalho Espiritual 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>8) E-mail do Cliente:</Label>
+                  <Input 
+                    type="email" 
+                    value={agenda.cliente_email} 
+                    disabled 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>CPF do Cliente:</Label>
+                  <Input 
+                    value={agenda.cliente_cpf} 
+                    disabled 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="valor_final">Valor Final:</Label>
+                <Input
+                  id="valor_final"
+                  type="number"
+                  step="0.01"
+                  value={valorFinal}
+                  onChange={(e) => setValorFinal(Number(e.target.value))}
+                  placeholder="Valor final do atendimento"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="observacoes_atendimento">Observações do Atendimento:</Label>
+                <Textarea
+                  id="observacoes_atendimento"
+                  value={observacoesAtendimento}
+                  onChange={(e) => setObservacoesAtendimento(e.target.value)}
+                  placeholder="Observações adicionais sobre o atendimento"
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Fotos do Atendimento:</Label>
+                <CameraCapture
+                  onPhotoTaken={(photoUrl) => setFotosUrls(prev => [...prev, photoUrl])}
+                  onPhotoRemoved={() => setFotosUrls([])}
+                  label="Adicionar Foto do Atendimento"
+                />
+                {fotosUrls.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {fotosUrls.length} foto(s) adicionada(s)
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Botões de ação */}
+              <div className="flex flex-wrap gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={abrirPagamentos}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pagamentos
+                </Button>
+                
+                <Button type="button" variant="outline" onClick={abrirHistorico}>
+                  <History className="mr-2 h-4 w-4" />
+                  Histórico
+                </Button>
+                
+                <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                  <Save className="mr-2 h-4 w-4" />
+                  {isEditing ? 'Atualizar' : 'Gravar'}
+                </Button>
+                
+                <Button type="button" variant="outline">
+                  <Edit3 className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+                
+                <Button type="button" variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir
+                </Button>
+                
+                <Button type="button" variant="outline" onClick={marcarServicoAdicional}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Marcar Serviço Adicional
+                </Button>
+                
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="documentos" className="mt-6">
+            <DocumentCapture
+              clienteId={agenda.cliente_id}
+              clienteNome={agenda.cliente_nome}
+            />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
