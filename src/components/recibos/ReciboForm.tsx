@@ -217,22 +217,38 @@ export function ReciboForm() {
               <Label htmlFor="tipo_recibo">Tipo de Recibo *</Label>
               <Select
                 value={form.watch('tipo_recibo_id')?.toString() || ''}
-                onValueChange={(value) => form.setValue('tipo_recibo_id', parseInt(value))}
+                onValueChange={(value) => {
+                  console.log('Selecionando tipo de recibo:', value);
+                  form.setValue('tipo_recibo_id', parseInt(value));
+                }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
-                <SelectContent>
-                  {tiposRecibo.map((tipo) => (
-                    <SelectItem key={tipo.id} value={tipo.id.toString()}>
-                      {tipo.nome}
-                    </SelectItem>
-                  ))}
+                <SelectContent className="bg-background border shadow-lg z-50">
+                  {tiposRecibo.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      Nenhum tipo de recibo disponível
+                    </div>
+                  ) : (
+                    tiposRecibo.map((tipo) => (
+                      <SelectItem 
+                        key={tipo.id} 
+                        value={tipo.id.toString()}
+                        className="bg-background hover:bg-accent"
+                      >
+                        {tipo.nome}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               {form.formState.errors.tipo_recibo_id && (
                 <p className="text-sm text-destructive">{form.formState.errors.tipo_recibo_id.message}</p>
               )}
+              <p className="text-xs text-muted-foreground">
+                Tipos carregados: {tiposRecibo.length}
+              </p>
             </div>
 
             <div className="space-y-2">
