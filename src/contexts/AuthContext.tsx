@@ -53,32 +53,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Buscar dados do usuário na tabela profiles
         if (session?.user) {
-          // Buscar perfil do usuário
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data: profile }) => {
-              if (profile) {
-                setUsuario({
-                  id: profile.id,
-                  nome: profile.nome,
-                  email: profile.email || session.user.email || '',
-                  permissao: profile.permissao as TipoPermissao,
-                  ativo: profile.ativo
-                });
-              } else {
-                // Se não encontrou perfil, criar um básico
-                setUsuario({
-                  id: session.user.id,
-                  nome: session.user.email?.split('@')[0] || 'Usuário',
-                  email: session.user.email || '',
-                  permissao: 'user',
-                  ativo: true
-                });
-              }
-            });
+          setTimeout(() => {
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+              .then(({ data: profile, error }) => {
+                console.log('Perfil carregado:', profile, 'Erro:', error);
+                if (profile) {
+                  setUsuario({
+                    id: profile.id,
+                    nome: profile.nome,
+                    email: profile.email || session.user.email || '',
+                    permissao: profile.permissao as TipoPermissao,
+                    ativo: profile.ativo
+                  });
+                } else {
+                  // Se não encontrou perfil, verificar por email para usuários já existentes
+                  supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', session.user.email)
+                    .single()
+                    .then(({ data: profileByEmail }) => {
+                      if (profileByEmail) {
+                        setUsuario({
+                          id: profileByEmail.id,
+                          nome: profileByEmail.nome,
+                          email: profileByEmail.email,
+                          permissao: profileByEmail.permissao as TipoPermissao,
+                          ativo: profileByEmail.ativo
+                        });
+                      } else {
+                        // Criar perfil básico se não existe
+                        setUsuario({
+                          id: session.user.id,
+                          nome: session.user.email?.split('@')[0] || 'Usuário',
+                          email: session.user.email || '',
+                          permissao: 'user',
+                          ativo: true
+                        });
+                      }
+                    });
+                }
+              });
+          }, 100);
         } else {
           setUsuario(null);
         }
@@ -93,34 +113,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (session?.user) {
         // Buscar perfil do usuário na inicialização
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              setUsuario({
-                id: profile.id,
-                nome: profile.nome,
-                email: profile.email || session.user.email || '',
-                permissao: profile.permissao as TipoPermissao,
-                ativo: profile.ativo
-              });
-            } else {
-              // Se não encontrou perfil, criar um básico
-              setUsuario({
-                id: session.user.id,
-                nome: session.user.email?.split('@')[0] || 'Usuário',
-                email: session.user.email || '',
-                permissao: 'user',
-                ativo: true
-              });
-            }
-          });
+        setTimeout(() => {
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data: profile, error }) => {
+              console.log('Perfil inicial carregado:', profile, 'Erro:', error);
+              if (profile) {
+                setUsuario({
+                  id: profile.id,
+                  nome: profile.nome,
+                  email: profile.email || session.user.email || '',
+                  permissao: profile.permissao as TipoPermissao,
+                  ativo: profile.ativo
+                });
+              } else {
+                // Se não encontrou perfil, verificar por email
+                supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('email', session.user.email)
+                  .single()
+                  .then(({ data: profileByEmail }) => {
+                    if (profileByEmail) {
+                      setUsuario({
+                        id: profileByEmail.id,
+                        nome: profileByEmail.nome,
+                        email: profileByEmail.email,
+                        permissao: profileByEmail.permissao as TipoPermissao,
+                        ativo: profileByEmail.ativo
+                      });
+                    } else {
+                      // Criar perfil básico se não existe
+                      setUsuario({
+                        id: session.user.id,
+                        nome: session.user.email?.split('@')[0] || 'Usuário',
+                        email: session.user.email || '',
+                        permissao: 'user',
+                        ativo: true
+                      });
+                    }
+                  });
+              }
+              setIsLoading(false);
+            });
+        }, 100);
+      } else {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
