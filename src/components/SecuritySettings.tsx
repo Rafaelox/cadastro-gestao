@@ -130,18 +130,20 @@ export const SecuritySettings = () => {
     }
   };
 
-  if (!isMaster) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center space-x-2 text-muted-foreground">
-            <Shield className="h-4 w-4" />
-            <span>Acesso restrito a usuários MASTER</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Removido temporariamente para permitir acesso
+  // O controle de acesso é feito no nível do menu Configurações
+  // if (!isMaster) {
+  //   return (
+  //     <Card>
+  //       <CardContent className="pt-6">
+  //         <div className="flex items-center space-x-2 text-muted-foreground">
+  //           <Shield className="h-4 w-4" />
+  //           <span>Acesso restrito a usuários MASTER</span>
+  //         </div>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   return (
     <div className="space-y-6">
