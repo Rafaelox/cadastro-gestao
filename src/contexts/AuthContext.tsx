@@ -51,24 +51,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Para usuário conhecido, criar objeto usuario básico
-        if (session?.user?.email === 'adm@rpedro.net') {
-          setUsuario({
-            id: session.user.id,
-            nome: 'Admin Master',
-            email: session.user.email,
-            permissao: 'master',
-            ativo: true
-          });
-        } else if (session?.user) {
-          // Para outros usuários, criar objeto básico
-          setUsuario({
-            id: session.user.id,
-            nome: session.user.email?.split('@')[0] || 'Usuário',
-            email: session.user.email || '',
-            permissao: 'user',
-            ativo: true
-          });
+        // Buscar dados do usuário na tabela profiles
+        if (session?.user) {
+          // Buscar perfil do usuário
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data: profile }) => {
+              if (profile) {
+                setUsuario({
+                  id: profile.id,
+                  nome: profile.nome,
+                  email: profile.email || session.user.email || '',
+                  permissao: profile.permissao as TipoPermissao,
+                  ativo: profile.ativo
+                });
+              } else {
+                // Se não encontrou perfil, criar um básico
+                setUsuario({
+                  id: session.user.id,
+                  nome: session.user.email?.split('@')[0] || 'Usuário',
+                  email: session.user.email || '',
+                  permissao: 'user',
+                  ativo: true
+                });
+              }
+            });
         } else {
           setUsuario(null);
         }
@@ -81,22 +91,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user?.email === 'adm@rpedro.net') {
-        setUsuario({
-          id: session.user.id,
-          nome: 'Admin Master',
-          email: session.user.email,
-          permissao: 'master',
-          ativo: true
-        });
-      } else if (session?.user) {
-        setUsuario({
-          id: session.user.id,
-          nome: session.user.email?.split('@')[0] || 'Usuário',
-          email: session.user.email || '',
-          permissao: 'user',
-          ativo: true
-        });
+      if (session?.user) {
+        // Buscar perfil do usuário na inicialização
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setUsuario({
+                id: profile.id,
+                nome: profile.nome,
+                email: profile.email || session.user.email || '',
+                permissao: profile.permissao as TipoPermissao,
+                ativo: profile.ativo
+              });
+            } else {
+              // Se não encontrou perfil, criar um básico
+              setUsuario({
+                id: session.user.id,
+                nome: session.user.email?.split('@')[0] || 'Usuário',
+                email: session.user.email || '',
+                permissao: 'user',
+                ativo: true
+              });
+            }
+          });
       }
       
       setIsLoading(false);
@@ -174,11 +195,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
     isConsultor: usuario?.permissao === 'consultor',
-    // Permissões simplificadas - dar acesso total para adm@rpedro.net
-    canManageUsers: user?.email === 'adm@rpedro.net',
-    canManageSettings: user?.email === 'adm@rpedro.net',
-    canViewReports: user?.email === 'adm@rpedro.net',
-    canManagePayments: user?.email === 'adm@rpedro.net',
+    // Permissões baseadas no nível do usuário
+    canManageUsers: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
+    canManageSettings: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
+    canViewReports: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
+    canManagePayments: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
   };
 
   // Mostrar loading durante inicialização

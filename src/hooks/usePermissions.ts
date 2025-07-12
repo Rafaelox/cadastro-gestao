@@ -15,49 +15,49 @@ export const usePermissions = () => {
     canManagePayments
   } = useAuth();
 
-  // Permissões simplificadas - dar acesso total para adm@rpedro.net
-  const isAdminMaster = user?.email === 'adm@rpedro.net';
+  // Sistema de permissões baseado em níveis de usuário
+  const isAdminMaster = user?.email === 'adm@rpedro.net' || isMaster;
 
   const permissions = {
-    // Gerenciamento de usuários
-    canCreateUser: isAdminMaster,
-    canEditUser: isAdminMaster,
+    // Gerenciamento de usuários - Master e Gerente
+    canCreateUser: isAdminMaster || isGerente,
+    canEditUser: isAdminMaster || isGerente,
     canDeleteUser: isAdminMaster,
     canChangeUserPermissions: isAdminMaster,
 
-    // Configurações do sistema
-    canManageServices: isAdminMaster,
-    canManageConsultants: isAdminMaster,
-    canManageCategories: isAdminMaster,
-    canManagePaymentMethods: isAdminMaster,
+    // Configurações do sistema - Master e Gerente
+    canManageServices: isAdminMaster || isGerente,
+    canManageConsultants: isAdminMaster || isGerente,
+    canManageCategories: isAdminMaster || isGerente,
+    canManagePaymentMethods: isAdminMaster || isGerente,
 
-    // Agenda e atendimentos
-    canCreateAppointment: isAdminMaster,
-    canEditAppointment: isAdminMaster,
-    canDeleteAppointment: isAdminMaster,
-    canViewAllAppointments: isAdminMaster,
+    // Agenda e atendimentos - Todos menos User básico
+    canCreateAppointment: isAdminMaster || isGerente || isSecretaria || isConsultor,
+    canEditAppointment: isAdminMaster || isGerente || isSecretaria,
+    canDeleteAppointment: isAdminMaster || isGerente,
+    canViewAllAppointments: isAdminMaster || isGerente || isSecretaria,
 
-    // Clientes
-    canCreateClient: isAdminMaster,
-    canEditClient: isAdminMaster,
-    canDeleteClient: isAdminMaster,
-    canViewAllClients: isAdminMaster,
-    canViewMyClients: isAdminMaster,
+    // Clientes - Todos podem ver, criar e editar
+    canCreateClient: isAdminMaster || isGerente || isSecretaria || isConsultor,
+    canEditClient: isAdminMaster || isGerente || isSecretaria || isConsultor,
+    canDeleteClient: isAdminMaster || isGerente,
+    canViewAllClients: isAdminMaster || isGerente || isSecretaria || isConsultor,
+    canViewMyClients: true, // Todos podem ver seus próprios clientes
 
-    // Pagamentos
-    canCreatePayment: isAdminMaster,
-    canEditPayment: isAdminMaster,
+    // Pagamentos - Master, Gerente e Secretaria
+    canCreatePayment: isAdminMaster || isGerente || isSecretaria,
+    canEditPayment: isAdminMaster || isGerente,
     canDeletePayment: isAdminMaster,
-    canViewAllPayments: isAdminMaster,
+    canViewAllPayments: isAdminMaster || isGerente || isSecretaria,
 
-    // Relatórios
-    canViewFinancialReports: isAdminMaster,
-    canExportReports: isAdminMaster,
+    // Relatórios - Master e Gerente
+    canViewFinancialReports: isAdminMaster || isGerente,
+    canExportReports: isAdminMaster || isGerente,
     canViewAuditLogs: isAdminMaster,
 
-    // Comissões
-    canViewCommissions: isAdminMaster,
-    canManageCommissions: isAdminMaster,
+    // Comissões - Todos podem ver suas próprias, Master e Gerente podem gerenciar
+    canViewCommissions: true,
+    canManageCommissions: isAdminMaster || isGerente,
   };
 
   return {
