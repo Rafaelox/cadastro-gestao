@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Target, Play, Pause, Calendar, Users, BarChart } from "lucide-react";
+import { Target, Play, Pause, Calendar, Users, BarChart, Plus } from "lucide-react";
 import { CampanhaMarketing } from "@/types/comunicacao";
+import { CampanhaForm } from "./CampanhaForm";
 import { format } from "date-fns";
 
 export const CampanhasMarketing = () => {
   const [campanhas, setCampanhas] = useState<CampanhaMarketing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editandoCampanha, setEditandoCampanha] = useState<CampanhaMarketing | null>(null);
+  const [mostrarForm, setMostrarForm] = useState(false);
   const { toast } = useToast();
 
   const loadCampanhas = async () => {
@@ -39,6 +43,40 @@ export const CampanhasMarketing = () => {
   useEffect(() => {
     loadCampanhas();
   }, []);
+
+  const salvarCampanha = async (campanha: CampanhaMarketing) => {
+    try {
+      if (campanha.id) {
+        const { id, ...updateData } = campanha;
+        const { error } = await supabase
+          .from('campanhas_marketing')
+          .update(updateData)
+          .eq('id', id);
+        if (error) throw error;
+      } else {
+        const { id, ...insertData } = campanha;
+        const { error } = await supabase
+          .from('campanhas_marketing')
+          .insert([insertData]);
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Campanha salva com sucesso",
+      });
+      
+      setEditandoCampanha(null);
+      setMostrarForm(false);
+      loadCampanhas();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar campanha",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,6 +122,10 @@ export const CampanhasMarketing = () => {
             Gerencie suas campanhas de comunicação em massa
           </p>
         </div>
+        <Button onClick={() => setMostrarForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Campanha
+        </Button>
       </div>
 
       {campanhas.length === 0 ? (
@@ -94,7 +136,7 @@ export const CampanhasMarketing = () => {
             <p className="text-muted-foreground text-center mb-4">
               Crie sua primeira campanha de marketing para alcançar seus clientes de forma direcionada.
             </p>
-            <Button>
+            <Button onClick={() => setMostrarForm(true)}>
               <Target className="h-4 w-4 mr-2" />
               Criar Primeira Campanha
             </Button>
@@ -170,8 +212,12 @@ export const CampanhasMarketing = () => {
                     </Button>
                   )}
 
-                  <Button size="sm" variant="outline">
-                    Ver Detalhes
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setEditandoCampanha(campanha)}
+                  >
+                    Editar
                   </Button>
                 </div>
 
@@ -200,6 +246,27 @@ export const CampanhasMarketing = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Formulário de Campanha */}
+      {(mostrarForm || editandoCampanha) && (
+        <Dialog open={true} onOpenChange={(open) => {
+          if (!open) {
+            setMostrarForm(false);
+            setEditandoCampanha(null);
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CampanhaForm
+              campanha={editandoCampanha || undefined}
+              onSave={salvarCampanha}
+              onCancel={() => {
+                setMostrarForm(false);
+                setEditandoCampanha(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

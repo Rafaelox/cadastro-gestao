@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Filter, Users, Search, Target, Download } from "lucide-react";
 import type { Cliente, Categoria, Origem } from "@/types";
 import { FiltroMarketing } from "@/types/comunicacao";
+import { CampanhaForm } from "./CampanhaForm";
 
 export const SegmentacaoClientes = () => {
   const [filtros, setFiltros] = useState<FiltroMarketing>({});
@@ -298,7 +300,13 @@ export const SegmentacaoClientes = () => {
                     <Download className="h-4 w-4 mr-2" />
                     Exportar
                   </Button>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => {
+                    // TODO: Implementar criação de campanha com filtros
+                    toast({
+                      title: "Em desenvolvimento",
+                      description: "Funcionalidade de criação de campanha será implementada em breve",
+                    });
+                  }}>
                     <Target className="h-4 w-4 mr-2" />
                     Criar Campanha
                   </Button>
@@ -352,5 +360,36 @@ export const SegmentacaoClientes = () => {
         </Card>
       </div>
     </div>
+  );
+};
+
+// Componente separado para o botão de criar campanha
+const CriarCampanhaButton = ({ filtros }: { filtros: FiltroMarketing }) => {
+  const [mostrarForm, setMostrarForm] = useState(false);
+
+  return (
+    <>
+      <Button size="sm" onClick={() => setMostrarForm(true)}>
+        <Target className="h-4 w-4 mr-2" />
+        Criar Campanha
+      </Button>
+
+      {mostrarForm && (
+        <Dialog open={true} onOpenChange={(open) => {
+          if (!open) setMostrarForm(false);
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CampanhaForm
+              filtrosSegmentacao={filtros}
+              onSave={(campanha) => {
+                // Implementar salvamento
+                setMostrarForm(false);
+              }}
+              onCancel={() => setMostrarForm(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };

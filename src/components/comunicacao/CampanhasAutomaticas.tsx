@@ -3,14 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, Clock, Users, Plus } from "lucide-react";
 import { CampanhaAutomatica } from "@/types/comunicacao";
+import { CampanhaAutomaticaForm } from "./CampanhaAutomaticaForm";
 
 export const CampanhasAutomaticas = () => {
   const [campanhas, setCampanhas] = useState<CampanhaAutomatica[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editandoCampanha, setEditandoCampanha] = useState<CampanhaAutomatica | null>(null);
+  const [mostrarForm, setMostrarForm] = useState(false);
   const { toast } = useToast();
 
   const loadCampanhas = async () => {
@@ -39,6 +43,40 @@ export const CampanhasAutomaticas = () => {
   useEffect(() => {
     loadCampanhas();
   }, []);
+
+  const salvarCampanha = async (campanha: CampanhaAutomatica) => {
+    try {
+      if (campanha.id) {
+        const { id, ...updateData } = campanha;
+        const { error } = await supabase
+          .from('campanhas_automaticas')
+          .update(updateData)
+          .eq('id', id);
+        if (error) throw error;
+      } else {
+        const { id, ...insertData } = campanha;
+        const { error } = await supabase
+          .from('campanhas_automaticas')
+          .insert([insertData]);
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Campanha automática salva com sucesso",
+      });
+      
+      setEditandoCampanha(null);
+      setMostrarForm(false);
+      loadCampanhas();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar campanha automática",
+        variant: "destructive",
+      });
+    }
+  };
 
   const toggleCampanha = async (campanha: CampanhaAutomatica, ativo: boolean) => {
     try {
@@ -105,7 +143,7 @@ export const CampanhasAutomaticas = () => {
             Configure disparos automáticos baseados em eventos
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setMostrarForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nova Campanha Automática
         </Button>
@@ -119,7 +157,7 @@ export const CampanhasAutomaticas = () => {
             <p className="text-muted-foreground text-center mb-4">
               Crie campanhas que são disparadas automaticamente baseadas em eventos como aniversários ou falta de movimento.
             </p>
-            <Button>
+            <Button onClick={() => setMostrarForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Criar Primeira Campanha
             </Button>
@@ -171,10 +209,41 @@ export const CampanhasAutomaticas = () => {
                     Template: {(campanha as any).templates_comunicacao?.nome || 'Template não encontrado'}
                   </p>
                 </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setEditandoCampanha(campanha)}
+                  >
+                    Editar
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Formulário de Campanha Automática */}
+      {(mostrarForm || editandoCampanha) && (
+        <Dialog open={true} onOpenChange={(open) => {
+          if (!open) {
+            setMostrarForm(false);
+            setEditandoCampanha(null);
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <CampanhaAutomaticaForm
+              campanha={editandoCampanha || undefined}
+              onSave={salvarCampanha}
+              onCancel={() => {
+                setMostrarForm(false);
+                setEditandoCampanha(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
