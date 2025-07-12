@@ -31,6 +31,7 @@ export const Configuracoes = () => {
   const [showEmpresaForm, setShowEmpresaForm] = useState(false);
   const [editingEmpresa, setEditingEmpresa] = useState<ConfiguracaoEmpresa | null>(null);
   const [refreshEmpresasKey, setRefreshEmpresasKey] = useState(0);
+  const [refreshUsuariosKey, setRefreshUsuariosKey] = useState(0);
   const { canManageUsers } = useAuth();
 
   const handleEditServico = (servicoId: number) => {
@@ -76,6 +77,7 @@ export const Configuracoes = () => {
   const handleUsuarioSuccess = () => {
     setShowUsuarioForm(false);
     setEditingUsuario(null);
+    setRefreshUsuariosKey(prev => prev + 1);
   };
 
   const handleEditEmpresa = (empresa: ConfiguracaoEmpresa) => {
@@ -180,6 +182,8 @@ export const Configuracoes = () => {
       <UsuariosList
         onEdit={handleEditUsuario}
         onAdd={handleAddUsuario}
+        onDelete={() => setRefreshUsuariosKey(prev => prev + 1)}
+        refreshKey={refreshUsuariosKey}
       />
     );
   };

@@ -20,9 +20,11 @@ interface Usuario {
 interface UsuariosListProps {
   onEdit: (usuario: Usuario) => void;
   onAdd: () => void;
+  onDelete?: () => void;
+  refreshKey?: number;
 }
 
-export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
+export const UsuariosList = ({ onEdit, onAdd, onDelete, refreshKey }: UsuariosListProps) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { canManageUsers } = useAuth();
@@ -59,6 +61,12 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
     loadUsuarios();
   }, []);
 
+  useEffect(() => {
+    if (refreshKey !== undefined) {
+      loadUsuarios();
+    }
+  }, [refreshKey]);
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este usuário?")) {
       return;
@@ -77,6 +85,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
           description: "Usuário desativado com sucesso.",
         });
         loadUsuarios();
+        onDelete?.();
       } else {
         throw new Error('Não foi possível excluir o usuário');
       }
