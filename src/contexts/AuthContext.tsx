@@ -124,36 +124,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Login com Supabase Auth nativo
+      // Primeiro, tentar login com Supabase Auth nativo
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (error) {
-        console.error('Erro no login:', error);
+      if (!error && data.user && data.session) {
+        // Buscar dados do profile do usuário
+        const usuarioData = await fetchProfile(data.user.id, data.user.email || email);
+        if (usuarioData) {
+          setUsuario(usuarioData);
+          setUser(data.user);
+          setSession(data.session);
+          localStorage.setItem('user_data', JSON.stringify(usuarioData));
+          localStorage.setItem('user_session', JSON.stringify(data.session));
+          return true;
+        }
+      }
+
+      // Se falhou, tentar login customizado (para usuários criados via função custom)
+      console.log('Tentando login customizado para:', email);
+      const { data: customLoginData, error: customError } = await supabase
+        .rpc('custom_login', {
+          user_email: email,
+          user_password: senha
+        });
+
+      if (customError) {
+        console.error('Erro no login customizado:', customError);
         return false;
       }
 
-      if (!data.user || !data.session) {
-        return false;
+      if (customLoginData && customLoginData.length > 0) {
+        const userData = customLoginData[0];
+        const usuarioData: Usuario = {
+          id: userData.id,
+          nome: userData.nome,
+          email: userData.email,
+          permissao: userData.permissao as TipoPermissao,
+          ativo: userData.ativo
+        };
+
+        // Criar sessão simulada para usuários customizados
+        const mockSession = {
+          access_token: 'custom_' + userData.id,
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: 'custom_refresh_' + userData.id,
+          user: {
+            id: userData.id,
+            email: userData.email,
+            aud: 'authenticated',
+            role: 'authenticated'
+          }
+        };
+
+        setUsuario(usuarioData);
+        setUser(mockSession.user as any);
+        setSession(mockSession as any);
+        localStorage.setItem('user_data', JSON.stringify(usuarioData));
+        localStorage.setItem('mock_session', JSON.stringify(mockSession));
+        
+        return true;
       }
 
-      // Buscar dados do profile do usuário
-      const usuarioData = await fetchProfile(data.user.id, data.user.email || email);
-      if (!usuarioData) {
-        console.error('Profile não encontrado para o usuário');
-        return false;
-      }
-
-      // Definir dados do usuário
-      setUsuario(usuarioData);
-      setUser(data.user);
-      setSession(data.session);
-      localStorage.setItem('user_data', JSON.stringify(usuarioData));
-      localStorage.setItem('user_session', JSON.stringify(data.session));
-      
-      return true;
+      console.error('Credenciais inválidas para ambos os métodos de login');
+      return false;
     } catch (error) {
       console.error('Erro no login:', error);
       return false;
