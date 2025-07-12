@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff, Settings, Zap } from "lucide-react";
 import { ConfiguracaoComunicacao } from "@/types/comunicacao";
 
 export const ConfiguracoesComunicacao = () => {
@@ -19,17 +19,14 @@ export const ConfiguracoesComunicacao = () => {
 
   const loadConfiguracoes = async () => {
     try {
-      console.log("Carregando configurações de comunicação...");
+      setLoading(true);
       const { data, error } = await supabase
         .from('configuracoes_comunicacao')
         .select('*')
         .order('tipo_servico', { ascending: true });
-
-      console.log("Resultado da consulta:", { data, error });
       
       if (error) throw error;
       setConfiguracoes(data as ConfiguracaoComunicacao[] || []);
-      console.log("Configurações carregadas:", data?.length || 0);
     } catch (error: any) {
       console.error("Erro ao carregar configurações:", error);
       toast({
@@ -119,8 +116,40 @@ export const ConfiguracoesComunicacao = () => {
     }));
   };
 
+  const adicionarConfiguracaoPadrao = async (tipo: 'email' | 'sms' | 'whatsapp') => {
+    const configsPadrao = {
+      email: {
+        tipo_servico: 'email' as const,
+        provider: 'SendGrid',
+        api_key: '',
+        ativo: false,
+      },
+      sms: {
+        tipo_servico: 'sms' as const,
+        provider: 'Twilio',
+        api_key: '',
+        ativo: false,
+      },
+      whatsapp: {
+        tipo_servico: 'whatsapp' as const,
+        provider: 'Twilio WhatsApp',
+        api_key: '',
+        ativo: false,
+      }
+    };
+
+    await salvarConfiguracao(configsPadrao[tipo]);
+  };
+
   if (loading) {
-    return <div>Carregando configurações...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando configurações...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -133,74 +162,126 @@ export const ConfiguracoesComunicacao = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {configuracoes.map((config) => (
-          <Card key={config.id} className="relative">
-            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-              <div className="flex items-center gap-2">
-                {getIcon(config.tipo_servico)}
-                <CardTitle className="text-lg capitalize">{config.tipo_servico}</CardTitle>
-              </div>
-              <div className="ml-auto flex gap-2">
-                <Switch
-                  checked={config.ativo}
-                  onCheckedChange={(checked) => 
-                    salvarConfiguracao({ ...config, ativo: checked })
-                  }
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <Label className="text-sm font-medium">Provider</Label>
-                <p className="text-sm text-muted-foreground">{config.provider}</p>
+      {configuracoes.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="mx-auto max-w-md">
+            <Settings className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Nenhuma configuração encontrada</h3>
+            <p className="text-muted-foreground mb-6">
+              Configure os provedores de comunicação para começar a enviar emails, SMS e mensagens WhatsApp.
+            </p>
+            
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Configurações rápidas:</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adicionarConfiguracaoPadrao('email')}
+                  className="flex items-center gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  Email
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adicionarConfiguracaoPadrao('sms')}
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  SMS
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adicionarConfiguracaoPadrao('whatsapp')}
+                  className="flex items-center gap-2"
+                >
+                  <Smartphone className="h-4 w-4" />
+                  WhatsApp
+                </Button>
               </div>
               
-              {config.api_key && (
-                <div>
-                  <Label className="text-sm font-medium">API Key</Label>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground flex-1">
-                      {mostrarSenhas[config.id!] 
-                        ? config.api_key 
-                        : '••••••••••••••••'
-                      }
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMostrarSenha(config.id!)}
-                    >
-                      {mostrarSenhas[config.id!] ? 
-                        <EyeOff className="h-4 w-4" /> : 
-                        <Eye className="h-4 w-4" />
-                      }
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditando(config.id!)}
-                  className="flex-1"
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => excluirConfiguracao(config.id!)}
-                >
-                  <Trash2 className="h-4 w-4" />
+              <div className="pt-4">
+                <Button onClick={() => setEditando(0)} className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Configuração Personalizada
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {configuracoes.map((config) => (
+            <Card key={config.id} className="relative">
+              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  {getIcon(config.tipo_servico)}
+                  <CardTitle className="text-lg capitalize">{config.tipo_servico}</CardTitle>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  <Switch
+                    checked={config.ativo}
+                    onCheckedChange={(checked) => 
+                      salvarConfiguracao({ ...config, ativo: checked })
+                    }
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Provider</Label>
+                  <p className="text-sm text-muted-foreground">{config.provider}</p>
+                </div>
+                
+                {config.api_key && (
+                  <div>
+                    <Label className="text-sm font-medium">API Key</Label>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground flex-1">
+                        {mostrarSenhas[config.id!] 
+                          ? config.api_key 
+                          : '••••••••••••••••'
+                        }
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleMostrarSenha(config.id!)}
+                      >
+                        {mostrarSenhas[config.id!] ? 
+                          <EyeOff className="h-4 w-4" /> : 
+                          <Eye className="h-4 w-4" />
+                        }
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditando(config.id!)}
+                    className="flex-1"
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => excluirConfiguracao(config.id!)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {editando !== null && (
         <ConfiguracaoForm
