@@ -2,7 +2,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const usePermissions = () => {
   const { 
-    usuario, 
+    usuario,
+    user,
     isMaster, 
     isGerente, 
     isSecretaria, 
@@ -14,47 +15,49 @@ export const usePermissions = () => {
     canManagePayments
   } = useAuth();
 
-  // Controles específicos de permissões para formulários
+  // Permissões simplificadas - dar acesso total para adm@rpedro.net
+  const isAdminMaster = user?.email === 'adm@rpedro.net';
+
   const permissions = {
     // Gerenciamento de usuários
-    canCreateUser: isMaster || isGerente,
-    canEditUser: isMaster || isGerente,
-    canDeleteUser: isMaster,
-    canChangeUserPermissions: isMaster,
+    canCreateUser: isAdminMaster,
+    canEditUser: isAdminMaster,
+    canDeleteUser: isAdminMaster,
+    canChangeUserPermissions: isAdminMaster,
 
     // Configurações do sistema
-    canManageServices: isMaster || isGerente,
-    canManageConsultants: isMaster || isGerente,
-    canManageCategories: isMaster || isGerente,
-    canManagePaymentMethods: isMaster || isGerente,
+    canManageServices: isAdminMaster,
+    canManageConsultants: isAdminMaster,
+    canManageCategories: isAdminMaster,
+    canManagePaymentMethods: isAdminMaster,
 
     // Agenda e atendimentos
-    canCreateAppointment: canManagePayments,
-    canEditAppointment: canManagePayments,
-    canDeleteAppointment: isMaster || isGerente,
-    canViewAllAppointments: canViewReports,
+    canCreateAppointment: isAdminMaster,
+    canEditAppointment: isAdminMaster,
+    canDeleteAppointment: isAdminMaster,
+    canViewAllAppointments: isAdminMaster,
 
     // Clientes
-    canCreateClient: canManagePayments,
-    canEditClient: canManagePayments,
-    canDeleteClient: isMaster || isGerente,
-    canViewAllClients: canViewReports && !isConsultor, // Consultores veem apenas seus clientes
-    canViewMyClients: isConsultor, // Consultor pode ver seus próprios clientes
+    canCreateClient: isAdminMaster,
+    canEditClient: isAdminMaster,
+    canDeleteClient: isAdminMaster,
+    canViewAllClients: isAdminMaster,
+    canViewMyClients: isAdminMaster,
 
     // Pagamentos
-    canCreatePayment: canManagePayments,
-    canEditPayment: canManagePayments,
-    canDeletePayment: isMaster || isGerente,
-    canViewAllPayments: canViewReports,
+    canCreatePayment: isAdminMaster,
+    canEditPayment: isAdminMaster,
+    canDeletePayment: isAdminMaster,
+    canViewAllPayments: isAdminMaster,
 
     // Relatórios
-    canViewFinancialReports: canViewReports,
-    canExportReports: canViewReports,
-    canViewAuditLogs: isMaster || isGerente,
+    canViewFinancialReports: isAdminMaster,
+    canExportReports: isAdminMaster,
+    canViewAuditLogs: isAdminMaster,
 
     // Comissões
-    canViewCommissions: canViewReports,
-    canManageCommissions: isMaster || isGerente,
+    canViewCommissions: isAdminMaster,
+    canManageCommissions: isAdminMaster,
   };
 
   return {
@@ -68,7 +71,7 @@ export const usePermissions = () => {
       return permissionList.every(permission => permissions[permission]);
     },
     getUserLevel: () => {
-      if (isMaster) return 'master';
+      if (isAdminMaster) return 'master';
       if (isGerente) return 'gerente';
       if (isSecretaria) return 'secretaria';
       return 'user';

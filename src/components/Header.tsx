@@ -34,14 +34,10 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <p className="text-sm font-medium">
-                {usuario?.nome || user?.email || 'Usuário'}
+                {user?.email || 'Usuário'}
               </p>
               <p className="text-xs text-muted-foreground">
-                {usuario ? (
-                  usuario.permissao === 'master' ? 'Master' : 
-                  usuario.permissao === 'gerente' ? 'Gerente' :
-                  usuario.permissao === 'secretaria' ? 'Secretaria' : 'Usuário'
-                ) : 'Carregando...'}
+                {user?.email === 'adm@rpedro.net' ? 'Master' : 'Usuário'}
               </p>
             </div>
             <Button 

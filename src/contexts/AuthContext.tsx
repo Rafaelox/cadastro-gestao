@@ -37,128 +37,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  // Função para buscar dados do perfil do usuário
-  const fetchProfile = async (userId: string, userEmail?: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nome, permissao, ativo, consultor_id, created_at, updated_at, email')
-        .eq('id', userId)
-        .eq('ativo', true)
-        .maybeSingle();
+  console.log('AuthProvider estado atual:', { user: user?.email, session: !!session, isLoading });
 
-      if (error) {
-        console.error('Erro ao buscar perfil:', error);
-        return null;
-      }
-
-      if (data) {
-        const usuarioData: Usuario = {
-          id: data.id,
-          nome: data.nome,
-          email: data.email || userEmail || '',
-          permissao: data.permissao as TipoPermissao,
-          ativo: data.ativo
-        };
-        return usuarioData;
-      }
-    } catch (error) {
-      console.error('Erro na função fetchProfile:', error);
-    }
-    return null;
-  };
-
-  // Configurar autenticação com timeout
+  // Configurar autenticação simplificada
   useEffect(() => {
-    let mounted = true;
-    let loadingTimeout: NodeJS.Timeout;
-
-    const initializeAuth = async () => {
-      try {
-        console.log('Iniciando autenticação...');
-        setIsLoading(true);
-
-        // Timeout de segurança para evitar loading infinito
-        loadingTimeout = setTimeout(() => {
-          if (mounted) {
-            console.warn('Timeout na inicialização da auth');
-            setIsLoading(false);
-          }
-        }, 10000); // 10 segundos
-
-        // Verificar sessão atual
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Erro ao obter sessão:', error);
-          throw error;
-        }
-
-        if (currentSession?.user && mounted) {
-          console.log('Sessão encontrada, definindo states...');
-          setSession(currentSession);
-          setUser(currentSession.user);
-          
-          // Buscar perfil sem bloquear
-          setIsProfileLoading(true);
-          const profile = await fetchProfile(currentSession.user.id, currentSession.user.email || '');
-          
-          if (profile && mounted) {
-            setUsuario(profile);
-            console.log('Perfil carregado com sucesso');
-          } else {
-            console.warn('Perfil não encontrado ou usuário inativo');
-          }
-          setIsProfileLoading(false);
-        } else {
-          console.log('Nenhuma sessão ativa encontrada');
-        }
-      } catch (error) {
-        console.error('Erro na inicialização da auth:', error);
-      } finally {
-        clearTimeout(loadingTimeout);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
+    console.log('Iniciando configuração de auth...');
+    
     // Listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) return;
-
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, 'User:', session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Buscar perfil sem setTimeout
-          setIsProfileLoading(true);
-          fetchProfile(session.user.id, session.user.email || '').then(profile => {
-            if (profile && mounted) {
-              setUsuario(profile);
-            }
-            if (mounted) {
-              setIsProfileLoading(false);
-            }
+        // Para usuário conhecido, criar objeto usuario básico
+        if (session?.user?.email === 'adm@rpedro.net') {
+          setUsuario({
+            id: session.user.id,
+            nome: 'Admin Master',
+            email: session.user.email,
+            permissao: 'master',
+            ativo: true
           });
-        } else if (event === 'SIGNED_OUT') {
+        } else if (session?.user) {
+          // Para outros usuários, criar objeto básico
+          setUsuario({
+            id: session.user.id,
+            nome: session.user.email?.split('@')[0] || 'Usuário',
+            email: session.user.email || '',
+            permissao: 'user',
+            ativo: true
+          });
+        } else {
           setUsuario(null);
-          setIsProfileLoading(false);
         }
       }
     );
 
-    initializeAuth();
+    // Verificar sessão atual
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Sessão inicial:', session?.user?.email);
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user?.email === 'adm@rpedro.net') {
+        setUsuario({
+          id: session.user.id,
+          nome: 'Admin Master',
+          email: session.user.email,
+          permissao: 'master',
+          ativo: true
+        });
+      } else if (session?.user) {
+        setUsuario({
+          id: session.user.id,
+          nome: session.user.email?.split('@')[0] || 'Usuário',
+          email: session.user.email || '',
+          permissao: 'user',
+          ativo: true
+        });
+      }
+      
+      setIsLoading(false);
+    });
 
-    return () => {
-      mounted = false;
-      clearTimeout(loadingTimeout);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   // Função de login simplificada
@@ -215,17 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Auto-logout por inatividade (simplificado)
-  useEffect(() => {
-    if (!usuario) return;
-
-    const inactivityTimer = setTimeout(() => {
-      console.log('Sessão expirada por inatividade');
-      logout();
-    }, 30 * 60 * 1000); // 30 minutos
-
-    return () => clearTimeout(inactivityTimer);
-  }, [usuario]);
+  // Removido auto-logout por simplicidade
 
   const value = {
     usuario,
@@ -235,16 +169,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     isLoading,
     isAuthenticated: !!session && !!user,
-    isMaster: usuario?.permissao === 'master',
+    isMaster: user?.email === 'adm@rpedro.net' || usuario?.permissao === 'master',
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
     isConsultor: usuario?.permissao === 'consultor',
-    // Simplificar permissões - para master conhecido, dar acesso sempre
-    canManageUsers: user?.email === 'adm@rpedro.net' || ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canManageSettings: user?.email === 'adm@rpedro.net' || ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canViewReports: user?.email === 'adm@rpedro.net' || ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
-    canManagePayments: user?.email === 'adm@rpedro.net' || ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
+    // Permissões simplificadas - dar acesso total para adm@rpedro.net
+    canManageUsers: user?.email === 'adm@rpedro.net',
+    canManageSettings: user?.email === 'adm@rpedro.net',
+    canViewReports: user?.email === 'adm@rpedro.net',
+    canManagePayments: user?.email === 'adm@rpedro.net',
   };
 
   // Mostrar loading durante inicialização
