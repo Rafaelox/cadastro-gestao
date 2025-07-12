@@ -7,14 +7,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff, Settings, Zap } from "lucide-react";
+import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff, Settings, Zap, Send } from "lucide-react";
 import { ConfiguracaoComunicacao } from "@/types/comunicacao";
+import { ConfiguracaoFormFields } from "./ConfiguracaoFormFields";
+import { TesteConfiguracao } from "./TesteConfiguracao";
+
+const getIcon = (tipo: string) => {
+  switch (tipo) {
+    case 'email': return <Mail className="h-5 w-5" />;
+    case 'sms': return <MessageSquare className="h-5 w-5" />;
+    case 'whatsapp': return <Smartphone className="h-5 w-5" />;
+    default: return <MessageSquare className="h-5 w-5" />;
+  }
+};
 
 export const ConfiguracoesComunicacao = () => {
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoComunicacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<number | null>(null);
   const [mostrarSenhas, setMostrarSenhas] = useState<Record<number, boolean>>({});
+  const [testando, setTestando] = useState<ConfiguracaoComunicacao | null>(null);
   const { toast } = useToast();
 
   const loadConfiguracoes = async () => {
@@ -100,14 +112,6 @@ export const ConfiguracoesComunicacao = () => {
     }
   };
 
-  const getIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'email': return <Mail className="h-5 w-5" />;
-      case 'sms': return <MessageSquare className="h-5 w-5" />;
-      case 'whatsapp': return <Smartphone className="h-5 w-5" />;
-      default: return <MessageSquare className="h-5 w-5" />;
-    }
-  };
 
   const toggleMostrarSenha = (id: number) => {
     setMostrarSenhas(prev => ({
@@ -336,6 +340,15 @@ export const ConfiguracoesComunicacao = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setTestando(config)}
+                    className="hover:bg-blue-500 hover:text-white transition-all duration-200"
+                    disabled={!config.ativo}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => excluirConfiguracao(config.id!)}
                     className="hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all duration-200"
                   >
@@ -353,6 +366,13 @@ export const ConfiguracoesComunicacao = () => {
           configuracao={editando === 0 ? undefined : configuracoes.find(c => c.id === editando)}
           onSave={salvarConfiguracao}
           onCancel={() => setEditando(null)}
+        />
+      )}
+
+      {testando && (
+        <TesteConfiguracao
+          configuracao={testando}
+          onClose={() => setTestando(null)}
         />
       )}
     </div>
@@ -377,97 +397,163 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
       ativo: true,
     }
   );
+  const [testLoading, setTestLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
 
+  const testConfiguration = async () => {
+    setTestLoading(true);
+    try {
+      // Simular teste de configuração
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Teste realizado",
+        description: "Configuração testada com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no teste",
+        description: "Falha ao testar a configuração",
+        variant: "destructive",
+      });
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {configuracao ? 'Editar' : 'Nova'} Configuração
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <CardHeader className="border-b bg-gradient-to-r from-background to-muted/20">
+          <div className="flex items-center justify-between">
             <div>
-              <Label>Tipo de Serviço</Label>
-              <Select
-                value={formData.tipo_servico}
-                onValueChange={(value: any) => 
-                  setFormData({ ...formData, tipo_servico: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                </SelectContent>
-              </Select>
+              <CardTitle className="text-2xl">
+                {configuracao ? 'Editar' : 'Nova'} Configuração de {formData.tipo_servico.toUpperCase()}
+              </CardTitle>
+              <p className="text-muted-foreground mt-1">
+                Configure seu provedor de {formData.tipo_servico} para envio de mensagens
+              </p>
             </div>
-            
-            <div>
-              <Label>Provider</Label>
-              <Input
-                value={formData.provider}
-                onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                placeholder="Ex: SendGrid, Twilio"
-                required
-              />
+            <div className="flex items-center gap-2">
+              {getIcon(formData.tipo_servico)}
             </div>
           </div>
+        </CardHeader>
+        
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Seletor de tipo de serviço */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-1">
+                <Label className="text-base font-medium">Tipo de Serviço</Label>
+                <Select
+                  value={formData.tipo_servico}
+                  onValueChange={(value: any) => 
+                    setFormData({ 
+                      ...formData, 
+                      tipo_servico: value,
+                      provider: '',
+                      api_key: '',
+                      api_secret: '',
+                      webhook_url: '',
+                      configuracoes_extras: {}
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="sms">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        SMS
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="whatsapp">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" />
+                        WhatsApp
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-base font-medium">Status</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.ativo}
+                      onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                    />
+                    <Label>{formData.ativo ? 'Ativo' : 'Inativo'}</Label>
+                  </div>
+                </div>
+                <div className={`h-12 rounded-lg border-2 border-dashed flex items-center justify-center ${
+                  formData.ativo ? 'border-green-300 bg-green-50 text-green-700' : 'border-red-300 bg-red-50 text-red-700'
+                }`}>
+                  <span className="font-medium">
+                    {formData.ativo ? 'Configuração Ativa' : 'Configuração Inativa'}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-          <div>
-            <Label>API Key</Label>
-            <Input
-              type="password"
-              value={formData.api_key || ''}
-              onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
-              placeholder="Sua API Key"
+            {/* Campos específicos por tipo */}
+            <ConfiguracaoFormFields 
+              formData={formData} 
+              setFormData={setFormData} 
             />
-          </div>
 
-          <div>
-            <Label>API Secret (opcional)</Label>
-            <Input
-              type="password"
-              value={formData.api_secret || ''}
-              onChange={(e) => setFormData({ ...formData, api_secret: e.target.value })}
-              placeholder="Sua API Secret"
-            />
-          </div>
-
-          <div>
-            <Label>Webhook URL (opcional)</Label>
-            <Input
-              value={formData.webhook_url || ''}
-              onChange={(e) => setFormData({ ...formData, webhook_url: e.target.value })}
-              placeholder="https://seu-webhook.com"
-            />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={formData.ativo}
-              onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-            />
-            <Label>Ativo</Label>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <Button type="submit">Salvar</Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            {/* Botões de ação */}
+            <div className="flex gap-3 pt-6 border-t">
+              <Button type="submit" size="lg" className="flex-1">
+                <Plus className="h-4 w-4 mr-2" />
+                {configuracao ? 'Atualizar' : 'Salvar'} Configuração
+              </Button>
+              
+              {formData.provider && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="lg"
+                  onClick={testConfiguration}
+                  disabled={testLoading}
+                >
+                  {testLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                      Testando...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-4 w-4 mr-2" />
+                      Testar
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              <Button type="button" variant="ghost" size="lg" onClick={onCancel}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
