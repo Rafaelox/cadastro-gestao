@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   // Função para buscar dados do perfil do usuário
   const fetchProfile = async (userId: string, userEmail?: string) => {
@@ -96,17 +97,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (currentSession?.user && mounted) {
-          console.log('Sessão encontrada, buscando perfil...');
+          console.log('Sessão encontrada, definindo states...');
+          setSession(currentSession);
+          setUser(currentSession.user);
+          
+          // Buscar perfil sem bloquear
+          setIsProfileLoading(true);
           const profile = await fetchProfile(currentSession.user.id, currentSession.user.email || '');
           
           if (profile && mounted) {
-            setSession(currentSession);
-            setUser(currentSession.user);
             setUsuario(profile);
             console.log('Perfil carregado com sucesso');
           } else {
             console.warn('Perfil não encontrado ou usuário inativo');
           }
+          setIsProfileLoading(false);
         } else {
           console.log('Nenhuma sessão ativa encontrada');
         }
@@ -130,15 +135,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Defer profile fetching to avoid blocking
-          setTimeout(async () => {
-            const profile = await fetchProfile(session.user.id, session.user.email || '');
+          // Buscar perfil sem setTimeout
+          setIsProfileLoading(true);
+          fetchProfile(session.user.id, session.user.email || '').then(profile => {
             if (profile && mounted) {
               setUsuario(profile);
             }
-          }, 0);
+            if (mounted) {
+              setIsProfileLoading(false);
+            }
+          });
         } else if (event === 'SIGNED_OUT') {
           setUsuario(null);
+          setIsProfileLoading(false);
         }
       }
     );
@@ -225,7 +234,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     isLoading,
-    isAuthenticated: !!usuario,
+    isProfileLoading,
+    isAuthenticated: !!session && !!user, // Base authentication on session
     isMaster: usuario?.permissao === 'master',
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
