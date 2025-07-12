@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
-  const { usuario, logout } = useAuth();
+  const { usuario, user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -30,14 +30,18 @@ export const Header = () => {
           </div>
         </div>
         
-        {usuario && (
+        {isAuthenticated && (
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm font-medium">{usuario.nome}</p>
+              <p className="text-sm font-medium">
+                {usuario?.nome || user?.email || 'Usuário'}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {usuario.permissao === 'master' ? 'Master' : 
-                 usuario.permissao === 'gerente' ? 'Gerente' :
-                 usuario.permissao === 'secretaria' ? 'Secretaria' : 'Usuário'}
+                {usuario ? (
+                  usuario.permissao === 'master' ? 'Master' : 
+                  usuario.permissao === 'gerente' ? 'Gerente' :
+                  usuario.permissao === 'secretaria' ? 'Secretaria' : 'Usuário'
+                ) : 'Carregando...'}
               </p>
             </div>
             <Button 

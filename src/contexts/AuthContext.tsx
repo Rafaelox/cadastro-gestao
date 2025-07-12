@@ -234,27 +234,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
     isLoading,
-    isProfileLoading,
-    isAuthenticated: !!session && !!user, // Base authentication on session
+    isAuthenticated: !!session && !!user,
     isMaster: usuario?.permissao === 'master',
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
     isConsultor: usuario?.permissao === 'consultor',
-    // Durante o loading do perfil, assumir permissões baseadas na presença de sessão autenticada
-    // Para o master conhecido, dar acesso total durante o loading
-    canManageUsers: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
-                   isProfileLoading ? false : 
-                   ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canManageSettings: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
-                      isProfileLoading ? false : 
-                      ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canViewReports: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
-                   isProfileLoading ? false : 
-                   ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
-    canManagePayments: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
-                      isProfileLoading ? false : 
-                      ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
+    // Simplificar permissões - para master conhecido, dar acesso sempre
+    canManageUsers: user?.email === 'adm@rpedro.net' || ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canManageSettings: user?.email === 'adm@rpedro.net' || ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canViewReports: user?.email === 'adm@rpedro.net' || ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
+    canManagePayments: user?.email === 'adm@rpedro.net' || ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
   };
 
   // Mostrar loading durante inicialização
