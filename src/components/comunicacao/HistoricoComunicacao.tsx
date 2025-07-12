@@ -13,8 +13,8 @@ export const HistoricoComunicacao = () => {
   const [comunicacoes, setComunicacoes] = useState<Comunicacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtros, setFiltros] = useState({
-    tipo: '',
-    status: '',
+    tipo: 'todos',
+    status: 'todos',
     cliente: '',
   });
   const { toast } = useToast();
@@ -31,10 +31,10 @@ export const HistoricoComunicacao = () => {
         .order('data_envio', { ascending: false })
         .limit(100);
 
-      if (filtros.tipo) {
+      if (filtros.tipo && filtros.tipo !== 'todos') {
         query = query.eq('tipo', filtros.tipo);
       }
-      if (filtros.status) {
+      if (filtros.status && filtros.status !== 'todos') {
         query = query.eq('status', filtros.status);
       }
       if (filtros.cliente) {
@@ -133,7 +133,7 @@ export const HistoricoComunicacao = () => {
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="todos">Todos os tipos</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="sms">SMS</SelectItem>
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
@@ -150,7 +150,7 @@ export const HistoricoComunicacao = () => {
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="todos">Todos os status</SelectItem>
                   <SelectItem value="enviando">Enviando</SelectItem>
                   <SelectItem value="enviado">Enviado</SelectItem>
                   <SelectItem value="entregue">Entregue</SelectItem>
