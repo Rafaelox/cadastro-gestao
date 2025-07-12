@@ -123,6 +123,130 @@ export type Database = {
         }
         Relationships: []
       }
+      campanhas_automaticas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          dias_antes: number | null
+          dias_depois: number | null
+          filtros: Json | null
+          id: number
+          nome: string
+          template_id: number
+          tipo_trigger: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dias_antes?: number | null
+          dias_depois?: number | null
+          filtros?: Json | null
+          id?: never
+          nome: string
+          template_id: number
+          tipo_trigger: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          dias_antes?: number | null
+          dias_depois?: number | null
+          filtros?: Json | null
+          id?: never
+          nome?: string
+          template_id?: number
+          tipo_trigger?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanhas_automaticas_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates_comunicacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campanhas_marketing: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          data_agendamento: string | null
+          data_execucao: string | null
+          descricao: string | null
+          filtros: Json
+          id: number
+          nome: string
+          status: string
+          template_id: number | null
+          tipo_comunicacao: string
+          total_destinatarios: number | null
+          total_enviados: number | null
+          total_erro: number | null
+          total_sucesso: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_agendamento?: string | null
+          data_execucao?: string | null
+          descricao?: string | null
+          filtros?: Json
+          id?: never
+          nome: string
+          status?: string
+          template_id?: number | null
+          tipo_comunicacao: string
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_erro?: number | null
+          total_sucesso?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          data_agendamento?: string | null
+          data_execucao?: string | null
+          descricao?: string | null
+          filtros?: Json
+          id?: never
+          nome?: string
+          status?: string
+          template_id?: number | null
+          tipo_comunicacao?: string
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_erro?: number | null
+          total_sucesso?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campanhas_marketing_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates_comunicacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias: {
         Row: {
           ativo: boolean
@@ -358,6 +482,139 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      comunicacoes: {
+        Row: {
+          assunto: string | null
+          campanha_id: number | null
+          cliente_id: number
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          custo: number | null
+          data_entrega: string | null
+          data_envio: string
+          data_leitura: string | null
+          destinatario: string
+          erro_detalhe: string | null
+          external_id: string | null
+          id: number
+          status: string
+          template_id: number | null
+          tipo: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assunto?: string | null
+          campanha_id?: number | null
+          cliente_id: number
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          custo?: number | null
+          data_entrega?: string | null
+          data_envio?: string
+          data_leitura?: string | null
+          destinatario: string
+          erro_detalhe?: string | null
+          external_id?: string | null
+          id?: never
+          status?: string
+          template_id?: number | null
+          tipo: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assunto?: string | null
+          campanha_id?: number | null
+          cliente_id?: number
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          custo?: number | null
+          data_entrega?: string | null
+          data_envio?: string
+          data_leitura?: string | null
+          destinatario?: string
+          erro_detalhe?: string | null
+          external_id?: string | null
+          id?: never
+          status?: string
+          template_id?: number | null
+          tipo?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicacoes_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "campanhas_marketing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicacoes_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates_comunicacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_comunicacao: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          ativo: boolean
+          configuracoes_extras: Json | null
+          created_at: string
+          created_by: string | null
+          id: number
+          provider: string
+          tipo_servico: string
+          updated_at: string
+          updated_by: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          ativo?: boolean
+          configuracoes_extras?: Json | null
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          provider: string
+          tipo_servico: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          ativo?: boolean
+          configuracoes_extras?: Json | null
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          provider?: string
+          tipo_servico?: string
+          updated_at?: string
+          updated_by?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
       }
       configuracoes_empresa: {
         Row: {
@@ -1002,6 +1259,48 @@ export type Database = {
           preco?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      templates_comunicacao: {
+        Row: {
+          assunto: string | null
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          id: number
+          nome: string
+          tipo: string
+          updated_at: string
+          updated_by: string | null
+          variaveis: Json | null
+        }
+        Insert: {
+          assunto?: string | null
+          ativo?: boolean
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          nome: string
+          tipo: string
+          updated_at?: string
+          updated_by?: string | null
+          variaveis?: Json | null
+        }
+        Update: {
+          assunto?: string | null
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          id?: never
+          nome?: string
+          tipo?: string
+          updated_at?: string
+          updated_by?: string | null
+          variaveis?: Json | null
         }
         Relationships: []
       }
