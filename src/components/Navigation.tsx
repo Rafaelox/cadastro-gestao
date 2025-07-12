@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight } from "lucide-react";
+import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight, Shield } from "lucide-react";
 import { useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -73,6 +73,10 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: 'configuracoes', label: 'Configurações', icon: Settings }
   ];
 
+  const permissionItems = permissions.canCreateUser ? [
+    { id: 'permissoes-pagina', label: 'Permissões por Página', icon: Shield }
+  ] : [];
+
   return (
     <Card className="p-4 bg-card/50 backdrop-blur-sm border-border/50">
       <div className="space-y-2">
@@ -142,6 +146,35 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                       : "hover:bg-muted/50"
                   }`}
                   onClick={() => onTabChange(item.id)}
+                >
+                  <IconComponent className="w-4 h-4 mr-2" />
+                  <span>{item.label}</span>
+                </Button>
+              );
+            })}
+            
+            {/* Seção de permissões especiais */}
+            {permissionItems.map((item) => {
+              const IconComponent = item.icon;
+              const isActive = activeTab === item.id;
+              
+              return (
+                <Button
+                  key={item.id}
+                  variant={isActive ? "default" : "ghost"}
+                  size="sm"
+                  className={`w-full justify-start ${
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => {
+                    if (item.id === 'permissoes-pagina') {
+                      window.location.href = '/permissoes';
+                    } else {
+                      onTabChange(item.id);
+                    }
+                  }}
                 >
                   <IconComponent className="w-4 h-4 mr-2" />
                   <span>{item.label}</span>

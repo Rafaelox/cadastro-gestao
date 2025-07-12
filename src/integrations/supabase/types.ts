@@ -709,6 +709,50 @@ export type Database = {
           },
         ]
       }
+      page_permissions: {
+        Row: {
+          can_access: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          page_name: string
+          page_route: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          can_access?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_name: string
+          page_route: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          can_access?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          page_name?: string
+          page_route?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcelas: {
         Row: {
           created_at: string
@@ -1156,6 +1200,10 @@ export type Database = {
           user_active?: boolean
           user_consultor_id?: number
         }
+        Returns: boolean
+      }
+      user_can_access_page: {
+        Args: { user_id: string; page_route: string }
         Returns: boolean
       }
       validate_user_session: {

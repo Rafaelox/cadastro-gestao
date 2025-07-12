@@ -16,6 +16,7 @@ import { ClientesPage } from "./pages/ClientesPage";
 import { AtendimentosPage } from "./pages/AtendimentosPage";
 import { CaixaPage } from "./pages/CaixaPage";
 import RecibosPage from "./pages/RecibosPage";
+import PermissoesPage from "./pages/PermissoesPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -86,6 +87,7 @@ const AppContent = () => {
                     <Route path="/caixa" element={<CaixaPage />} />
                     <Route path="/recibos" element={<RecibosPage />} />
                     <Route path="/sistema" element={<Index activeTab={activeTab} />} />
+                    <Route path="/permissoes" element={<PermissoesPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
@@ -103,6 +105,7 @@ const AppContent = () => {
               <Route path="/caixa" element={<CaixaPage />} />
               <Route path="/recibos" element={<RecibosPage />} />
               <Route path="/sistema" element={<Index activeTab={activeTab} />} />
+              <Route path="/permissoes" element={<PermissoesPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />
