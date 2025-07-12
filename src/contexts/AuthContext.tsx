@@ -241,10 +241,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
     isConsultor: usuario?.permissao === 'consultor',
-    canManageUsers: ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canManageSettings: ['master', 'gerente'].includes(usuario?.permissao || ''),
-    canViewReports: ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
-    canManagePayments: ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
+    // Durante o loading do perfil, assumir permissões baseadas na presença de sessão autenticada
+    // Para o master conhecido, dar acesso total durante o loading
+    canManageUsers: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
+                   isProfileLoading ? false : 
+                   ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canManageSettings: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
+                      isProfileLoading ? false : 
+                      ['master', 'gerente'].includes(usuario?.permissao || ''),
+    canViewReports: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
+                   isProfileLoading ? false : 
+                   ['master', 'gerente', 'secretaria'].includes(usuario?.permissao || ''),
+    canManagePayments: isProfileLoading && user?.email === 'adm@rpedro.net' ? true : 
+                      isProfileLoading ? false : 
+                      ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
   };
 
   // Mostrar loading durante inicialização
