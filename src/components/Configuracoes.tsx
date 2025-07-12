@@ -15,6 +15,7 @@ import { UsuarioForm } from "@/components/UsuarioForm";
 import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
 import { ConfiguracaoEmpresaForm } from "@/components/ConfiguracaoEmpresaForm";
 import { EmpresasList } from "@/components/EmpresasList";
+import { SecuritySettings } from "@/components/SecuritySettings";
 import type { Servico, Consultor } from "@/types";
 import type { ConfiguracaoEmpresa } from "@/types/recibo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -228,7 +229,7 @@ export const Configuracoes = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="servicos" className="flex items-center space-x-2">
             <Briefcase className="h-4 w-4" />
             <span>Serviços</span>
@@ -257,6 +258,12 @@ export const Configuracoes = () => {
             <TabsTrigger value="usuarios" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
               <span>Usuários</span>
+            </TabsTrigger>
+          )}
+          {canManageUsers && (
+            <TabsTrigger value="seguranca" className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span>Segurança</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -425,6 +432,22 @@ export const Configuracoes = () => {
               </CardHeader>
               <CardContent>
                 {renderUsuariosContent()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+
+        {canManageUsers && (
+          <TabsContent value="seguranca" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Configurações de Segurança</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SecuritySettings />
               </CardContent>
             </Card>
           </TabsContent>

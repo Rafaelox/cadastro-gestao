@@ -3,12 +3,52 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import type { Usuario, TipoPermissao } from '@/types';
 
+// Storage seguro para mobile/web
+const secureStorage = {
+  async setItem(key: string, value: string) {
+    try {
+      // Usar localStorage para web, SecureStorage será implementado no mobile
+      localStorage.setItem(key, value);
+    } catch (error) {
+      console.error('Erro ao salvar no storage:', error);
+    }
+  },
+  
+  async getItem(key: string) {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.error('Erro ao ler do storage:', error);
+      return null;
+    }
+  },
+  
+  async removeItem(key: string) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error('Erro ao remover do storage:', error);
+    }
+  },
+  
+  async clear() {
+    try {
+      // Limpar apenas chaves relacionadas à autenticação
+      const authKeys = ['secure_session', 'user_data', 'user_session', 'usuario_logado', 'mock_session'];
+      authKeys.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Erro ao limpar storage:', error);
+    }
+  }
+};
+
 interface AuthContextType {
   usuario: Usuario | null;
   user: User | null;
   session: Session | null;
   login: (email: string, senha: string) => Promise<boolean>;
   logout: () => void;
+  isLoading: boolean;
   isAuthenticated: boolean;
   isMaster: boolean;
   isGerente: boolean;
@@ -37,178 +77,233 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Função auxiliar para buscar profile
-  const fetchProfile = async (userId: string, userEmail: string) => {
+  // Função para buscar dados do perfil do usuário
+  const fetchProfile = async (userId: string, userEmail?: string) => {
     try {
-      const { data: profileData } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
-        .select('id, nome, permissao, ativo, consultor_id, created_at, updated_at')
+        .select('id, nome, permissao, ativo, consultor_id, created_at, updated_at, email')
         .eq('id', userId)
+        .eq('ativo', true)
         .single();
 
-      if (profileData) {
+      if (error) {
+        console.error('Erro ao buscar perfil:', error);
+        return null;
+      }
+
+      if (data) {
         const usuarioData: Usuario = {
-          id: profileData.id,
-          nome: profileData.nome,
-          email: userEmail,
-          permissao: profileData.permissao as TipoPermissao,
-          ativo: profileData.ativo
+          id: data.id,
+          nome: data.nome,
+          email: data.email || userEmail || '',
+          permissao: data.permissao as TipoPermissao,
+          ativo: data.ativo
         };
         return usuarioData;
       }
     } catch (error) {
-      console.error('Erro ao buscar profile:', error);
+      console.error('Erro na função fetchProfile:', error);
     }
     return null;
   };
 
+  // Função para criar sessão segura
+  const createSecureSession = async (user: User, profile: Usuario) => {
+    try {
+      const sessionData = {
+        user: {
+          id: user.id,
+          email: user.email,
+          created_at: user.created_at
+        },
+        usuario: profile,
+        timestamp: new Date().getTime(),
+        expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).getTime() // 8 horas
+      };
+
+      await secureStorage.setItem('secure_session', JSON.stringify(sessionData));
+      return true;
+    } catch (error) {
+      console.error('Erro ao criar sessão segura:', error);
+      return false;
+    }
+  };
+
+  // Função para validar sessão armazenada
+  const validateStoredSession = async () => {
+    try {
+      const storedSession = await secureStorage.getItem('secure_session');
+      if (!storedSession) return null;
+
+      const sessionData = JSON.parse(storedSession);
+      const now = new Date().getTime();
+
+      // Verificar se a sessão expirou
+      if (now > sessionData.expires_at) {
+        await secureStorage.removeItem('secure_session');
+        return null;
+      }
+
+      return sessionData;
+    } catch (error) {
+      console.error('Erro ao validar sessão armazenada:', error);
+      await secureStorage.removeItem('secure_session');
+      return null;
+    }
+  };
+
+  // Configurar autenticação
   useEffect(() => {
-    // Configurar listener do Supabase Auth
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true);
+
+        // 1. Verificar sessão do Supabase primeiro
+        const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+        
+        if (supabaseSession?.user && mounted) {
+          const profile = await fetchProfile(supabaseSession.user.id, supabaseSession.user.email || '');
+          if (profile && mounted) {
+            setSession(supabaseSession);
+            setUser(supabaseSession.user);
+            setUsuario(profile);
+            await createSecureSession(supabaseSession.user, profile);
+          }
+        } else {
+          // 2. Se não há sessão Supabase, verificar sessão armazenada (fallback temporário)
+          const storedSession = await validateStoredSession();
+          if (storedSession && mounted) {
+            setUsuario(storedSession.usuario);
+            // Para sessões customizadas, não definir session/user do Supabase
+          }
+        }
+      } catch (error) {
+        console.error('Erro na inicialização da auth:', error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    // Listener para mudanças de autenticação do Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          fetchProfile(session.user.id, session.user.email || '').then(usuarioData => {
-            if (usuarioData) {
-              setUsuario(usuarioData);
-              setUser(session.user);
-              setSession(session);
-              localStorage.setItem('user_data', JSON.stringify(usuarioData));
-              localStorage.setItem('user_session', JSON.stringify(session));
-            }
-          });
+          const profile = await fetchProfile(session.user.id, session.user.email || '');
+          if (profile && mounted) {
+            setUsuario(profile);
+            await createSecureSession(session.user, profile);
+          }
         } else if (event === 'SIGNED_OUT') {
           setUsuario(null);
-          setUser(null);
-          setSession(null);
-          localStorage.removeItem('user_data');
-          localStorage.removeItem('user_session');
-          localStorage.removeItem('usuario_logado');
-          localStorage.removeItem('mock_session');
+          await secureStorage.clear();
         }
       }
     );
 
-    // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchProfile(session.user.id, session.user.email || '').then(usuarioData => {
-          if (usuarioData) {
-            setUsuario(usuarioData);
-            setUser(session.user);
-            setSession(session);
-          }
-          setIsLoading(false);
-        });
-      } else {
-        // Fallback: verificar localStorage
-        const usuarioSalvo = localStorage.getItem('user_data') || localStorage.getItem('usuario_logado');
-        const sessionSalva = localStorage.getItem('user_session') || localStorage.getItem('mock_session');
-        
-        if (usuarioSalvo && sessionSalva) {
-          try {
-            const userData = JSON.parse(usuarioSalvo);
-            const sessionData = JSON.parse(sessionSalva);
-            setUsuario(userData);
-            setUser(sessionData.user);
-            setSession(sessionData);
-          } catch (error) {
-            localStorage.clear();
-          }
-        }
-        setIsLoading(false);
-      }
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
+  // Função de login APENAS com Supabase Auth (removido custom_login)
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Primeiro, tentar login com Supabase Auth nativo
+      setIsLoading(true);
+
+      // Login apenas com Supabase Auth nativo
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (!error && data.user && data.session) {
-        // Buscar dados do profile do usuário
-        const usuarioData = await fetchProfile(data.user.id, data.user.email || email);
-        if (usuarioData) {
-          setUsuario(usuarioData);
-          setUser(data.user);
-          setSession(data.session);
-          localStorage.setItem('user_data', JSON.stringify(usuarioData));
-          localStorage.setItem('user_session', JSON.stringify(data.session));
-          return true;
-        }
-      }
-
-      // Se falhou, tentar login customizado (para usuários criados via função custom)
-      console.log('Tentando login customizado para:', email);
-      const { data: customLoginData, error: customError } = await supabase
-        .rpc('custom_login', {
-          user_email: email,
-          user_password: senha
-        });
-
-      if (customError) {
-        console.error('Erro no login customizado:', customError);
+      if (error) {
+        console.error('Erro no login:', error.message);
         return false;
       }
 
-      if (customLoginData && customLoginData.length > 0) {
-        const userData = customLoginData[0];
-        const usuarioData: Usuario = {
-          id: userData.id,
-          nome: userData.nome,
-          email: userData.email,
-          permissao: userData.permissao as TipoPermissao,
-          ativo: userData.ativo
-        };
-
-        // Criar sessão simulada para usuários customizados
-        const mockSession = {
-          access_token: 'custom_' + userData.id,
-          token_type: 'bearer',
-          expires_in: 3600,
-          refresh_token: 'custom_refresh_' + userData.id,
-          user: {
-            id: userData.id,
-            email: userData.email,
-            aud: 'authenticated',
-            role: 'authenticated'
-          }
-        };
-
-        setUsuario(usuarioData);
-        setUser(mockSession.user as any);
-        setSession(mockSession as any);
-        localStorage.setItem('user_data', JSON.stringify(usuarioData));
-        localStorage.setItem('mock_session', JSON.stringify(mockSession));
-        
+      if (data.user && data.session) {
+        // O listener onAuthStateChange cuidará do resto
         return true;
       }
 
-      console.error('Credenciais inválidas para ambos os métodos de login');
       return false;
     } catch (error) {
       console.error('Erro no login:', error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Função de logout seguro
   const logout = async () => {
     try {
+      setIsLoading(true);
+      
+      // Limpar storage seguro
+      await secureStorage.clear();
+      
+      // Logout do Supabase
       await supabase.auth.signOut();
+      
+      // Limpar estados
+      setUser(null);
+      setSession(null);
+      setUsuario(null);
+      
     } catch (error) {
       console.error('Erro no logout:', error);
+    } finally {
+      setIsLoading(false);
+      // Força reload para garantir limpeza completa
+      window.location.href = '/';
     }
-    
-    setUsuario(null);
-    setUser(null);
-    setSession(null);
-    localStorage.clear();
   };
+
+  // Auto-logout por inatividade (30 minutos)
+  useEffect(() => {
+    if (!usuario) return;
+
+    let inactivityTimer: NodeJS.Timeout;
+    
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        console.log('Sessão expirada por inatividade');
+        logout();
+      }, 30 * 60 * 1000); // 30 minutos
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    // Configurar listeners de atividade
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer, true);
+    });
+
+    // Iniciar timer
+    resetTimer();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimer, true);
+      });
+    };
+  }, [usuario]);
 
   const value = {
     usuario,
@@ -216,7 +311,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     session,
     login,
     logout,
-    isAuthenticated: !!usuario && !!session,
+    isLoading,
+    isAuthenticated: !!usuario,
     isMaster: usuario?.permissao === 'master',
     isGerente: usuario?.permissao === 'gerente',
     isSecretaria: usuario?.permissao === 'secretaria',
@@ -228,8 +324,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     canManagePayments: ['master', 'gerente', 'secretaria', 'consultor'].includes(usuario?.permissao || ''),
   };
 
+  // Mostrar loading durante inicialização
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -191,9 +191,8 @@ export const Login = () => {
           
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
             <p className="text-sm text-center text-muted-foreground">
-              <strong>Credenciais Master:</strong><br />
-              Email: adm@rpedro.com<br />
-              Senha: admin123
+              <strong>Sistema de Autenticação Seguro</strong><br />
+              Entre em contato com o administrador para obter suas credenciais de acesso.
             </p>
           </div>
         </CardContent>
