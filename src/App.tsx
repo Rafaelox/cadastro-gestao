@@ -17,6 +17,8 @@ import { AtendimentosPage } from "./pages/AtendimentosPage";
 import { CaixaPage } from "./pages/CaixaPage";
 import RecibosPage from "./pages/RecibosPage";
 import PermissoesPage from "./pages/PermissoesPage";
+import { ComunicacaoPage } from "./pages/ComunicacaoPage";
+import { MarketingPage } from "./pages/MarketingPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -37,6 +39,8 @@ const AppContent = () => {
       '/clientes': 'clientes',
       '/atendimentos': 'historico-diario',
       '/caixa': 'caixa',
+      '/comunicacao': 'comunicacao',
+      '/marketing': 'marketing',
       '/sistema': 'comissoes' // Default para /sistema
     };
     const newTab = routeToTab[location.pathname] || 'dashboard';
@@ -64,6 +68,8 @@ const AppContent = () => {
                       'clientes': '/clientes',
                       'historico-diario': '/atendimentos',
                       'caixa': '/caixa',
+                      'comunicacao': '/comunicacao',
+                      'marketing': '/marketing',
                       'dashboard-financeiro': '/sistema',
                       'relatorios': '/sistema',
                       'comissoes': '/sistema',
@@ -85,6 +91,8 @@ const AppContent = () => {
                     <Route path="/clientes" element={<ClientesPage />} />
                     <Route path="/atendimentos" element={<AtendimentosPage />} />
                     <Route path="/caixa" element={<CaixaPage />} />
+                    <Route path="/comunicacao" element={<ComunicacaoPage />} />
+                    <Route path="/marketing" element={<MarketingPage />} />
                     <Route path="/recibos" element={<RecibosPage />} />
                     <Route path="/sistema" element={<Index activeTab={activeTab} />} />
                     <Route path="/permissoes" element={<PermissoesPage />} />
@@ -103,6 +111,8 @@ const AppContent = () => {
               <Route path="/clientes" element={<ClientesPage />} />
               <Route path="/atendimentos" element={<AtendimentosPage />} />
               <Route path="/caixa" element={<CaixaPage />} />
+              <Route path="/comunicacao" element={<ComunicacaoPage />} />
+              <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/recibos" element={<RecibosPage />} />
               <Route path="/sistema" element={<Index activeTab={activeTab} />} />
               <Route path="/permissoes" element={<PermissoesPage />} />

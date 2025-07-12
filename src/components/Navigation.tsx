@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight, Shield } from "lucide-react";
+import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight, Shield, MessageSquare, Target } from "lucide-react";
 import { useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -62,6 +62,18 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       label: 'Dashboard Financeiro',
       icon: BarChart3,
       description: 'Análises financeiras'
+    },
+    {
+      id: 'comunicacao',
+      label: 'Comunicação',
+      icon: MessageSquare,
+      description: 'Templates e campanhas'
+    },
+    {
+      id: 'marketing',
+      label: 'Marketing',
+      icon: Target,
+      description: 'Campanhas de marketing'
     },
   ];
 
