@@ -19,17 +19,22 @@ export const ConfiguracoesComunicacao = () => {
 
   const loadConfiguracoes = async () => {
     try {
+      console.log("Carregando configurações de comunicação...");
       const { data, error } = await supabase
         .from('configuracoes_comunicacao')
         .select('*')
         .order('tipo_servico', { ascending: true });
 
+      console.log("Resultado da consulta:", { data, error });
+      
       if (error) throw error;
       setConfiguracoes(data as ConfiguracaoComunicacao[] || []);
+      console.log("Configurações carregadas:", data?.length || 0);
     } catch (error: any) {
+      console.error("Erro ao carregar configurações:", error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar configurações",
+        description: `Erro ao carregar configurações: ${error.message}`,
         variant: "destructive",
       });
     } finally {
