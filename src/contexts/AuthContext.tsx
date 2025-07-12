@@ -3,45 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import type { Usuario, TipoPermissao } from '@/types';
 
-// Storage seguro para mobile/web
-const secureStorage = {
-  async setItem(key: string, value: string) {
-    try {
-      // Usar localStorage para web, SecureStorage será implementado no mobile
-      localStorage.setItem(key, value);
-    } catch (error) {
-      console.error('Erro ao salvar no storage:', error);
-    }
-  },
-  
-  async getItem(key: string) {
-    try {
-      return localStorage.getItem(key);
-    } catch (error) {
-      console.error('Erro ao ler do storage:', error);
-      return null;
-    }
-  },
-  
-  async removeItem(key: string) {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.error('Erro ao remover do storage:', error);
-    }
-  },
-  
-  async clear() {
-    try {
-      // Limpar apenas chaves relacionadas à autenticação
-      const authKeys = ['secure_session', 'user_data', 'user_session', 'usuario_logado', 'mock_session'];
-      authKeys.forEach(key => localStorage.removeItem(key));
-    } catch (error) {
-      console.error('Erro ao limpar storage:', error);
-    }
-  }
-};
-
 interface AuthContextType {
   usuario: Usuario | null;
   user: User | null;
@@ -85,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .select('id, nome, permissao, ativo, consultor_id, created_at, updated_at, email')
         .eq('id', userId)
         .eq('ativo', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Erro ao buscar perfil:', error);
@@ -108,104 +69,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return null;
   };
 
-  // Função para criar sessão segura
-  const createSecureSession = async (user: User, profile: Usuario) => {
-    try {
-      const sessionData = {
-        user: {
-          id: user.id,
-          email: user.email,
-          created_at: user.created_at
-        },
-        usuario: profile,
-        timestamp: new Date().getTime(),
-        expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).getTime() // 8 horas
-      };
-
-      await secureStorage.setItem('secure_session', JSON.stringify(sessionData));
-      return true;
-    } catch (error) {
-      console.error('Erro ao criar sessão segura:', error);
-      return false;
-    }
-  };
-
-  // Função para validar sessão armazenada
-  const validateStoredSession = async () => {
-    try {
-      const storedSession = await secureStorage.getItem('secure_session');
-      if (!storedSession) return null;
-
-      const sessionData = JSON.parse(storedSession);
-      const now = new Date().getTime();
-
-      // Verificar se a sessão expirou
-      if (now > sessionData.expires_at) {
-        await secureStorage.removeItem('secure_session');
-        return null;
-      }
-
-      return sessionData;
-    } catch (error) {
-      console.error('Erro ao validar sessão armazenada:', error);
-      await secureStorage.removeItem('secure_session');
-      return null;
-    }
-  };
-
-  // Configurar autenticação
+  // Configurar autenticação com timeout
   useEffect(() => {
     let mounted = true;
+    let loadingTimeout: NodeJS.Timeout;
 
     const initializeAuth = async () => {
       try {
+        console.log('Iniciando autenticação...');
         setIsLoading(true);
 
-        // 1. Verificar sessão do Supabase primeiro
-        const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+        // Timeout de segurança para evitar loading infinito
+        loadingTimeout = setTimeout(() => {
+          if (mounted) {
+            console.warn('Timeout na inicialização da auth');
+            setIsLoading(false);
+          }
+        }, 10000); // 10 segundos
+
+        // Verificar sessão atual
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (supabaseSession?.user && mounted) {
-          const profile = await fetchProfile(supabaseSession.user.id, supabaseSession.user.email || '');
+        if (error) {
+          console.error('Erro ao obter sessão:', error);
+          throw error;
+        }
+
+        if (currentSession?.user && mounted) {
+          console.log('Sessão encontrada, buscando perfil...');
+          const profile = await fetchProfile(currentSession.user.id, currentSession.user.email || '');
+          
           if (profile && mounted) {
-            setSession(supabaseSession);
-            setUser(supabaseSession.user);
+            setSession(currentSession);
+            setUser(currentSession.user);
             setUsuario(profile);
-            await createSecureSession(supabaseSession.user, profile);
+            console.log('Perfil carregado com sucesso');
+          } else {
+            console.warn('Perfil não encontrado ou usuário inativo');
           }
         } else {
-          // 2. Se não há sessão Supabase, verificar sessão armazenada (fallback temporário)
-          const storedSession = await validateStoredSession();
-          if (storedSession && mounted) {
-            setUsuario(storedSession.usuario);
-            // Para sessões customizadas, não definir session/user do Supabase
-          }
+          console.log('Nenhuma sessão ativa encontrada');
         }
       } catch (error) {
         console.error('Erro na inicialização da auth:', error);
       } finally {
+        clearTimeout(loadingTimeout);
         if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
-    // Listener para mudanças de autenticação do Supabase
+    // Listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
 
+        console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchProfile(session.user.id, session.user.email || '');
-          if (profile && mounted) {
-            setUsuario(profile);
-            await createSecureSession(session.user, profile);
-          }
+          // Defer profile fetching to avoid blocking
+          setTimeout(async () => {
+            const profile = await fetchProfile(session.user.id, session.user.email || '');
+            if (profile && mounted) {
+              setUsuario(profile);
+            }
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setUsuario(null);
-          await secureStorage.clear();
         }
       }
     );
@@ -214,16 +147,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);
 
-  // Função de login APENAS com Supabase Auth (removido custom_login)
+  // Função de login simplificada
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      setIsLoading(true);
-
-      // Login apenas com Supabase Auth nativo
+      console.log('Tentando fazer login...');
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
@@ -235,7 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user && data.session) {
-        // O listener onAuthStateChange cuidará do resto
+        console.log('Login realizado com sucesso');
         return true;
       }
 
@@ -243,66 +176,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Erro no login:', error);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Função de logout seguro
+  // Função de logout simplificada
   const logout = async () => {
     try {
-      setIsLoading(true);
+      console.log('Fazendo logout...');
       
-      // Limpar storage seguro
-      await secureStorage.clear();
-      
-      // Logout do Supabase
       await supabase.auth.signOut();
       
-      // Limpar estados
+      // Limpar estados locais
       setUser(null);
       setSession(null);
       setUsuario(null);
       
+      // Limpar localStorage
+      localStorage.clear();
+      
+      // Redirecionar para home
+      window.location.href = '/';
     } catch (error) {
       console.error('Erro no logout:', error);
-    } finally {
-      setIsLoading(false);
-      // Força reload para garantir limpeza completa
+      // Mesmo com erro, limpar estados e redirecionar
+      setUser(null);
+      setSession(null);
+      setUsuario(null);
       window.location.href = '/';
     }
   };
 
-  // Auto-logout por inatividade (30 minutos)
+  // Auto-logout por inatividade (simplificado)
   useEffect(() => {
     if (!usuario) return;
 
-    let inactivityTimer: NodeJS.Timeout;
-    
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        console.log('Sessão expirada por inatividade');
-        logout();
-      }, 30 * 60 * 1000); // 30 minutos
-    };
+    const inactivityTimer = setTimeout(() => {
+      console.log('Sessão expirada por inatividade');
+      logout();
+    }, 30 * 60 * 1000); // 30 minutos
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    // Configurar listeners de atividade
-    events.forEach(event => {
-      document.addEventListener(event, resetTimer, true);
-    });
-
-    // Iniciar timer
-    resetTimer();
-
-    return () => {
-      clearTimeout(inactivityTimer);
-      events.forEach(event => {
-        document.removeEventListener(event, resetTimer, true);
-      });
-    };
+    return () => clearTimeout(inactivityTimer);
   }, [usuario]);
 
   const value = {
