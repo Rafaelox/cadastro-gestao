@@ -71,30 +71,26 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
     try {
       if (usuario) {
         // Atualizar usuário existente
-        const updateData: any = {
-          nome: formData.nome,
-          email: formData.email,
-          permissao: formData.permissao,
-          ativo: formData.ativo,
-          consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
-        };
-
-        // Só atualizar senha se foi informada
-        if (formData.senha.trim()) {
-          updateData.senha = formData.senha;
-        }
-
-        const { error } = await supabase
-          .from('usuarios')
-          .update(updateData)
-          .eq('id', usuario.id);
+        const { data, error } = await supabase.rpc('update_custom_user', {
+          p_user_id: usuario.id,
+          p_nome: formData.nome,
+          p_email: formData.email,
+          p_permissao: formData.permissao,
+          p_ativo: formData.ativo,
+          p_password: formData.senha.trim() || null,
+          p_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
+        });
 
         if (error) throw error;
 
-        toast({
-          title: "Usuário atualizado",
-          description: "Usuário atualizado com sucesso.",
-        });
+        if (data?.[0]?.success) {
+          toast({
+            title: "Usuário atualizado",
+            description: data[0].message,
+          });
+        } else {
+          throw new Error(data?.[0]?.message || 'Erro desconhecido');
+        }
       } else {
         // Criar novo usuário
         if (!formData.senha.trim()) {
@@ -106,33 +102,33 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
           return;
         }
 
-        const { error } = await supabase
-          .from('usuarios')
-          .insert([formData]);
+        const { data, error } = await supabase.rpc('create_custom_user', {
+          p_nome: formData.nome,
+          p_email: formData.email,
+          p_password: formData.senha,
+          p_permissao: formData.permissao,
+          p_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
+        });
 
         if (error) throw error;
 
-        toast({
-          title: "Usuário criado",
-          description: "Usuário criado com sucesso.",
-        });
+        if (data?.[0]?.success) {
+          toast({
+            title: "Usuário criado",
+            description: data[0].message,
+          });
+        } else {
+          throw new Error(data?.[0]?.message || 'Erro desconhecido');
+        }
       }
 
       onSuccess();
     } catch (error: any) {
-      if (error.message?.includes('duplicate key')) {
-        toast({
-          title: "Email já existe",
-          description: "Este email já está sendo usado por outro usuário.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao salvar usuário",
-          description: "Não foi possível salvar o usuário.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Erro ao salvar usuário",
+        description: error.message || "Não foi possível salvar o usuário.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

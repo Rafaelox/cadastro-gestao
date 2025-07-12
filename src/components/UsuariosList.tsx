@@ -30,7 +30,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
   const loadUsuarios = async () => {
     try {
       const { data, error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .select('*')
         .order('nome');
 
@@ -61,23 +61,25 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('usuarios')
-        .delete()
-        .eq('id', id);
+      const { data, error } = await supabase.rpc('delete_custom_user', {
+        p_user_id: id
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Usuário excluído",
-        description: "Usuário excluído com sucesso.",
-      });
-
-      loadUsuarios();
-    } catch (error) {
+      if (data?.[0]?.success) {
+        toast({
+          title: "Usuário excluído",
+          description: data[0].message,
+        });
+        loadUsuarios();
+      } else {
+        throw new Error(data?.[0]?.message || 'Erro desconhecido');
+      }
+    } catch (error: any) {
       toast({
         title: "Erro ao excluir usuário",
-        description: "Não foi possível excluir o usuário.",
+        description: error.message || "Não foi possível excluir o usuário.",
         variant: "destructive",
       });
     }
@@ -86,7 +88,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
   const toggleStatus = async (id: string, ativo: boolean) => {
     try {
       const { error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .update({ ativo: !ativo })
         .eq('id', id);
 

@@ -61,32 +61,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Verificar se o usuário existe na tabela usuarios
-      const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('email', email)
-        .eq('senha', senha)
-        .eq('ativo', true)
-        .single();
+      // Usar a função de login customizada
+      const { data, error } = await supabase.rpc('custom_login', {
+        p_email: email,
+        p_password: senha
+      });
 
-      if (userError || !userData) {
+      if (error) throw error;
+
+      const loginResult = data?.[0];
+      if (!loginResult?.success) {
         return false;
       }
 
-      // Criar um usuário fictício para o contexto de auth
+      // Extrair dados do usuário do resultado
+      const profileData = loginResult.profile_data as any;
       const usuarioData: Usuario = {
-        id: userData.id,
-        nome: userData.nome,
-        email: userData.email,
-        permissao: userData.permissao as TipoPermissao,
-        ativo: userData.ativo,
-        consultor_id: userData.consultor_id
+        id: profileData.id,
+        nome: profileData.nome,
+        email: profileData.email,
+        permissao: profileData.permissao as TipoPermissao,
+        ativo: profileData.ativo,
+        consultor_id: profileData.consultor_id
       };
 
       // Simular uma sessão válida
       const mockSession = {
-        user: { id: userData.id, email: userData.email },
+        user: { id: profileData.id, email: profileData.email },
         access_token: 'mock_token',
         refresh_token: 'mock_refresh',
         expires_in: 3600,
