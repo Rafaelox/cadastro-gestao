@@ -143,85 +143,149 @@ export const ConfiguracoesComunicacao = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando configurações...</p>
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20"></div>
+          </div>
+          <div>
+            <p className="font-medium">Carregando configurações...</p>
+            <p className="text-sm text-muted-foreground">Aguarde um momento</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Configurações de Comunicação</h2>
-        <Button onClick={() => setEditando(0)}>
+    <div className="space-y-8">
+      {/* Header melhorado */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">Configurações de Comunicação</h2>
+          <p className="text-muted-foreground">
+            Gerencie suas conexões com provedores de Email, SMS e WhatsApp
+          </p>
+        </div>
+        <Button 
+          onClick={() => setEditando(0)}
+          size="lg"
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nova Configuração
         </Button>
       </div>
 
       {configuracoes.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto max-w-md">
-            <Settings className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Nenhuma configuração encontrada</h3>
-            <p className="text-muted-foreground mb-6">
-              Configure os provedores de comunicação para começar a enviar emails, SMS e mensagens WhatsApp.
-            </p>
-            
-            <div className="space-y-3">
-              <p className="text-sm font-medium">Configurações rápidas:</p>
-              <div className="flex gap-2 justify-center flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => adicionarConfiguracaoPadrao('email')}
-                  className="flex items-center gap-2"
-                >
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => adicionarConfiguracaoPadrao('sms')}
-                  className="flex items-center gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  SMS
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => adicionarConfiguracaoPadrao('whatsapp')}
-                  className="flex items-center gap-2"
-                >
-                  <Smartphone className="h-4 w-4" />
-                  WhatsApp
-                </Button>
+        <div className="min-h-[500px] flex items-center justify-center">
+          <Card className="max-w-2xl w-full border-dashed border-2 border-border/50 bg-gradient-to-br from-card via-card to-muted/20">
+            <CardContent className="p-12 text-center">
+              <div className="space-y-6">
+                {/* Ícone animado */}
+                <div className="relative mx-auto w-20 h-20">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 animate-pulse"></div>
+                  <div className="relative rounded-full bg-primary/10 p-4 border border-primary/20">
+                    <Settings className="h-12 w-12 text-primary" />
+                  </div>
+                </div>
+                
+                {/* Conteúdo */}
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold">Configure seus canais de comunicação</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Conecte seus provedores de Email, SMS e WhatsApp para começar a enviar mensagens automatizadas aos seus clientes.
+                  </p>
+                </div>
+                
+                {/* Botões de ação */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                  <Button 
+                    onClick={() => adicionarConfiguracaoPadrao('email')}
+                    variant="default" 
+                    size="lg"
+                    className="flex flex-col items-center gap-3 h-auto py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Mail className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Configurar Email</div>
+                      <div className="text-xs opacity-90">SMTP, SendGrid, etc.</div>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => adicionarConfiguracaoPadrao('sms')}
+                    variant="default" 
+                    size="lg"
+                    className="flex flex-col items-center gap-3 h-auto py-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <MessageSquare className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Configurar SMS</div>
+                      <div className="text-xs opacity-90">Twilio, Zenvia, etc.</div>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => adicionarConfiguracaoPadrao('whatsapp')}
+                    variant="default" 
+                    size="lg"
+                    className="flex flex-col items-center gap-3 h-auto py-6 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <Smartphone className="h-6 w-6" />
+                    <div className="text-center">
+                      <div className="font-semibold">Configurar WhatsApp</div>
+                      <div className="text-xs opacity-90">Business API</div>
+                    </div>
+                  </Button>
+                </div>
+                
+                {/* Link de ajuda */}
+                <div className="pt-4 border-t border-border/50">
+                  <p className="text-sm text-muted-foreground">
+                    Precisa de ajuda? <Button variant="link" className="h-auto p-0 text-primary">Consulte nossa documentação</Button>
+                  </p>
+                </div>
               </div>
-              
-              <div className="pt-4">
-                <Button onClick={() => setEditando(0)} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Configuração Personalizada
-                </Button>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {configuracoes.map((config) => (
-            <Card key={config.id} className="relative">
-              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  {getIcon(config.tipo_servico)}
-                  <CardTitle className="text-lg capitalize">{config.tipo_servico}</CardTitle>
+            <Card 
+              key={config.id} 
+              className="relative group hover:shadow-lg transition-all duration-200 border-border/50 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm"
+            >
+              {/* Status indicator */}
+              <div className={`absolute top-3 right-3 w-3 h-3 rounded-full ${config.ativo ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'}`}></div>
+              
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg border ${
+                    config.tipo_servico === 'email' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                    config.tipo_servico === 'sms' ? 'bg-green-50 border-green-200 text-green-700' :
+                    'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  }`}>
+                    {getIcon(config.tipo_servico)}
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-lg capitalize font-semibold">{config.tipo_servico}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{config.provider}</p>
+                  </div>
                 </div>
-                <div className="ml-auto flex gap-2">
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                {/* Status visual */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${config.ativo ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <span className="text-sm font-medium">
+                      {config.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
                   <Switch
                     checked={config.ativo}
                     onCheckedChange={(checked) => 
@@ -229,27 +293,26 @@ export const ConfiguracoesComunicacao = () => {
                     }
                   />
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label className="text-sm font-medium">Provider</Label>
-                  <p className="text-sm text-muted-foreground">{config.provider}</p>
-                </div>
                 
+                {/* API Key com visual melhorado */}
                 {config.api_key && (
-                  <div>
-                    <Label className="text-sm font-medium">API Key</Label>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground flex-1">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Zap className="h-3 w-3" />
+                      API Key
+                    </Label>
+                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border">
+                      <code className="text-sm text-muted-foreground flex-1 font-mono">
                         {mostrarSenhas[config.id!] 
                           ? config.api_key 
                           : '••••••••••••••••'
                         }
-                      </p>
+                      </code>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleMostrarSenha(config.id!)}
+                        className="h-8 w-8 p-0"
                       >
                         {mostrarSenhas[config.id!] ? 
                           <EyeOff className="h-4 w-4" /> : 
@@ -260,12 +323,13 @@ export const ConfiguracoesComunicacao = () => {
                   </div>
                 )}
 
+                {/* Botões de ação melhorados */}
                 <div className="flex gap-2 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setEditando(config.id!)}
-                    className="flex-1"
+                    className="flex-1 hover:bg-primary hover:text-primary-foreground transition-all duration-200"
                   >
                     Editar
                   </Button>
@@ -273,6 +337,7 @@ export const ConfiguracoesComunicacao = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => excluirConfiguracao(config.id!)}
+                    className="hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-all duration-200"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
