@@ -761,27 +761,33 @@ export type Database = {
           ativo: boolean
           consultor_id: number | null
           created_at: string
+          email: string | null
           id: string
           nome: string
           permissao: string
+          senha_temp: string | null
           updated_at: string
         }
         Insert: {
           ativo?: boolean
           consultor_id?: number | null
           created_at?: string
+          email?: string | null
           id: string
           nome: string
           permissao?: string
+          senha_temp?: string | null
           updated_at?: string
         }
         Update: {
           ativo?: boolean
           consultor_id?: number | null
           created_at?: string
+          email?: string | null
           id?: string
           nome?: string
           permissao?: string
+          senha_temp?: string | null
           updated_at?: string
         }
         Relationships: [
