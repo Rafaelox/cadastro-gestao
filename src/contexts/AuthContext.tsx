@@ -37,83 +37,177 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Verificar se existe usuário logado no localStorage
-    const usuarioSalvo = localStorage.getItem('usuario_logado');
-    const sessionSalva = localStorage.getItem('mock_session');
-    
-    if (usuarioSalvo && sessionSalva) {
-      try {
-        const userData = JSON.parse(usuarioSalvo);
-        const sessionData = JSON.parse(sessionSalva);
-        
-        setUsuario(userData);
-        setUser(sessionData.user);
-        setSession(sessionData);
-      } catch (error) {
-        localStorage.removeItem('usuario_logado');
-        localStorage.removeItem('mock_session');
+  // Função auxiliar para buscar profile
+  const fetchProfile = async (userId: string, userEmail: string) => {
+    try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, nome, permissao, ativo, consultor_id, created_at, updated_at')
+        .eq('id', userId)
+        .single();
+
+      if (profileData) {
+        const usuarioData: Usuario = {
+          id: profileData.id,
+          nome: profileData.nome,
+          email: userEmail,
+          permissao: profileData.permissao as TipoPermissao,
+          ativo: profileData.ativo
+        };
+        return usuarioData;
       }
+    } catch (error) {
+      console.error('Erro ao buscar profile:', error);
     }
-    
-    setIsLoading(false);
+    return null;
+  };
+
+  useEffect(() => {
+    // Configurar listener do Supabase Auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          fetchProfile(session.user.id, session.user.email || '').then(usuarioData => {
+            if (usuarioData) {
+              setUsuario(usuarioData);
+              setUser(session.user);
+              setSession(session);
+              localStorage.setItem('user_data', JSON.stringify(usuarioData));
+              localStorage.setItem('user_session', JSON.stringify(session));
+            }
+          });
+        } else if (event === 'SIGNED_OUT') {
+          setUsuario(null);
+          setUser(null);
+          setSession(null);
+          localStorage.removeItem('user_data');
+          localStorage.removeItem('user_session');
+          localStorage.removeItem('usuario_logado');
+          localStorage.removeItem('mock_session');
+        }
+      }
+    );
+
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email || '').then(usuarioData => {
+          if (usuarioData) {
+            setUsuario(usuarioData);
+            setUser(session.user);
+            setSession(session);
+          }
+          setIsLoading(false);
+        });
+      } else {
+        // Fallback: verificar localStorage
+        const usuarioSalvo = localStorage.getItem('user_data') || localStorage.getItem('usuario_logado');
+        const sessionSalva = localStorage.getItem('user_session') || localStorage.getItem('mock_session');
+        
+        if (usuarioSalvo && sessionSalva) {
+          try {
+            const userData = JSON.parse(usuarioSalvo);
+            const sessionData = JSON.parse(sessionSalva);
+            setUsuario(userData);
+            setUser(sessionData.user);
+            setSession(sessionData);
+          } catch (error) {
+            localStorage.clear();
+          }
+        }
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Usar a função de login customizada
-      const { data, error } = await supabase.rpc('custom_login', {
-        p_email: email,
-        p_password: senha
+      // Tentar login com Supabase Auth nativo
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha,
       });
 
-      if (error) throw error;
+      if (authData.user && !authError) {
+        const usuarioData = await fetchProfile(authData.user.id, authData.user.email || email);
+        if (usuarioData) {
+          setUsuario(usuarioData);
+          setUser(authData.user);
+          setSession(authData.session);
+          localStorage.setItem('user_data', JSON.stringify(usuarioData));
+          localStorage.setItem('user_session', JSON.stringify(authData.session));
+          return true;
+        }
+      }
 
-      const loginResult = data?.[0];
-      if (!loginResult?.success) {
+      // Fallback: sistema customizado
+      const { data: customData, error: customError } = await supabase.rpc('custom_login', {
+        user_email: email,
+        user_password: senha
+      });
+
+      if (customError || !customData || customData.length === 0) {
         return false;
       }
 
-      // Extrair dados do usuário do resultado
-      const profileData = loginResult.profile_data as any;
+      const userData = customData[0];
       const usuarioData: Usuario = {
-        id: profileData.id,
-        nome: profileData.nome,
-        email: profileData.email,
-        permissao: profileData.permissao as TipoPermissao,
-        ativo: profileData.ativo,
-        consultor_id: profileData.consultor_id
+        id: userData.id,
+        nome: userData.nome,
+        email: userData.email || email,
+        permissao: userData.permissao as TipoPermissao,
+        ativo: userData.ativo
       };
-
-      // Simular uma sessão válida
+      
       const mockSession = {
-        user: { id: profileData.id, email: profileData.email },
-        access_token: 'mock_token',
-        refresh_token: 'mock_refresh',
+        access_token: 'mock-token-' + userData.id,
+        token_type: 'bearer' as const,
         expires_in: 3600,
-        token_type: 'bearer'
+        expires_at: Date.now() + 3600000,
+        refresh_token: 'mock-refresh-' + userData.id,
+        user: {
+          id: userData.id,
+          email: userData.email || email,
+          aud: 'authenticated' as const,
+          role: 'authenticated' as const,
+          email_confirmed_at: new Date().toISOString(),
+          phone_confirmed_at: null,
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          app_metadata: { permission: userData.permissao },
+          user_metadata: { name: userData.nome },
+          identities: [],
+          created_at: userData.created_at || new Date().toISOString(),
+          updated_at: userData.updated_at || new Date().toISOString()
+        }
       } as Session;
 
       setUsuario(usuarioData);
-      setUser(mockSession.user as User);
+      setUser(mockSession.user);
       setSession(mockSession);
+      localStorage.setItem('user_data', JSON.stringify(usuarioData));
+      localStorage.setItem('user_session', JSON.stringify(mockSession));
       
-      // Salvar no localStorage para persistência
-      localStorage.setItem('usuario_logado', JSON.stringify(usuarioData));
-      localStorage.setItem('mock_session', JSON.stringify(mockSession));
-
       return true;
     } catch (error) {
+      console.error('Erro no login:', error);
       return false;
     }
   };
 
   const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
+    
     setUsuario(null);
     setUser(null);
     setSession(null);
-    localStorage.removeItem('usuario_logado');
-    localStorage.removeItem('mock_session');
+    localStorage.clear();
   };
 
   const value = {
@@ -135,7 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

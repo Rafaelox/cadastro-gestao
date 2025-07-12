@@ -36,9 +36,13 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
 
       if (error) throw error;
 
-      setUsuarios((data || []).map(user => ({
-        ...user,
-        permissao: user.permissao as TipoPermissao
+      setUsuarios((data || []).map((user: any) => ({
+        id: user.id,
+        nome: user.nome,
+        email: user.email || 'email@exemplo.com',
+        permissao: user.permissao as TipoPermissao,
+        ativo: user.ativo,
+        created_at: user.created_at
       })));
     } catch (error) {
       toast({
@@ -62,7 +66,7 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
 
     try {
       const { data, error } = await supabase.rpc('delete_custom_user', {
-        p_user_id: id
+        user_id: id
       });
 
       if (error) throw error;

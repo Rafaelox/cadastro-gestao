@@ -72,24 +72,24 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
       if (usuario) {
         // Atualizar usuário existente
         const { data, error } = await supabase.rpc('update_custom_user', {
-          p_user_id: usuario.id,
-          p_nome: formData.nome,
-          p_email: formData.email,
-          p_permissao: formData.permissao,
-          p_ativo: formData.ativo,
-          p_password: formData.senha.trim() || null,
-          p_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
+          user_id: usuario.id,
+          user_name: formData.nome,
+          user_email: formData.email,
+          user_permission: formData.permissao,
+          user_active: formData.ativo,
+          user_password: formData.senha.trim() || null,
+          user_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
         });
 
         if (error) throw error;
 
-        if (data?.[0]?.success) {
+        if (data) {
           toast({
             title: "Usuário atualizado",
-            description: data[0].message,
+            description: "Usuário atualizado com sucesso.",
           });
         } else {
-          throw new Error(data?.[0]?.message || 'Erro desconhecido');
+          throw new Error('Erro ao atualizar usuário');
         }
       } else {
         // Criar novo usuário
@@ -103,22 +103,22 @@ export const UsuarioForm = ({ usuario, onSuccess }: UsuarioFormProps) => {
         }
 
         const { data, error } = await supabase.rpc('create_custom_user', {
-          p_nome: formData.nome,
-          p_email: formData.email,
-          p_password: formData.senha,
-          p_permissao: formData.permissao,
-          p_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
+          user_name: formData.nome,
+          user_email: formData.email,
+          user_password: formData.senha,
+          user_permission: formData.permissao,
+          user_consultor_id: formData.permissao === 'consultor' ? formData.consultor_id : null
         });
 
         if (error) throw error;
 
-        if (data?.[0]?.success) {
+        if (data) {
           toast({
             title: "Usuário criado",
-            description: data[0].message,
+            description: "Usuário criado com sucesso.",
           });
         } else {
-          throw new Error(data?.[0]?.message || 'Erro desconhecido');
+          throw new Error('Erro ao criar usuário');
         }
       }
 
