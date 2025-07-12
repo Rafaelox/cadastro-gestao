@@ -5,12 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff, Settings, Zap, Send } from "lucide-react";
+import { Mail, MessageSquare, Smartphone, Plus, Trash2, Eye, EyeOff, Settings, Zap, Send, AlertTriangle, CheckCircle2, X } from "lucide-react";
 import { ConfiguracaoComunicacao } from "@/types/comunicacao";
 import { ConfiguracaoFormFields } from "./ConfiguracaoFormFields";
 import { TesteConfiguracao } from "./TesteConfiguracao";
+import { ProviderDocumentation } from "./ProviderDocumentation";
+import { useCommunicationValidation } from "@/hooks/useCommunicationValidation";
 
 const getIcon = (tipo: string) => {
   switch (tipo) {
@@ -398,7 +402,19 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
     }
   );
   const [testLoading, setTestLoading] = useState(false);
+  const [validationResult, setValidationResult] = useState<any>(null);
   const { toast } = useToast();
+  const { validateConfiguration } = useCommunicationValidation();
+
+  // Validar em tempo real
+  useEffect(() => {
+    if (formData.provider) {
+      const result = validateConfiguration(formData);
+      setValidationResult(result);
+    } else {
+      setValidationResult(null);
+    }
+  }, [formData, validateConfiguration]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -428,7 +444,9 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
+      <div className="w-full max-w-7xl max-h-[90vh] flex gap-6">
+        {/* Formulário principal */}
+        <Card className="flex-1 overflow-auto">
         <CardHeader className="border-b bg-gradient-to-r from-background to-muted/20">
           <div className="flex items-center justify-between">
             <div>
@@ -512,6 +530,52 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
               </div>
             </div>
 
+            {/* Indicadores de validação */}
+            {validationResult && (
+              <div className="space-y-3">
+                {validationResult.errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <p className="font-medium">Erros de configuração:</p>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          {validationResult.errors.map((error: string, index: number) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {validationResult.warnings.length > 0 && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <p className="font-medium">Avisos:</p>
+                        <ul className="list-disc list-inside space-y-1 text-sm">
+                          {validationResult.warnings.map((warning: string, index: number) => (
+                            <li key={index}>{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {validationResult.isValid && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      Configuração válida! Você pode salvar e testar esta configuração.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+
             {/* Campos específicos por tipo */}
             <ConfiguracaoFormFields 
               formData={formData} 
@@ -520,7 +584,12 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
 
             {/* Botões de ação */}
             <div className="flex gap-3 pt-6 border-t">
-              <Button type="submit" size="lg" className="flex-1">
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="flex-1"
+                disabled={validationResult && !validationResult.isValid}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 {configuracao ? 'Atualizar' : 'Salvar'} Configuração
               </Button>
@@ -553,7 +622,16 @@ const ConfiguracaoForm = ({ configuracao, onSave, onCancel }: ConfiguracaoFormPr
             </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+        
+        {/* Documentação lateral */}
+        <div className="w-96">
+          <ProviderDocumentation 
+            tipo={formData.tipo_servico}
+            provider={formData.provider}
+          />
+        </div>
+      </div>
     </div>
   );
 };

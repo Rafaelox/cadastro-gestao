@@ -25,6 +25,16 @@ export const ConfiguracaoFormFields = ({ formData, setFormData }: ConfiguracaoFo
     return formData.configuracoes_extras?.[key] || defaultValue;
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone);
+  };
+
   const renderEmailFields = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">

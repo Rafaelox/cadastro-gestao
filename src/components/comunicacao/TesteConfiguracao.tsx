@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { ConfiguracaoComunicacao } from "@/types/comunicacao";
 import { Send, CheckCircle, XCircle, Clock } from "lucide-react";
 
@@ -35,13 +36,20 @@ export const TesteConfiguracao = ({ configuracao, onClose }: TesteConfiguracaoPr
     setResultado(null);
 
     try {
-      // Simular envio de teste baseado no tipo de serviço
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Simular sucesso/erro aleatório para demonstração
-      const sucesso = Math.random() > 0.3;
-      
-      if (sucesso) {
+      const { data, error } = await supabase.functions.invoke('test-communication', {
+        body: {
+          configId: configuracao.id,
+          destinatario,
+          assunto: configuracao.tipo_servico === 'email' ? assunto : undefined,
+          mensagem
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.sucesso) {
         setResultado('sucesso');
         toast({
           title: "Teste realizado com sucesso!",
@@ -51,15 +59,15 @@ export const TesteConfiguracao = ({ configuracao, onClose }: TesteConfiguracaoPr
         setResultado('erro');
         toast({
           title: "Erro no teste",
-          description: "Falha na configuração ou credenciais inválidas",
+          description: data.erro || "Falha na configuração ou credenciais inválidas",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       setResultado('erro');
       toast({
         title: "Erro no teste",
-        description: "Falha ao testar a configuração",
+        description: error.message || "Falha ao testar a configuração",
         variant: "destructive",
       });
     } finally {
