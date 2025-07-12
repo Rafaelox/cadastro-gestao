@@ -6,8 +6,7 @@
     "branch": "main"
   },
   "build": {
-    "type": "dockerfile",
-    "dockerfile": "Dockerfile"
+    "type": "nixpacks"
   },
   "deploy": {
     "port": 80,

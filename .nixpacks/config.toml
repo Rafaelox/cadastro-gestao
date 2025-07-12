@@ -1,0 +1,11 @@
+[phases.setup]
+nixpkgs = ["nodejs", "deno"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[phases.start]
+cmd = "npm run preview -- --port $PORT --host"
