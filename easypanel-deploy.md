@@ -1,65 +1,155 @@
-# Deploy no EasyPanel
+# Deploy Sistema de Gestão - Easypanel
 
-## Configuração Inicial
+## 🚀 Configuração Rápida
 
-1. **Acesse o EasyPanel**
-   - Faça login na sua instância do EasyPanel
-   - Clique em "Create Service"
+### 1. Preparação do Projeto
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/sistema-gestao-comunicacao.git
+cd sistema-gestao-comunicacao
 
-2. **Configurar Aplicação**
-   - Nome: `cadastro-facil-gestao`
-   - Tipo: `App`
-   - Source: `Git Repository`
+# Instale dependências
+npm install
 
-3. **Configuração do Git**
-   - Repository URL: [URL do seu repositório]
-   - Branch: `main`
-   - Build Command: `docker build -t cadastro-facil .`
-
-4. **Configuração de Deploy**
-   - Port: `80`
-   - Health Check Path: `/health`
-   - Environment: `production`
-
-## Configurações Avançadas
-
-### Domínio Customizado
-1. Vá em "Domains" no seu serviço
-2. Adicione seu domínio personalizado
-3. O SSL será configurado automaticamente
-
-### Variáveis de Ambiente (se necessário)
+# Teste local
+npm run build
 ```
+
+### 2. Deploy Automático via Easypanel
+
+#### Opção A: Interface Web
+1. **Acesse o Easypanel**: https://app.easypanel.io
+2. **Criar Novo App**:
+   - Nome: `sistema-gestao-comunicacao`
+   - Source: Git Repository
+   - Repository: `https://github.com/seu-usuario/sistema-gestao-comunicacao.git`
+   - Branch: `main`
+
+3. **Configurações**:
+   - Build Type: `Dockerfile`
+   - Port: `80`
+   - Health Check: `/health`
+
+#### Opção B: Arquivo de Configuração
+Use o arquivo `easypanel.json` na raiz do projeto para deploy automático.
+
+### 3. Variáveis de Ambiente
+
+Configure no painel do Easypanel:
+```env
 NODE_ENV=production
 VITE_SUPABASE_URL=https://mmqorugxbsspuyqlraia.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-### Monitoramento
-- Logs: Disponíveis na aba "Logs" do serviço
-- Métricas: CPU, RAM e Network na aba "Metrics"
-- Health Checks: Configurado para `/health`
+### 4. Domínio Personalizado
 
-## Deploy Automático
+1. **Adicionar Domínio**:
+   - Vá em `Domains` no seu app
+   - Adicione: `sistema-gestao.seudominio.com`
+   - SSL será configurado automaticamente
 
-O EasyPanel irá fazer rebuild automático sempre que você fizer push para a branch configurada.
+2. **DNS Configuration**:
+   ```
+   Type: CNAME
+   Name: sistema-gestao
+   Value: app.easypanel.io
+   ```
 
-## Comandos Úteis
+## 🛠️ Deploy via Script
 
-### Build Local (para testar)
+Use o script automatizado:
 ```bash
-docker build -t cadastro-facil .
-docker run -p 3000:80 cadastro-facil
+chmod +x deploy-easypanel.sh
+./deploy-easypanel.sh production
 ```
 
-### Verificar Logs
+## 📊 Monitoramento
+
+### Logs
+- **Container Logs**: Easypanel → App → Logs
+- **Build Logs**: Easypanel → App → Builds
+
+### Métricas
+- **CPU/RAM**: Dashboard → Metrics
+- **Uptime**: Dashboard → Overview
+- **Health Checks**: Automatic via `/health`
+
+### Alertas (Opcional)
+Configure alerts para:
+- CPU > 80%
+- Memory > 80%
+- Error Rate > 5%
+
+## 🔧 Comandos Úteis
+
+### Build Local
 ```bash
-# No EasyPanel, vá em Logs > Container Logs
+docker build -t sistema-gestao .
+docker run -p 3000:80 sistema-gestao
 ```
 
-## Solução de Problemas
+### Debug
+```bash
+# Logs do container
+docker logs <container-id>
 
-1. **Build failing**: Verifique os logs de build no EasyPanel
-2. **App não carrega**: Verifique se a porta 80 está exposta
-3. **Rotas 404**: Confirme se o nginx.conf está configurado corretamente
-4. **Performance**: Monitore CPU/RAM nas métricas do EasyPanel
+# Shell no container
+docker exec -it <container-id> /bin/sh
+```
+
+## 🚨 Solução de Problemas
+
+### Build Failing
+1. Verifique `package.json` dependencies
+2. Confirme versão do Node.js (18+)
+3. Check build logs no Easypanel
+
+### App não carrega
+1. Confirme porta 80 exposta
+2. Verifique health check `/health`
+3. Check container logs
+
+### Rotas 404
+1. Confirme `nginx.conf` configurado
+2. Verifique SPA routing config
+3. Check `try_files` directive
+
+### Performance Issues
+1. Monitore CPU/RAM usage
+2. Configure resource limits
+3. Optimize bundle size
+
+## 📈 Otimizações
+
+### Performance
+- **Gzip**: Habilitado por padrão
+- **Cache**: Assets cachados por 1 ano
+- **Minificação**: Build automático
+
+### Segurança
+- **Security Headers**: Configurados no nginx
+- **HTTPS**: SSL automático
+- **CSP**: Content Security Policy ativo
+
+### Escalabilidade
+- **Auto-scaling**: 1-3 replicas
+- **Load Balancing**: Automático
+- **Health Checks**: Configurado
+
+## 📋 Checklist de Deploy
+
+- [ ] Repositório Git configurado
+- [ ] Build local funcionando
+- [ ] Docker build testado
+- [ ] Variáveis de ambiente configuradas
+- [ ] Domínio DNS apontado
+- [ ] Health check respondendo
+- [ ] SSL certificado ativo
+- [ ] Monitoramento configurado
+
+## 🔗 Links Úteis
+
+- [Easypanel Docs](https://easypanel.io/docs)
+- [Docker Best Practices](https://docs.docker.com/develop/best-practices/)
+- [Nginx Configuration](https://nginx.org/en/docs/)

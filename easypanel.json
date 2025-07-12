@@ -1,0 +1,50 @@
+{
+  "name": "Sistema de Gestão - Comunicação",
+  "source": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/sistema-gestao-comunicacao.git",
+    "branch": "main"
+  },
+  "build": {
+    "type": "dockerfile",
+    "dockerfile": "Dockerfile"
+  },
+  "deploy": {
+    "port": 80,
+    "healthcheck": {
+      "path": "/health",
+      "interval": 30,
+      "timeout": 10,
+      "retries": 3
+    },
+    "resources": {
+      "memory": "512Mi",
+      "cpu": "0.5"
+    }
+  },
+  "domains": [
+    {
+      "name": "sistema-gestao.exemplo.com",
+      "ssl": true
+    }
+  ],
+  "environment": {
+    "NODE_ENV": "production",
+    "VITE_SUPABASE_URL": "https://mmqorugxbsspuyqlraia.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE"
+  },
+  "scaling": {
+    "minReplicas": 1,
+    "maxReplicas": 3,
+    "targetCPU": 70
+  },
+  "monitoring": {
+    "metrics": true,
+    "logs": true,
+    "alerts": {
+      "cpu": 80,
+      "memory": 80,
+      "errorRate": 5
+    }
+  }
+}
