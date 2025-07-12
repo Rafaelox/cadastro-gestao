@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
 import { CategoriasList } from "@/components/CategoriasList";
@@ -14,6 +15,8 @@ import { CaixaForm } from "@/components/CaixaForm";
 import { CaixaList } from "@/components/CaixaList";
 import { ComissaoExtrato } from "@/components/ComissaoExtrato";
 import { AuditLogs } from "@/components/AuditLogs";
+import { UsuariosList } from "@/components/UsuariosList";
+import { UsuarioForm } from "@/components/UsuarioForm";
 import type { Cliente } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -25,6 +28,8 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
   const [activeTab, setActiveTab] = useState(propActiveTab || 'dashboard');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
+  const [showUsuarioForm, setShowUsuarioForm] = useState(false);
+  const [editingUsuario, setEditingUsuario] = useState<any | undefined>();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -60,6 +65,26 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
     setEditingCliente(undefined);
   };
 
+  const handleEditUsuario = (usuario: any) => {
+    setEditingUsuario(usuario);
+    setShowUsuarioForm(true);
+  };
+
+  const handleNewUsuario = () => {
+    setEditingUsuario(undefined);
+    setShowUsuarioForm(true);
+  };
+
+  const handleUsuarioSaved = () => {
+    setShowUsuarioForm(false);
+    setEditingUsuario(undefined);
+  };
+
+  const handleCancelUsuario = () => {
+    setShowUsuarioForm(false);
+    setEditingUsuario(undefined);
+  };
+
   if (!isAuthenticated) {
     return null; // Ou um loading spinner
   }
@@ -72,6 +97,18 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
           onSave={handleClienteSaved}
           onCancel={handleCancelCliente}
         />
+      ) : showUsuarioForm ? (
+        <div>
+          <UsuarioForm
+            usuario={editingUsuario}
+            onSuccess={handleUsuarioSaved}
+          />
+          <div className="mt-4">
+            <Button variant="outline" onClick={handleCancelUsuario}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
       ) : (
         <>
           {activeTab === 'dashboard' && <Dashboard />}
@@ -90,6 +127,12 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
               <CaixaForm />
               <CaixaList />
             </div>
+          )}
+          {activeTab === 'usuarios' && (
+            <UsuariosList
+              onEdit={handleEditUsuario}
+              onAdd={handleNewUsuario}
+            />
           )}
           {activeTab === 'comissoes' && <ComissaoExtrato />}
           {activeTab === 'categorias' && <CategoriasList />}

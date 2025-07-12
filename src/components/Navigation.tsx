@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface NavigationProps {
   activeTab: string;
@@ -11,6 +12,7 @@ interface NavigationProps {
 
 export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const { permissions } = usePermissions();
   
   const menuItems = [
     {
@@ -31,6 +33,12 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       icon: Calendar,
       description: 'Gerenciar agendamentos'
     },
+    ...(permissions.canCreateUser ? [{
+      id: 'usuarios',
+      label: 'Usuários',
+      icon: UserCheck,
+      description: 'Gerenciar usuários'
+    }] : []),
     {
       id: 'historico-diario',
       label: 'Histórico Diário',
