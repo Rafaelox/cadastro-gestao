@@ -756,6 +756,44 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          ativo: boolean
+          consultor_id: number | null
+          created_at: string
+          id: string
+          nome: string
+          permissao: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          consultor_id?: number | null
+          created_at?: string
+          id: string
+          nome: string
+          permissao?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          consultor_id?: number | null
+          created_at?: string
+          id?: string
+          nome?: string
+          permissao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_consultor_id_fkey"
+            columns: ["consultor_id"]
+            isOneToOne: false
+            referencedRelation: "consultores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recibos: {
         Row: {
           cliente_id: number
@@ -908,6 +946,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       usuarios: {
         Row: {
           ativo: boolean
@@ -957,6 +1016,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_auth_user_and_profile: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_nome: string
+          p_consultor_id?: number
+          p_permissao?: string
+        }
+        Returns: string
+      }
       generate_numero_recibo: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -987,9 +1056,20 @@ export type Database = {
           updated_at: string
         }[]
       }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1116,6 +1196,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
