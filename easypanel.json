@@ -1,5 +1,5 @@
 {
-  "name": "Sistema de Gestão - Comunicação",
+  "name": "sistema-gestao-comunicacao",
   "source": {
     "type": "git",
     "url": "https://github.com/seu-usuario/sistema-gestao-comunicacao.git",
@@ -12,7 +12,7 @@
   "deploy": {
     "port": 80,
     "healthcheck": {
-      "path": "/health",
+      "path": "/",
       "interval": 30,
       "timeout": 10,
       "retries": 3
@@ -29,9 +29,7 @@
     }
   ],
   "environment": {
-    "NODE_ENV": "production",
-    "VITE_SUPABASE_URL": "https://mmqorugxbsspuyqlraia.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE"
+    "NODE_ENV": "production"
   },
   "scaling": {
     "minReplicas": 1,
