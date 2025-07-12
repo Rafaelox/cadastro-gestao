@@ -973,50 +973,6 @@ export type Database = {
         }
         Relationships: []
       }
-      usuarios: {
-        Row: {
-          ativo: boolean
-          consultor_id: number | null
-          created_at: string
-          email: string
-          id: string
-          nome: string
-          permissao: string
-          senha: string
-          updated_at: string
-        }
-        Insert: {
-          ativo?: boolean
-          consultor_id?: number | null
-          created_at?: string
-          email: string
-          id?: string
-          nome: string
-          permissao?: string
-          senha: string
-          updated_at?: string
-        }
-        Update: {
-          ativo?: boolean
-          consultor_id?: number | null
-          created_at?: string
-          email?: string
-          id?: string
-          nome?: string
-          permissao?: string
-          senha?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "usuarios_consultor_id_fkey"
-            columns: ["consultor_id"]
-            isOneToOne: false
-            referencedRelation: "consultores"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
