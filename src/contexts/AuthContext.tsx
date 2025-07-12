@@ -124,71 +124,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      // Tentar login com Supabase Auth nativo
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Login com Supabase Auth nativo
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (authData.user && !authError) {
-        const usuarioData = await fetchProfile(authData.user.id, authData.user.email || email);
-        if (usuarioData) {
-          setUsuario(usuarioData);
-          setUser(authData.user);
-          setSession(authData.session);
-          localStorage.setItem('user_data', JSON.stringify(usuarioData));
-          localStorage.setItem('user_session', JSON.stringify(authData.session));
-          return true;
-        }
-      }
-
-      // Fallback: sistema customizado
-      const { data: customData, error: customError } = await supabase.rpc('custom_login', {
-        user_email: email,
-        user_password: senha
-      });
-
-      if (customError || !customData || customData.length === 0) {
+      if (error) {
+        console.error('Erro no login:', error);
         return false;
       }
 
-      const userData = customData[0];
-      const usuarioData: Usuario = {
-        id: userData.id,
-        nome: userData.nome,
-        email: userData.email || email,
-        permissao: userData.permissao as TipoPermissao,
-        ativo: userData.ativo
-      };
-      
-      const mockSession = {
-        access_token: 'mock-token-' + userData.id,
-        token_type: 'bearer' as const,
-        expires_in: 3600,
-        expires_at: Date.now() + 3600000,
-        refresh_token: 'mock-refresh-' + userData.id,
-        user: {
-          id: userData.id,
-          email: userData.email || email,
-          aud: 'authenticated' as const,
-          role: 'authenticated' as const,
-          email_confirmed_at: new Date().toISOString(),
-          phone_confirmed_at: null,
-          confirmed_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-          app_metadata: { permission: userData.permissao },
-          user_metadata: { name: userData.nome },
-          identities: [],
-          created_at: userData.created_at || new Date().toISOString(),
-          updated_at: userData.updated_at || new Date().toISOString()
-        }
-      } as Session;
+      if (!data.user || !data.session) {
+        return false;
+      }
 
+      // Buscar dados do profile do usuário
+      const usuarioData = await fetchProfile(data.user.id, data.user.email || email);
+      if (!usuarioData) {
+        console.error('Profile não encontrado para o usuário');
+        return false;
+      }
+
+      // Definir dados do usuário
       setUsuario(usuarioData);
-      setUser(mockSession.user);
-      setSession(mockSession);
+      setUser(data.user);
+      setSession(data.session);
       localStorage.setItem('user_data', JSON.stringify(usuarioData));
-      localStorage.setItem('user_session', JSON.stringify(mockSession));
+      localStorage.setItem('user_session', JSON.stringify(data.session));
       
       return true;
     } catch (error) {
