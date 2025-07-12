@@ -1142,6 +1142,10 @@ export type Database = {
         Args: { user_email: string }
         Returns: string
       }
+      permanent_delete_user: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       update_custom_user: {
         Args: {
           user_id: string
