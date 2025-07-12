@@ -71,14 +71,14 @@ export const UsuariosList = ({ onEdit, onAdd }: UsuariosListProps) => {
 
       if (error) throw error;
 
-      if (data?.[0]?.success) {
+      if (data) {
         toast({
           title: "Usuário excluído",
-          description: data[0].message,
+          description: "Usuário desativado com sucesso.",
         });
         loadUsuarios();
       } else {
-        throw new Error(data?.[0]?.message || 'Erro desconhecido');
+        throw new Error('Não foi possível excluir o usuário');
       }
     } catch (error: any) {
       toast({
