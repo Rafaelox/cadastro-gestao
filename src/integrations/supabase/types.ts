@@ -1120,6 +1120,16 @@ export type Database = {
         Args: { user_id: string; user_name: string }
         Returns: undefined
       }
+      create_user_with_auth: {
+        Args: {
+          user_name: string
+          user_email: string
+          user_password: string
+          user_permission?: string
+          user_consultor_id?: number
+        }
+        Returns: Json
+      }
       custom_login: {
         Args: { user_email: string; user_password: string }
         Returns: {
@@ -1186,9 +1196,17 @@ export type Database = {
         Args: { user_email: string }
         Returns: string
       }
+      migrate_profiles_to_auth: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       permanent_delete_user: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      sync_profile_to_auth: {
+        Args: { profile_id: string }
+        Returns: Json
       }
       update_custom_user: {
         Args: {
