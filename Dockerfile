@@ -11,8 +11,16 @@ RUN npm ci && npm cache clean --force
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application with debug output
 RUN npm run build
+
+# Debug: Verify build output
+RUN echo "=== Build completed, checking dist folder ===" && \
+    ls -la dist/ && \
+    echo "=== Content of index.html ===" && \
+    head -20 dist/index.html && \
+    echo "=== Assets folder ===" && \
+    ls -la dist/assets/ || echo "No assets folder found"
 
 # Production Stage
 FROM nginx:alpine
