@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  sistema-gestao:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=18
+        - BUILD_ENV=production
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    image: sistema-gestao:latest
+    container_name: sistema-gestao-prod
+    ports:
+      - "${PORT:-80}:80"
+    environment:
+      - NODE_ENV=production
+      - PORT=80
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    volumes:
+      # Persistent logs
+      - nginx-logs:/var/log/nginx
+      # Optional: Custom nginx config override
+      # - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - sistema-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sistema-gestao.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.sistema-gestao.tls=true"
+      - "traefik.http.routers.sistema-gestao.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sistema-gestao.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.sistema-security.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE"
+      - "traefik.http.middlewares.sistema-security.headers.accesscontrolalloworiginlist=https://${DOMAIN}"
+      - "traefik.http.middlewares.sistema-security.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.sistema-security.headers.addvaryheader=true"
+
+  # Optional: Add a reverse proxy if not using external one
+  # traefik:
+  #   image: traefik:v2.10
+  #   container_name: traefik-proxy
+  #   command:
+  #     - "--api.dashboard=true"
+  #     - "--providers.docker=true"
+  #     - "--providers.docker.exposedbydefault=false"
+  #     - "--entrypoints.web.address=:80"
+  #     - "--entrypoints.websecure.address=:443"
+  #     - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+  #     - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+  #     - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+  #     - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - traefik-acme:/acme.json
+  #   networks:
+  #     - sistema-network
+  #   restart: always
+
+networks:
+  sistema-network:
+    driver: bridge
+    name: sistema-gestao-network
+
+volumes:
+  nginx-logs:
+    driver: local
+  # traefik-acme:
+  #   driver: local

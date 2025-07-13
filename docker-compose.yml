@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  sistema-gestao:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=18
+        - BUILD_ENV=development
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-https://mmqorugxbsspuyqlraia.supabase.co}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE}
+    container_name: sistema-gestao-app
+    ports:
+      - "${PORT:-3000}:80"
+    environment:
+      - NODE_ENV=development
+      - PORT=80
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-https://mmqorugxbsspuyqlraia.supabase.co}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    volumes:
+      # Mount logs for development debugging
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - sistema-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sistema-gestao.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.services.sistema-gestao.loadbalancer.server.port=80"
+
+networks:
+  sistema-network:
+    driver: bridge
+    name: sistema-gestao-network
+
+volumes:
+  nginx-logs:
+    driver: local
