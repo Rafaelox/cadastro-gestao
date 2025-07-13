@@ -6,10 +6,11 @@
     "branch": "main"
   },
   "build": {
-    "type": "nixpacks"
+    "type": "dockerfile",
+    "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "port": 8080,
+    "port": 80,
     "healthcheck": {
       "path": "/",
       "interval": 30,
@@ -29,8 +30,10 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "PORT": "8080",
-    "HOST": "0.0.0.0"
+    "PORT": "80",
+    "HOST": "0.0.0.0",
+    "VITE_SUPABASE_URL": "https://mmqorugxbsspuyqlraia.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE"
   },
   "scaling": {
     "minReplicas": 1,
