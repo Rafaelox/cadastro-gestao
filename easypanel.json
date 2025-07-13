@@ -9,7 +9,7 @@
     "type": "nixpacks"
   },
   "deploy": {
-    "port": 80,
+    "port": 8080,
     "healthcheck": {
       "path": "/",
       "interval": 30,
@@ -17,7 +17,7 @@
       "retries": 3
     },
     "resources": {
-      "memory": "512Mi",
+      "memory": "1Gi",
       "cpu": "0.5"
     }
   },
@@ -28,7 +28,9 @@
     }
   ],
   "environment": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "PORT": "8080",
+    "HOST": "0.0.0.0"
   },
   "scaling": {
     "minReplicas": 1,
