@@ -1,8 +1,11 @@
+[variables]
+NIXPACKS_METADATA = "nodejs"
+
 [phases.setup]
 nixpkgs = ["nodejs-18_x", "npm"]
 
 [phases.install]
-cmds = ["npm ci --only=production"]
+cmds = ["npm ci"]
 
 [phases.build]
 cmds = ["npm run build"]
