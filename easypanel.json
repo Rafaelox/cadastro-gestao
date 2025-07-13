@@ -7,7 +7,7 @@
   },
   "build": {
     "type": "dockerfile",
-    "dockerfile": "Dockerfile"
+    "dockerfile": "./Dockerfile"
   },
   "deploy": {
     "port": 80,
