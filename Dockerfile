@@ -5,7 +5,7 @@ ARG NGINX_VERSION=alpine
 # ====================
 # Build Stage
 # ====================
-FROM node:${NODE_VERSION}-alpine as builder
+FROM node:${NODE_VERSION}-alpine AS builder
 
 # Build arguments
 ARG BUILD_ENV=production
@@ -31,8 +31,8 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies with npm ci for faster, reliable builds
-RUN npm ci --only=production --silent && \
+# Install ALL dependencies for build (including devDependencies for vite)
+RUN npm ci --silent && \
     npm cache clean --force
 
 # Copy source code
