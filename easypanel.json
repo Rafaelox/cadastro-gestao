@@ -12,14 +12,21 @@
   "deploy": {
     "port": 80,
     "healthcheck": {
-      "path": "/",
-      "interval": 30,
-      "timeout": 10,
-      "retries": 3
+      "path": "/health",
+      "interval": 15,
+      "timeout": 5,
+      "retries": 5,
+      "startPeriod": 30
     },
     "resources": {
       "memory": "1Gi",
-      "cpu": "0.5"
+      "cpu": "1.0"
+    },
+    "restartPolicy": {
+      "condition": "any",
+      "delay": "5s",
+      "maxAttempts": 3,
+      "window": "120s"
     }
   },
   "domains": [
@@ -30,8 +37,6 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "PORT": "80",
-    "HOST": "0.0.0.0",
     "VITE_SUPABASE_URL": "https://mmqorugxbsspuyqlraia.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE"
   },
