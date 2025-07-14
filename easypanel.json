@@ -13,10 +13,10 @@
     "port": 80,
     "healthcheck": {
       "path": "/health",
-      "interval": 15,
-      "timeout": 5,
-      "retries": 5,
-      "startPeriod": 30
+      "interval": 30,
+      "timeout": 10,
+      "retries": 3,
+      "startPeriod": 60
     },
     "resources": {
       "memory": "1Gi",

@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source and build
 COPY . .
@@ -39,13 +39,8 @@ RUN mkdir -p /var/log/nginx
 # Expose port
 EXPOSE 80
 
-# Add startup script for debugging
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'echo "=== Container Starting ===" ' >> /start.sh && \
-    echo 'echo "Nginx config test:" ' >> /start.sh && \
-    echo 'nginx -t' >> /start.sh && \
-    echo 'echo "Starting Nginx..." ' >> /start.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /start.sh && \
-    chmod +x /start.sh
+# Add health check and start nginx
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
 
-CMD ["/start.sh"]
+CMD ["nginx", "-g", "daemon off;"]
