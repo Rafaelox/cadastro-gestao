@@ -17,30 +17,27 @@ RUN ls -la dist/ && \
     echo "Build verification successful" || (echo "Build verification failed" && exit 1)
 
 # Production stage
-FROM nginx:alpine
+FROM node:18-alpine
 
-# Install dependencies for health checks
-RUN apk add --no-cache curl
+WORKDIR /app
 
-# Copy built files
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install production dependencies only
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Create health endpoint
-RUN echo '<!DOCTYPE html><html><body><h1>OK</h1></body></html>' > /usr/share/nginx/html/health
+# Copy built frontend and server files
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
 
 # Create logs directory
-RUN mkdir -p /opt/sistema-gestao/logs && \
-    chown -R nginx:nginx /opt/sistema-gestao/logs
+RUN mkdir -p /opt/sistema-gestao/logs
 
 # Expose port
-EXPOSE 80
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost/health || exit 1
+  CMD node -e "require('http').get('http://localhost:3000/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))" || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start the server
+CMD ["node", "server/index.js"]
