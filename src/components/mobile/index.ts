@@ -1,3 +1,3 @@
-export { CameraCapture } from './CameraCapture.tsx';
-export { PhotoCapture } from './PhotoCapture.tsx';
-export { DocumentCapture } from './DocumentCapture.tsx';
+export { CameraCapture } from './CameraCapture';
+export { PhotoCapture } from './PhotoCapture';
+export { DocumentCapture } from './DocumentCapture';

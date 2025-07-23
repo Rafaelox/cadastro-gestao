@@ -2,12 +2,12 @@
   "name": "sistema-gestao-comunicacao",
   "source": {
     "type": "git",
-    "url": "https://github.com/seu-usuario/sistema-gestao-comunicacao.git",
+    "url": "https://github.com/your-username/your-repo.git",
     "branch": "main"
   },
   "build": {
     "type": "dockerfile",
-    "dockerfile": "./Dockerfile"
+    "dockerfile": "./Dockerfile.vps"
   },
   "deploy": {
     "port": 80,
@@ -37,8 +37,13 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "VITE_SUPABASE_URL": "https://mmqorugxbsspuyqlraia.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcW9ydWd4YnNzcHV5cWxyYWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MDM3MjYsImV4cCI6MjA2NzQ3OTcyNn0.8e3ohcVXPJVBvtw82aKmvAsCpf_8dfOjaB6U2g-hCTE"
+    "DB_HOST": "localhost",
+    "DB_PORT": "5432",
+    "DB_NAME": "sistema_gestao",
+    "DB_USER": "gestao_user",
+    "DB_PASSWORD": "sua_senha_segura",
+    "JWT_SECRET": "seu_jwt_secret_muito_seguro",
+    "SESSION_SECRET": "seu_session_secret_muito_seguro"
   },
   "scaling": {
     "minReplicas": 1,

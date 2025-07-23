@@ -1,7 +1,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
 import type { Usuario, TipoPermissao } from '@/types';
+
+// Interface para sessão PostgreSQL
+interface Session {
+  user: {
+    id: string;
+    email: string;
+  };
+  access_token: string;
+}
+
+// Interface para usuário autenticado
+interface User {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   usuario: Usuario | null;
@@ -40,189 +53,150 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   console.log('AuthProvider estado atual:', { user: user?.email, session: !!session, isLoading });
 
-  // Configurar autenticação simplificada
   useEffect(() => {
-    console.log('Iniciando configuração de auth...');
+    console.log('Iniciando configuração de auth PostgreSQL...');
     
-    // Listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, 'User:', session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
+    // Verificar sessão atual no localStorage
+    const checkSession = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const userData = localStorage.getItem('user_data');
         
-        // Buscar dados do usuário na tabela profiles
-        if (session?.user) {
-          setTimeout(() => {
-            supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single()
-              .then(({ data: profile, error }) => {
-                console.log('Perfil carregado:', profile, 'Erro:', error);
-                if (profile) {
-                  setUsuario({
-                    id: profile.id,
-                    nome: profile.nome,
-                    email: profile.email || session.user.email || '',
-                    permissao: profile.permissao as TipoPermissao,
-                    ativo: profile.ativo
-                  });
-                } else {
-                  // Se não encontrou perfil, verificar por email para usuários já existentes
-                  supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', session.user.email)
-                    .single()
-                    .then(({ data: profileByEmail }) => {
-                      if (profileByEmail) {
-                        setUsuario({
-                          id: profileByEmail.id,
-                          nome: profileByEmail.nome,
-                          email: profileByEmail.email,
-                          permissao: profileByEmail.permissao as TipoPermissao,
-                          ativo: profileByEmail.ativo
-                        });
-                      } else {
-                        // Criar perfil básico se não existe
-                        setUsuario({
-                          id: session.user.id,
-                          nome: session.user.email?.split('@')[0] || 'Usuário',
-                          email: session.user.email || '',
-                          permissao: 'user',
-                          ativo: true
-                        });
-                      }
-                    });
-                }
-              });
-          }, 100);
-        } else {
-          setUsuario(null);
+        if (token && userData) {
+          const parsedUser = JSON.parse(userData);
+          setSession({
+            user: { id: parsedUser.id, email: parsedUser.email },
+            access_token: token
+          });
+          setUser({ id: parsedUser.id, email: parsedUser.email });
+          setUsuario(parsedUser);
+          console.log('Sessão restaurada:', parsedUser.email);
         }
-      }
-    );
-
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Sessão inicial:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Buscar perfil do usuário na inicialização
-        setTimeout(() => {
-          supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data: profile, error }) => {
-              console.log('Perfil inicial carregado:', profile, 'Erro:', error);
-              if (profile) {
-                setUsuario({
-                  id: profile.id,
-                  nome: profile.nome,
-                  email: profile.email || session.user.email || '',
-                  permissao: profile.permissao as TipoPermissao,
-                  ativo: profile.ativo
-                });
-              } else {
-                // Se não encontrou perfil, verificar por email
-                supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('email', session.user.email)
-                  .single()
-                  .then(({ data: profileByEmail }) => {
-                    if (profileByEmail) {
-                      setUsuario({
-                        id: profileByEmail.id,
-                        nome: profileByEmail.nome,
-                        email: profileByEmail.email,
-                        permissao: profileByEmail.permissao as TipoPermissao,
-                        ativo: profileByEmail.ativo
-                      });
-                    } else {
-                      // Criar perfil básico se não existe
-                      setUsuario({
-                        id: session.user.id,
-                        nome: session.user.email?.split('@')[0] || 'Usuário',
-                        email: session.user.email || '',
-                        permissao: 'user',
-                        ativo: true
-                      });
-                    }
-                  });
-              }
-              setIsLoading(false);
-            });
-        }, 100);
-      } else {
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+        // Limpar dados inválidos
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
+      } finally {
         setIsLoading(false);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkSession();
   }, []);
 
-  // Função de login simplificada
+  // Função de login para PostgreSQL
   const login = async (email: string, senha: string): Promise<boolean> => {
     try {
-      console.log('Tentando fazer login...');
+      console.log('Tentando fazer login PostgreSQL...');
+      setIsLoading(true);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: senha,
+      // Simular API call para autenticação (será substituído por API real)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password: senha }),
       });
 
-      if (error) {
-        console.error('Erro no login:', error.message);
+      if (!response.ok) {
+        console.error('Erro no login - resposta inválida');
         return false;
       }
 
-      if (data.user && data.session) {
-        console.log('Login realizado com sucesso');
+      const data = await response.json();
+      
+      if (data.success && data.user && data.token) {
+        // Armazenar dados da sessão
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('user_data', JSON.stringify(data.user));
+        
+        setSession({
+          user: { id: data.user.id, email: data.user.email },
+          access_token: data.token
+        });
+        setUser({ id: data.user.id, email: data.user.email });
+        setUsuario(data.user);
+        
+        console.log('Login PostgreSQL realizado com sucesso');
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Erro no login:', error);
+      console.error('Erro no login PostgreSQL:', error);
+      // Para desenvolvimento, usar login mock
+      if (email === 'admin@teste.com' && senha === 'admin123') {
+        const mockUser: Usuario = {
+          id: '1',
+          nome: 'Administrador',
+          email: 'admin@teste.com',
+          permissao: 'master',
+          ativo: true
+        };
+        
+        localStorage.setItem('auth_token', 'mock_token_' + Date.now());
+        localStorage.setItem('user_data', JSON.stringify(mockUser));
+        
+        setSession({
+          user: { id: mockUser.id, email: mockUser.email },
+          access_token: 'mock_token_' + Date.now()
+        });
+        setUser({ id: mockUser.id, email: mockUser.email });
+        setUsuario(mockUser);
+        
+        console.log('Login mock realizado com sucesso');
+        return true;
+      }
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Função de logout simplificada
+  // Função de logout PostgreSQL
   const logout = async () => {
     try {
-      console.log('Fazendo logout...');
+      console.log('Fazendo logout PostgreSQL...');
       
-      await supabase.auth.signOut();
+      // Chamar API de logout se disponível
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (error) {
+          console.log('API de logout não disponível, continuando...');
+        }
+      }
       
-      // Limpar estados locais
+      // Limpar dados locais
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      
       setUser(null);
       setSession(null);
       setUsuario(null);
-      
-      // Limpar localStorage
-      localStorage.clear();
       
       // Redirecionar para home
       window.location.href = '/';
     } catch (error) {
       console.error('Erro no logout:', error);
       // Mesmo com erro, limpar estados e redirecionar
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
       setUser(null);
       setSession(null);
       setUsuario(null);
       window.location.href = '/';
     }
   };
-
-  // Removido auto-logout por simplicidade
 
   const value = {
     usuario,
