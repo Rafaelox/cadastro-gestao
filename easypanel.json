@@ -2,7 +2,7 @@
   "name": "sistema-gestao-comunicacao",
   "source": {
     "type": "git",
-    "url": "https://github.com/your-username/your-repo.git",
+    "url": "https://github.com/YOUR_USERNAME/YOUR_REPO.git",
     "branch": "main"
   },
   "build": {

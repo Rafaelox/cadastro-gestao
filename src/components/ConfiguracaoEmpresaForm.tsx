@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { databaseClient } from '@/lib/database-client';
 import { useToast } from '@/hooks/use-toast';
 import { ConfiguracaoEmpresa } from '@/types/recibo';
 import { Building2, Upload } from 'lucide-react';
@@ -76,7 +76,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
 
   const loadConfiguracao = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('configuracoes_empresa')
         .select('*')
         .eq('ativo', true)
@@ -117,7 +117,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       if (configuracao) {
         // Atualizar configuração existente
         console.log('Atualizando configuração existente com ID:', configuracao.id);
-        const { data: result, error } = await supabase
+        const { data: result, error } = await databaseClient
           .from('configuracoes_empresa')
           .update(data)
           .eq('id', configuracao.id)
@@ -131,14 +131,10 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       } else {
         // Desativar empresas existentes primeiro
         console.log('Desativando empresas existentes...');
-        const { error: deactivateError } = await supabase
+        await databaseClient
           .from('configuracoes_empresa')
           .update({ ativo: false })
           .neq('id', 0);
-
-        if (deactivateError) {
-          console.error('Erro ao desativar empresas:', deactivateError);
-        }
 
         // Criar nova configuração como ativa
         const insertData = {
@@ -156,7 +152,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
         };
         
         console.log('Inserindo nova configuração:', insertData);
-        const { data: result, error } = await supabase
+        const { data: result, error } = await databaseClient
           .from('configuracoes_empresa')
           .insert(insertData)
           .select();
@@ -204,13 +200,13 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await databaseClient.storage
         .from('cliente-documentos')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
+      const { data } = databaseClient.storage
         .from('cliente-documentos')
         .getPublicUrl(fileName);
 

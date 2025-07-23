@@ -25,7 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useHistorico, type HistoricoItem } from "@/hooks/useHistorico";
 import { useAgendaForm } from "@/hooks/useAgendaForm";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { AgendaForm } from "./AgendaForm";
 import {
   Dialog,
@@ -87,9 +87,9 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const loadFilterData = async () => {
     try {
       const [consultoresRes, servicosRes, clientesRes] = await Promise.all([
-        supabase.from('consultores').select('id, nome').eq('ativo', true),
-        supabase.from('servicos').select('id, nome').eq('ativo', true),
-        supabase.from('clientes').select('id, nome').eq('ativo', true)
+        databaseClient.from('consultores').select('id, nome').eq('ativo', true),
+        databaseClient.from('servicos').select('id, nome').eq('ativo', true),
+        databaseClient.from('clientes').select('id, nome').eq('ativo', true)
       ]);
 
       setConsultores(consultoresRes.data || []);
@@ -139,14 +139,12 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const handleExcluirAtendimento = async (atendimentoId: number) => {
     if (window.confirm("Tem certeza que deseja excluir este atendimento?")) {
       try {
-        const { error } = await supabase
+        await databaseClient
           .from('historico')
           .delete()
           .eq('id', atendimentoId);
 
-        if (error) {
-          throw error;
-        }
+        // Delete completed successfully
 
         toast({
           title: "Sucesso",

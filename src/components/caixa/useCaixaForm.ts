@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, addMonths } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 import type { FormaPagamento, Consultor, Servico, Cliente } from "./types";
 
@@ -29,9 +29,9 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
   const loadData = async () => {
     try {
       const [formasData, consultoresData, servicosData] = await Promise.all([
-        supabase.from('formas_pagamento').select('*').eq('ativo', true).order('ordem'),
-        supabase.from('consultores').select('id, nome').eq('ativo', true).order('nome'),
-        supabase.from('servicos').select('id, nome, preco').eq('ativo', true).order('nome')
+        databaseClient.from('formas_pagamento').select('*').eq('ativo', true).order('ordem'),
+        databaseClient.from('consultores').select('id, nome').eq('ativo', true).order('nome'),
+        databaseClient.from('servicos').select('id, nome, preco').eq('ativo', true).order('nome')
       ]);
 
       if (formasData.error) throw formasData.error;
@@ -78,7 +78,7 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
       const valorPorParcela = valorOriginal / numeroParcelas;
 
       // Inserir o pagamento principal
-      const { data: pagamentoData, error: pagamentoError } = await supabase
+      const { data: pagamentoData, error: pagamentoError } = await databaseClient
         .from('pagamentos')
         .insert({
           atendimento_id: atendimentoId || 0,
@@ -113,14 +113,14 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
           });
         }
 
-        const { error: parcelasError } = await supabase
+        const { error: parcelasError } = await databaseClient
           .from('parcelas')
           .insert(parcelas);
 
         if (parcelasError) throw parcelasError;
       } else {
         // Criar uma única parcela para pagamento à vista
-        const { error: parcelaError } = await supabase
+        const { error: parcelaError } = await databaseClient
           .from('parcelas')
           .insert({
             pagamento_id: pagamentoData.id,

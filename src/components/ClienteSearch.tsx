@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, User, Phone, Mail, FileText } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { cn } from "@/lib/utils";
 
 interface Cliente {
@@ -52,7 +52,7 @@ export const ClienteSearch = ({
 
   const loadClienteById = async (clienteId: number) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('clientes')
         .select('id, nome, cpf, telefone, email')
         .eq('id', clienteId)
@@ -72,7 +72,7 @@ export const ClienteSearch = ({
   const searchClientes = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('clientes')
         .select('id, nome, cpf, telefone, email')
         .eq('ativo', true)

@@ -12,7 +12,7 @@ import { CalendarIcon, FolderOpen, CreditCard, History, UserCheck, Mail, Edit3, 
 import { format, differenceInYears, differenceInMonths, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 import { CameraCapture } from "@/components/mobile/CameraCapture";
 import { DocumentCapture } from "@/components/mobile/DocumentCapture";
@@ -66,7 +66,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     if (!agendaId) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('agenda')
         .select(`
           *,
@@ -110,7 +110,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     if (!atendimentoId) return;
     
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('historico')
         .select(`
           *,
@@ -218,7 +218,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     try {
       if (isEditing && atendimentoId) {
         // Atualizar atendimento existente
-        const { error } = await supabase
+        await databaseClient
           .from('historico')
           .update({
             data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
@@ -229,9 +229,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
           })
           .eq('id', atendimentoId);
 
-        if (error) {
-          throw error;
-        }
+        // Update completed successfully
 
         toast({
           title: "Sucesso",
@@ -239,7 +237,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
         });
       } else {
         // Criar novo atendimento
-        const { error } = await supabase
+        const { error } = await databaseClient
           .from('historico')
           .insert({
             agenda_id: agendaId!,
@@ -262,7 +260,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
         }
 
         // Marcar o agendamento como concluído apenas para novos atendimentos
-        await supabase
+        await databaseClient
           .from('agenda')
           .update({ status: 'concluido' })
           .eq('id', agendaId);

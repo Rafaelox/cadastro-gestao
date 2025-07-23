@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { Filter, Users, Search, Target, Download } from "lucide-react";
 import type { Cliente, Categoria, Origem } from "@/types";
 import { FiltroMarketing } from "@/types/comunicacao";
@@ -25,8 +25,8 @@ export const SegmentacaoClientes = () => {
   const loadMetadata = async () => {
     try {
       const [categoriasRes, origensRes] = await Promise.all([
-        supabase.from('categorias').select('*').eq('ativo', true),
-        supabase.from('origens').select('*').eq('ativo', true)
+        databaseClient.from('categorias').select('*').eq('ativo', true),
+        databaseClient.from('origens').select('*').eq('ativo', true)
       ]);
 
       if (categoriasRes.error) throw categoriasRes.error;
@@ -50,9 +50,9 @@ export const SegmentacaoClientes = () => {
   const aplicarFiltros = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      let query = databaseClient
         .from('clientes')
-        .select('*, categorias(nome), origens(nome)', { count: 'exact' })
+        .select('*, categorias(nome), origens(nome)')
         .eq('ativo', true);
 
       // Aplicar filtros

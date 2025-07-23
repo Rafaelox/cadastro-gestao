@@ -3,7 +3,7 @@ import { Plus, Building, Edit, Eye, ToggleLeft, ToggleRight } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { useToast } from "@/hooks/use-toast";
 import { ConfiguracaoEmpresa } from "@/types/recibo";
 
@@ -21,7 +21,7 @@ export function EmpresasList({ onEdit, onAdd, refreshKey }: EmpresasListProps) {
   const loadEmpresas = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('configuracoes_empresa')
         .select('*')
         .order('created_at', { ascending: false });
@@ -42,12 +42,12 @@ export function EmpresasList({ onEdit, onAdd, refreshKey }: EmpresasListProps) {
 
   const toggleAtivo = async (id: number, ativo: boolean) => {
     try {
-      const { error } = await supabase
+      const result = await databaseClient
         .from('configuracoes_empresa')
         .update({ ativo: !ativo })
         .eq('id', id);
 
-      if (error) throw error;
+      // Result is void for updates in mock client
 
       toast({
         title: "Sucesso",

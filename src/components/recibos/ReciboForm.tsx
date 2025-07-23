@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { databaseClient } from '@/lib/database-client';
 import { useToast } from '@/hooks/use-toast';
 import { TipoRecibo, ReciboFormData } from '@/types/recibo';
 import { Receipt, FileText } from 'lucide-react';
@@ -77,10 +77,10 @@ export function ReciboForm() {
       console.log('Iniciando carregamento de dados...');
       
       const [tiposResult, clientesResult, consultoresResult, pagamentosResult] = await Promise.all([
-        supabase.from('tipos_recibo').select('*').eq('ativo', true),
-        supabase.from('clientes').select('id, nome').eq('ativo', true),
-        supabase.from('consultores').select('id, nome').eq('ativo', true),
-        supabase.from('pagamentos').select(`
+        databaseClient.from('tipos_recibo').select('*').eq('ativo', true),
+        databaseClient.from('clientes').select('id, nome').eq('ativo', true),
+        databaseClient.from('consultores').select('id, nome').eq('ativo', true),
+        databaseClient.from('pagamentos').select(`
           id, 
           valor, 
           valor_original, 
@@ -126,7 +126,7 @@ export function ReciboForm() {
     setLoading(true);
     try {
       // Buscar dados da empresa ativa usando a função do banco
-      const { data: empresaResult, error: empresaError } = await supabase
+      const { data: empresaResult, error: empresaError } = await databaseClient
         .rpc('get_empresa_ativa');
 
       if (empresaError) throw empresaError;
@@ -144,14 +144,14 @@ export function ReciboForm() {
       console.log('Empresa ativa encontrada:', empresa);
 
       // Buscar dados do cliente
-      const { data: cliente } = await supabase
+      const { data: cliente } = await databaseClient
         .from('clientes')
         .select('*')
         .eq('id', data.cliente_id)
         .single();
 
       // Gerar número do recibo
-      const { data: numeroRecibo } = await supabase
+      const { data: numeroRecibo } = await databaseClient
         .rpc('generate_numero_recibo');
 
       // Criar recibo
@@ -168,7 +168,7 @@ export function ReciboForm() {
         dados_cliente: cliente,
       };
 
-      const { data: recibo, error } = await supabase
+      const { data: recibo, error } = await databaseClient
         .from('recibos')
         .insert(reciboData)
         .select()
@@ -203,7 +203,7 @@ export function ReciboForm() {
       // Buscar informações das parcelas se houver pagamento associado
       let parcelasInfo = null;
       if (recibo.pagamento_id) {
-        const { data: parcelas } = await supabase
+        const { data: parcelas } = await databaseClient
           .from('parcelas')
           .select('*')
           .eq('pagamento_id', recibo.pagamento_id)

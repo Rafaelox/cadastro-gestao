@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Search, Calendar, User, Database, Download, BarChart3 } from "lucide-react";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { TableInventory } from "./TableInventory";
@@ -57,7 +57,7 @@ export const AuditLogs = () => {
   const loadLogs = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = databaseClient
         .from('audit_logs')
         .select('*')
         .gte('created_at', `${filters.dataInicio} 00:00:00`)

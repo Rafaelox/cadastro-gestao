@@ -7,7 +7,7 @@ import { CalendarIcon, DollarSign, TrendingUp, TrendingDown, Users, CreditCard, 
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 
 interface DashboardData {
@@ -46,7 +46,7 @@ export const DashboardFinanceiro = () => {
     setIsLoading(true);
     try {
       // Buscar dados de pagamentos
-      const { data: pagamentos, error: pagamentosError } = await supabase
+      const { data: pagamentos, error: pagamentosError } = await databaseClient
         .from('pagamentos')
         .select(`
           *,

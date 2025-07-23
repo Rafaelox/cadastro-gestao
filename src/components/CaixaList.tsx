@@ -9,7 +9,7 @@ import { CalendarIcon, Download, DollarSign, TrendingUp, TrendingDown, Search } 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 import { ParcelasList } from "./caixa/ParcelasList";
 import jsPDF from 'jspdf';
@@ -44,7 +44,7 @@ export const CaixaList = () => {
   const loadMovimentos = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = databaseClient
         .from('pagamentos')
         .select(`
           id,

@@ -8,7 +8,7 @@ import { CalendarIcon, TrendingUp, TrendingDown, DollarSign, User, Download } fr
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 
@@ -50,7 +50,7 @@ export const ComissaoExtrato = () => {
 
   const loadConsultores = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('consultores')
         .select('id, nome, percentual_comissao')
         .eq('ativo', true)
@@ -73,7 +73,7 @@ export const ComissaoExtrato = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await databaseClient
         .from('comissoes')
         .select('*')
         .eq('consultor_id', consultorSelecionado.id)
