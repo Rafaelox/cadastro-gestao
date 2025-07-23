@@ -7,7 +7,7 @@
   },
   "build": {
     "type": "dockerfile",
-    "dockerfile": "./Dockerfile.vps"
+    "dockerfile": "Dockerfile.vps"
   },
   "deploy": {
     "port": 3000,
