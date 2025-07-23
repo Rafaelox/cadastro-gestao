@@ -33,7 +33,7 @@ export const supabase = {
       return { data: { user: null, session: null }, error: new Error('Credenciais inválidas') };
     },
     
-    signOut: async () => {
+    signOut: async (options?: { scope?: 'global' | 'local' }) => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
       return { error: null };
@@ -84,7 +84,7 @@ export const supabase = {
 
   // Database operations
   from: (table: string) => ({
-    select: (columns = '*') => {
+    select: (columns = '*', options?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }) => {
       const query = {
         eq: (column: string, value: any) => query,
         neq: (column: string, value: any) => query,
@@ -100,11 +100,17 @@ export const supabase = {
         single: async () => mockResponse,
         maybeSingle: async () => mockResponse,
         then: async (callback: (result: any) => void) => {
-          console.log('Mock select from:', table);
-          callback({ data: [], error: null });
+          console.log('Mock select from:', table, options);
+          // Return count if requested
+          if (options?.count) {
+            callback({ data: [], count: 0, error: null });
+          } else {
+            callback({ data: [], error: null });
+          }
         },
         data: null,
-        error: null
+        error: null,
+        count: 0
       };
       return query;
     },
