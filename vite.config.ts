@@ -4,18 +4,16 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const plugins = [react()];
-  
-  // Component tagger will be loaded automatically by Lovable in development
-  // No manual configuration needed for latest version
-
   return {
     base: "/",
     server: {
       host: "::",
       port: 8080,
     },
-    plugins,
+    plugins: [
+      react(),
+      // Component tagger will be automatically loaded by Lovable in development mode
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
