@@ -1,18 +1,39 @@
-// Cliente completo para PostgreSQL compatível com Supabase
+// Database client for PostgreSQL VPS
+// This replaces the Supabase client completely
+
+import { apiService } from '@/services/api.service';
+import type {
+  Cliente,
+  Categoria,
+  Origem,
+  Servico,
+  Consultor,
+  FormaPagamento,
+  Agenda,
+  Historico,
+  ClienteFilters
+} from '@/types';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
 class DatabaseClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || '/api';
+    this.baseUrl = 'http://localhost:3000/api';
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<{ data: T | null; error: any }> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const token = localStorage.getItem('auth_token');
-      
       const headers = {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       };
 
@@ -21,359 +42,287 @@ class DatabaseClient {
         headers,
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      return { data, error: null };
-    } catch (error) {
-      return { data: null, error };
-    }
-  }
 
-  // Método principal from() para simular Supabase
-  from(table: string) {
-    return new TableQuery(table, this);
-  }
-
-  // Mock para storage
-  get storage() {
-    return {
-      from: (bucket: string) => ({
-        upload: async (path: string, file: File) => {
-          console.log('Mock upload:', bucket, path, file.name);
-          const mockUrl = URL.createObjectURL(file);
-          return { data: { path: mockUrl }, error: null };
-        },
-        getPublicUrl: (path: string) => ({
-          data: { publicUrl: path }
-        }),
-        remove: async (paths: string[]) => {
-          console.log('Mock remove:', paths);
-          return { data: null, error: null };
-        }
-      })
-    };
-  }
-
-  // Mock para RPC calls
-  async rpc(functionName: string, params?: any) {
-    console.log('Mock RPC call:', functionName, params);
-    
-    switch (functionName) {
-      case 'create_custom_user':
-        return { data: 'mock-user-id', error: null };
-      case 'update_custom_user':
-        return { data: true, error: null };
-      case 'delete_custom_user':
-        return { data: true, error: null };
-      default:
-        return { data: null, error: new Error(`RPC function ${functionName} not implemented`) };
-    }
-  }
-
-  // Mock para auth
-  get auth() {
-    return {
-      signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
-        if (email === 'admin@teste.com' && password === 'admin123') {
-          const user = { id: '1', email };
-          const session = { user, access_token: 'mock_token' };
-          localStorage.setItem('auth_token', 'mock_token');
-          localStorage.setItem('user_data', JSON.stringify(user));
-          return { data: { user, session }, error: null };
-        }
-        return { data: { user: null, session: null }, error: new Error('Credenciais inválidas') };
-      },
-      
-      signOut: async () => {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
-        return { error: null };
-      },
-      
-      getSession: async () => {
-        const token = localStorage.getItem('auth_token');
-        const userData = localStorage.getItem('user_data');
-        
-        if (token && userData) {
-          const user = JSON.parse(userData);
-          const session = { user, access_token: token };
-          return { data: { session }, error: null };
-        }
-        
-        return { data: { session: null }, error: null };
-      },
-      
-      onAuthStateChange: (callback: (event: string, session: any) => void) => {
+      if (!response.ok) {
         return {
-          data: {
-            subscription: {
-              unsubscribe: () => {}
-            }
-          }
+          success: false,
+          error: data.error || `HTTP error! status: ${response.status}`
         };
-      },
-      
-      resetPasswordForEmail: async (email: string, options?: any) => {
-        console.log('Mock reset password:', email, options);
-        return { data: null, error: null };
-      },
-      
-      signUp: async ({ email, password }: { email: string; password: string }) => {
-        console.log('Mock sign up:', email);
-        return { data: { user: null, session: null }, error: null };
-      },
-      
-      getUser: async () => {
-        const userData = localStorage.getItem('user_data');
-        if (userData) {
-          const user = JSON.parse(userData);
-          return { data: { user }, error: null };
-        }
-        return { data: { user: null }, error: null };
       }
-    };
-  }
 
-  // Mock para functions
-  get functions() {
-    return {
-      invoke: async (functionName: string, options?: any) => {
-        console.log('Mock function invoke:', functionName, options);
-        return { data: null, error: null };
-      }
-    };
-  }
-}
-
-// Classe para operações de tabela
-class TableQuery {
-  constructor(private table: string, private client: DatabaseClient) {}
-
-  select(columns = '*') {
-    return new SelectQuery(this.table, this.client, columns);
-  }
-
-  insert(values: any) {
-    return new InsertQuery(this.table, this.client, values);
-  }
-
-  update(values: any) {
-    return new UpdateQuery(this.table, this.client, values);
-  }
-
-  delete() {
-    return new DeleteQuery(this.table, this.client);
-  }
-}
-
-// Classe para SELECT queries
-class SelectQuery {
-  private filters: string[] = [];
-  private orderBy: string | null = null;
-
-  constructor(
-    private table: string, 
-    private client: DatabaseClient, 
-    private columns: string
-  ) {}
-
-  eq(column: string, value: any) {
-    this.filters.push(`${column}=eq.${value}`);
-    return this;
-  }
-
-  neq(column: string, value: any) {
-    this.filters.push(`${column}=neq.${value}`);
-    return this;
-  }
-
-  gte(column: string, value: any) {
-    this.filters.push(`${column}=gte.${value}`);
-    return this;
-  }
-
-  lte(column: string, value: any) {
-    this.filters.push(`${column}=lte.${value}`);
-    return this;
-  }
-
-  or(conditions: string) {
-    this.filters.push(`or=(${conditions})`);
-    return this;
-  }
-
-  ilike(column: string, value: any) {
-    this.filters.push(`${column}=ilike.${value}`);
-    return this;
-  }
-
-  not(column: string, operator: string, value: any) {
-    this.filters.push(`${column}=not.${operator}.${value}`);
-    return this;
-  }
-
-  in(column: string, values: any[]) {
-    this.filters.push(`${column}=in.(${values.join(',')})`);
-    return this;
-  }
-
-  limit(count: number) {
-    this.filters.push(`limit=${count}`);
-    return this;
-  }
-
-  range(from: number, to: number) {
-    this.filters.push(`limit=${to - from + 1}&offset=${from}`);
-    return this;
-  }
-
-  order(column: string, options?: { ascending?: boolean }) {
-    const direction = options?.ascending === false ? 'desc' : 'asc';
-    this.orderBy = `order=${column}.${direction}`;
-    return this;
-  }
-
-  async single() {
-    try {
-      const query = this.buildQuery();
-      console.log('Mock query:', query);
-      return { data: null, error: null };
+      return {
+        success: true,
+        data: data.data || data
+      };
     } catch (error) {
-      return { data: null, error };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
     }
   }
 
-  async maybeSingle() {
-    return this.single();
-  }
+  // ============================================
+  // CLIENTES CRUD
+  // ============================================
 
-  async then(callback: (result: any) => void) {
-    try {
-      const query = this.buildQuery();
-      console.log('Mock query:', query);
-      callback({ data: [], error: null });
-    } catch (error) {
-      callback({ data: null, error });
-    }
-  }
-
-  private buildQuery() {
-    let query = `/${this.table}?select=${this.columns}`;
-    if (this.filters.length > 0) {
-      query += '&' + this.filters.join('&');
-    }
-    if (this.orderBy) {
-      query += '&' + this.orderBy;
-    }
-    return query;
-  }
-
-  // Propriedades para compatibilidade
-  get data() {
-    return null;
-  }
-
-  get error() {
-    return null;
-  }
-}
-
-// Classe para INSERT queries
-class InsertQuery {
-  constructor(
-    private table: string, 
-    private client: DatabaseClient, 
-    private values: any
-  ) {}
-
-  select(columns = '*') {
-    return {
-      single: async () => {
-        console.log('Mock insert:', this.table, this.values);
-        return { data: null, error: null };
-      },
-      maybeSingle: async () => {
-        console.log('Mock insert maybeSingle:', this.table, this.values);
-        return { data: null, error: null };
-      },
-      // Propriedades para compatibilidade
-      data: null,
-      error: null
-    };
-  }
-
-  // Propriedades para compatibilidade
-  get data() {
-    return null;
-  }
-
-  get error() {
-    return null;
-  }
-}
-
-// Classe para UPDATE queries
-class UpdateQuery {
-  constructor(
-    private table: string, 
-    private client: DatabaseClient, 
-    private values: any
-  ) {}
-
-  eq(column: string, value: any) {
-    return {
-      select: (columns = '*') => ({
-        single: async () => {
-          console.log('Mock update:', this.table, this.values, `${column}=${value}`);
-          return { data: null, error: null };
-        },
-        maybeSingle: async () => {
-          console.log('Mock update maybeSingle:', this.table, this.values, `${column}=${value}`);
-          return { data: null, error: null };
-        },
-        // Propriedades para compatibilidade
-        data: null,
-        error: null
-      })
-    };
-  }
-
-  neq(column: string, value: any) {
-    return {
-      select: (columns = '*') => ({
-        single: async () => {
-          console.log('Mock update neq:', this.table, this.values, `${column}!=${value}`);
-          return { data: null, error: null };
-        },
-        maybeSingle: async () => {
-          console.log('Mock update neq maybeSingle:', this.table, this.values, `${column}!=${value}`);
-          return { data: null, error: null };
-        },
-        // Propriedades para compatibilidade
-        data: null,
-        error: null
-      })
-    };
-  }
-}
-
-// Classe para DELETE queries
-class DeleteQuery {
-  constructor(private table: string, private client: DatabaseClient) {}
-
-  eq(column: string, value: any) {
-    return {
-      async then(callback: (result: any) => void) {
-        console.log('Mock delete:', this.table, `${column}=${value}`);
-        callback({ error: null });
+  async getClientes(filters: ClienteFilters = {}): Promise<ApiResponse<Cliente[]>> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value));
       }
-    };
+    });
+
+    const endpoint = `/clientes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.request<Cliente[]>(endpoint);
+  }
+
+  async getClienteById(id: number): Promise<ApiResponse<Cliente>> {
+    return this.request<Cliente>(`/clientes/${id}`);
+  }
+
+  async createCliente(cliente: Omit<Cliente, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Cliente>> {
+    return this.request<Cliente>('/clientes', {
+      method: 'POST',
+      body: JSON.stringify(cliente),
+    });
+  }
+
+  async updateCliente(id: number, cliente: Partial<Cliente>): Promise<ApiResponse<Cliente>> {
+    return this.request<Cliente>(`/clientes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(cliente),
+    });
+  }
+
+  async deleteCliente(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/clientes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // CATEGORIAS CRUD
+  // ============================================
+
+  async getCategorias(): Promise<ApiResponse<Categoria[]>> {
+    return this.request<Categoria[]>('/categorias');
+  }
+
+  async createCategoria(categoria: Omit<Categoria, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Categoria>> {
+    return this.request<Categoria>('/categorias', {
+      method: 'POST',
+      body: JSON.stringify(categoria),
+    });
+  }
+
+  async updateCategoria(id: number, categoria: Partial<Categoria>): Promise<ApiResponse<Categoria>> {
+    return this.request<Categoria>(`/categorias/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoria),
+    });
+  }
+
+  async deleteCategoria(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/categorias/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // ORIGENS CRUD
+  // ============================================
+
+  async getOrigens(): Promise<ApiResponse<Origem[]>> {
+    return this.request<Origem[]>('/origens');
+  }
+
+  async createOrigem(origem: Omit<Origem, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Origem>> {
+    return this.request<Origem>('/origens', {
+      method: 'POST',
+      body: JSON.stringify(origem),
+    });
+  }
+
+  async updateOrigem(id: number, origem: Partial<Origem>): Promise<ApiResponse<Origem>> {
+    return this.request<Origem>(`/origens/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(origem),
+    });
+  }
+
+  async deleteOrigem(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/origens/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // SERVIÇOS CRUD
+  // ============================================
+
+  async getServicos(): Promise<ApiResponse<Servico[]>> {
+    return this.request<Servico[]>('/servicos');
+  }
+
+  async getServicoById(id: number): Promise<ApiResponse<Servico>> {
+    return this.request<Servico>(`/servicos/${id}`);
+  }
+
+  async createServico(servico: Omit<Servico, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Servico>> {
+    return this.request<Servico>('/servicos', {
+      method: 'POST',
+      body: JSON.stringify(servico),
+    });
+  }
+
+  async updateServico(id: number, servico: Partial<Servico>): Promise<ApiResponse<Servico>> {
+    return this.request<Servico>(`/servicos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(servico),
+    });
+  }
+
+  async deleteServico(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/servicos/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // CONSULTORES CRUD
+  // ============================================
+
+  async getConsultores(): Promise<ApiResponse<Consultor[]>> {
+    return this.request<Consultor[]>('/consultores');
+  }
+
+  async createConsultor(consultor: Omit<Consultor, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Consultor>> {
+    return this.request<Consultor>('/consultores', {
+      method: 'POST',
+      body: JSON.stringify(consultor),
+    });
+  }
+
+  async updateConsultor(id: number, consultor: Partial<Consultor>): Promise<ApiResponse<Consultor>> {
+    return this.request<Consultor>(`/consultores/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(consultor),
+    });
+  }
+
+  async deleteConsultor(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/consultores/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // FORMAS DE PAGAMENTO CRUD
+  // ============================================
+
+  async getFormasPagamento(): Promise<ApiResponse<FormaPagamento[]>> {
+    return this.request<FormaPagamento[]>('/formas-pagamento');
+  }
+
+  async createFormaPagamento(formaPagamento: Omit<FormaPagamento, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<FormaPagamento>> {
+    return this.request<FormaPagamento>('/formas-pagamento', {
+      method: 'POST',
+      body: JSON.stringify(formaPagamento),
+    });
+  }
+
+  async updateFormaPagamento(id: number, formaPagamento: Partial<FormaPagamento>): Promise<ApiResponse<FormaPagamento>> {
+    return this.request<FormaPagamento>(`/formas-pagamento/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(formaPagamento),
+    });
+  }
+
+  async deleteFormaPagamento(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/formas-pagamento/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // AGENDA CRUD
+  // ============================================
+
+  async getAgenda(): Promise<ApiResponse<Agenda[]>> {
+    return this.request<Agenda[]>('/agenda');
+  }
+
+  async createAgenda(agenda: Omit<Agenda, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Agenda>> {
+    return this.request<Agenda>('/agenda', {
+      method: 'POST',
+      body: JSON.stringify(agenda),
+    });
+  }
+
+  async updateAgenda(id: number, agenda: Partial<Agenda>): Promise<ApiResponse<Agenda>> {
+    return this.request<Agenda>(`/agenda/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(agenda),
+    });
+  }
+
+  async deleteAgenda(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/agenda/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ============================================
+  // HISTÓRICO CRUD
+  // ============================================
+
+  async getHistorico(filters: any = {}): Promise<ApiResponse<Historico[]>> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value));
+      }
+    });
+
+    const endpoint = `/historico${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.request<Historico[]>(endpoint);
+  }
+
+  async createHistorico(historico: any): Promise<ApiResponse<Historico>> {
+    return this.request<Historico>('/historico', {
+      method: 'POST',
+      body: JSON.stringify(historico),
+    });
+  }
+
+  // ============================================
+  // PAGAMENTOS CRUD
+  // ============================================
+
+  async getPagamentos(filters: any = {}): Promise<ApiResponse<any[]>> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, String(value));
+      }
+    });
+
+    const endpoint = `/pagamentos${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.request<any[]>(endpoint);
+  }
+
+  async createPagamento(pagamento: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/pagamentos', {
+      method: 'POST',
+      body: JSON.stringify(pagamento),
+    });
   }
 }
 
-// Instância global
 export const databaseClient = new DatabaseClient();
-export const supabase = databaseClient;

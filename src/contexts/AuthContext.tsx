@@ -1,27 +1,24 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { Usuario, TipoPermissao } from '@/types';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-// Interface para sessão PostgreSQL
-interface Session {
-  user: {
-    id: string;
-    email: string;
-  };
-  access_token: string;
-}
-
-// Interface para usuário autenticado
+// User types for PostgreSQL VPS
 interface User {
   id: string;
   email: string;
+  nome?: string;
+  permissao?: string;
+}
+
+interface Session {
+  user: User;
+  access_token: string;
 }
 
 interface AuthContextType {
-  usuario: Usuario | null;
-  user: User | null;
+  usuario: User | null;
+  user: User | null; 
   session: Session | null;
-  login: (email: string, senha: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
   isMaster: boolean;
@@ -29,6 +26,7 @@ interface AuthContextType {
   isSecretaria: boolean;
   isUser: boolean;
   isConsultor: boolean;
+  hasAdminAccess: boolean;
   canManageUsers: boolean;
   canManageSettings: boolean;
   canViewReports: boolean;
@@ -46,7 +44,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [usuario, setUsuario] = useState<User | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,12 +126,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Erro no login PostgreSQL:', error);
       // Para desenvolvimento, usar login mock
       if (email === 'admin@teste.com' && senha === 'admin123') {
-        const mockUser: Usuario = {
+        const mockUser: User = {
           id: '1',
           nome: 'Administrador',
           email: 'admin@teste.com',
-          permissao: 'master',
-          ativo: true
+          permissao: 'master'
         };
         
         localStorage.setItem('auth_token', 'mock_token_' + Date.now());
@@ -211,6 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isSecretaria: usuario?.permissao === 'secretaria',
     isUser: usuario?.permissao === 'user',
     isConsultor: usuario?.permissao === 'consultor',
+    hasAdminAccess: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
     // Permissões baseadas no nível do usuário
     canManageUsers: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
     canManageSettings: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
