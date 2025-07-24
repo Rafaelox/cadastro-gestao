@@ -6,8 +6,8 @@ import path from "path";
 export default defineConfig(({ mode }) => {
   const plugins = [react()];
   
-  // Remove lovable-tagger for now to fix build issues
-  // Will only be used in development when properly configured
+  // Component tagger will be loaded automatically by Lovable in development
+  // No manual configuration needed for latest version
 
   return {
     base: "/",
