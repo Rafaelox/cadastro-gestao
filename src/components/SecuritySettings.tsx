@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { databaseClient } from '@/lib/database-client';
 import { Shield, Users, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -37,18 +37,13 @@ export const SecuritySettings = () => {
       const activeSessions = localStorage.getItem('secure_session') ? 1 : 0;
 
       // Buscar contagem de usuários MASTER
-      const { data: masters, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('permissao', 'master')
-        .eq('ativo', true);
-
-      if (error) throw error;
+      const masters = await databaseClient.getUsuarios();
+      const masterUsers = masters.data?.filter(u => u.role === 'admin') || [];
 
       setSecurityInfo({
         activeSessions,
         lastLogin: new Date().toLocaleString('pt-BR'),
-        masterCount: masters?.length || 0,
+        masterCount: masterUsers.length,
         inactiveTimeout: 30
       });
     } catch (error) {
@@ -63,8 +58,8 @@ export const SecuritySettings = () => {
       // Limpar storage local
       localStorage.clear();
       
-      // Logout global do Supabase
-      await supabase.auth.signOut({ scope: 'global' });
+      // Logout global do sistema - simplificado
+      localStorage.removeItem('auth-token');
 
       toast({
         title: "Sessões limpas",
@@ -91,24 +86,20 @@ export const SecuritySettings = () => {
     try {
       setIsLoading(true);
 
-      const { data: usuarios, error } = await supabase
-        .from('profiles')
-        .select('id, nome, email, permissao, ativo, created_at')
-        .order('permissao', { ascending: false });
-
-      if (error) throw error;
+      const usuariosResult = await databaseClient.getUsuarios();
+      const usuarios = usuariosResult.data || [];
 
       console.log('=== AUDITORIA DE USUÁRIOS ===');
-      console.log('Total de usuários:', usuarios?.length);
+      console.log('Total de usuários:', usuarios.length);
       
-      const groupedUsers = usuarios?.reduce((acc: any, user) => {
-        if (!acc[user.permissao]) acc[user.permissao] = [];
-        acc[user.permissao].push(user);
+      const groupedUsers = usuarios.reduce((acc: any, user) => {
+        if (!acc[user.role]) acc[user.role] = [];
+        acc[user.role].push(user);
         return acc;
       }, {});
 
-      Object.entries(groupedUsers || {}).forEach(([permissao, users]: [string, any]) => {
-        console.log(`\n${permissao.toUpperCase()}: ${users.length} usuários`);
+      Object.entries(groupedUsers).forEach(([role, users]: [string, any]) => {
+        console.log(`\n${role.toUpperCase()}: ${users.length} usuários`);
         users.forEach((user: any) => {
           console.log(`- ${user.nome} (${user.email}) - ${user.ativo ? 'ATIVO' : 'INATIVO'}`);
         });

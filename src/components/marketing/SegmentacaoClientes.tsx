@@ -25,8 +25,8 @@ export const SegmentacaoClientes = () => {
   const loadMetadata = async () => {
     try {
       const [categoriasRes, origensRes] = await Promise.all([
-        databaseClient.from('categorias').select('*').eq('ativo', true),
-        databaseClient.from('origens').select('*').eq('ativo', true)
+        databaseClient.getCategorias(),
+        databaseClient.getOrigens()
       ]);
 
       if (categoriasRes.error) throw categoriasRes.error;
@@ -50,39 +50,12 @@ export const SegmentacaoClientes = () => {
   const aplicarFiltros = async () => {
     setLoading(true);
     try {
-      let query = databaseClient
-        .from('clientes')
-        .select('*, categorias(nome), origens(nome)')
-        .eq('ativo', true);
-
-      // Aplicar filtros
-      if (filtros.categoria_id && filtros.categoria_id.length > 0) {
-        query = query.in('categoria_id', filtros.categoria_id);
-      }
-
-      if (filtros.origem_id && filtros.origem_id.length > 0) {
-        query = query.in('origem_id', filtros.origem_id);
-      }
-
-      if (filtros.cidade && filtros.cidade.length > 0) {
-        query = query.in('cidade', filtros.cidade);
-      }
-
-      if (filtros.recebe_email !== undefined) {
-        query = query.eq('recebe_email', filtros.recebe_email);
-      }
-
-      if (filtros.recebe_sms !== undefined) {
-        query = query.eq('recebe_sms', filtros.recebe_sms);
-      }
-
-      if (filtros.recebe_whatsapp !== undefined) {
-        query = query.eq('recebe_whatsapp', filtros.recebe_whatsapp);
-      }
-
-      const { data, error, count } = await query.limit(100);
-
-      if (error) throw error;
+      const clientesResult = await databaseClient.getClientesSegmentados(filtros);
+      
+      if (clientesResult.error) throw clientesResult.error;
+      
+      const data = clientesResult.data || [];
+      const count = data.length;
 
       setClientes(data || []);
       setTotalClientes(count || 0);

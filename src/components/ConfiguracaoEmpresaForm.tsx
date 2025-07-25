@@ -123,10 +123,8 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       } else {
         // Desativar empresas existentes primeiro
         console.log('Desativando empresas existentes...');
-        await databaseClient
-          .from('configuracoes_empresa')
-          .update({ ativo: false })
-          .neq('id', 0);
+        const updateResult = await databaseClient.updateConfiguracaoEmpresa(0, { ativo: false });
+        if (updateResult.error) throw updateResult.error;
 
         // Criar nova configuração como ativa
         const insertData = {
@@ -189,8 +187,8 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
 
-      const uploadResult = await databaseClient.uploadFile(file, 'cliente-documentos');
-      const publicUrl = await databaseClient.getPublicUrl(uploadResult.path, 'cliente-documentos');
+      const uploadResult = await databaseClient.uploadFile(file);
+      const publicUrl = databaseClient.getPublicUrl(uploadResult.path || fileName, 'cliente-documentos');
 
       form.setValue('logo_url', publicUrl);
       

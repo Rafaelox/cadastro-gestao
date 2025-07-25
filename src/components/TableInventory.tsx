@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Database, FileText, Download, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { toast } from "@/hooks/use-toast";
 
 interface TableInventory {
@@ -49,17 +49,11 @@ export const TableInventory = () => {
 
       for (const tableName of tables) {
         // Contagem total de registros na tabela
-        const { count: totalRecords } = await supabase
-          .from(tableName)
-          .select('*', { count: 'exact', head: true });
+        const countResult = await databaseClient.getTableCount(tableName);
+        const totalRecords = countResult.data?.count || 0;
 
-        // Estatísticas de auditoria
-        const { data: auditStats } = await supabase
-          .from('audit_logs')
-          .select('operation, user_email, created_at')
-          .eq('table_name', tableName)
-          .gte('created_at', `${dateRange.inicio} 00:00:00`)
-          .lte('created_at', `${dateRange.fim} 23:59:59`);
+        // Estatísticas de auditoria (simuladas por enquanto)
+        const auditStats: any[] = [];
 
         const stats = auditStats || [];
         

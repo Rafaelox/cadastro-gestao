@@ -86,9 +86,9 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
           tipo_transacao: tipoTransacao,
           data_pagamento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
           observacoes: observacoes || null
-        })
-        .select()
-        .single();
+        });
+
+      const pagamentoResult = await databaseClient.createPagamento(pagamentoData);
 
       if (pagamentoError) throw pagamentoError;
 

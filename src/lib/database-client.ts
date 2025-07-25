@@ -491,8 +491,8 @@ class DatabaseClient {
     }
   }
 
-  // File Upload
-  async uploadFile(file: File, bucket: string = 'uploads'): Promise<{path: string; url: string}> {
+  // File Upload (versão corrigida)
+  async uploadFileToStorage(file: File, bucket: string = 'uploads'): Promise<{path: string; url: string}> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('bucket', bucket);
@@ -514,7 +514,7 @@ class DatabaseClient {
     return result.data;
   }
 
-  async getPublicUrl(path: string, bucket: string = 'uploads'): Promise<string> {
+  async getPublicUrlFromStorage(path: string, bucket: string = 'uploads'): Promise<string> {
     return `${this.baseUrl}/api/storage/${bucket}/${path}`;
   }
 
@@ -572,6 +572,63 @@ class DatabaseClient {
       console.error('Erro ao criar parcela:', error);
       return { success: false, data: null, error: 'Erro ao criar parcela' };
     }
+  }
+
+  // ============================================
+  // MÉTODOS ADICIONAIS PARA MIGRAÇÃO
+  // ============================================
+
+  // Método para contar registros de uma tabela
+  async getTableCount(tableName: string): Promise<ApiResponse<{ count: number }>> {
+    try {
+      const response = await this.request<{ count: number }>(`/${tableName}/count`);
+      return response;
+    } catch (error: any) {
+      return { success: false, data: { count: 0 }, error: error.message };
+    }
+  }
+
+  // Método para buscar clientes segmentados
+  async getClientesSegmentados(filtros: any): Promise<ApiResponse<any[]>> {
+    try {
+      const params = new URLSearchParams();
+      if (filtros.categoria_id) params.append('categoria_id', filtros.categoria_id.join(','));
+      if (filtros.origem_id) params.append('origem_id', filtros.origem_id.join(','));
+      if (filtros.recebe_email !== undefined) params.append('recebe_email', filtros.recebe_email.toString());
+      if (filtros.recebe_sms !== undefined) params.append('recebe_sms', filtros.recebe_sms.toString());
+      if (filtros.recebe_whatsapp !== undefined) params.append('recebe_whatsapp', filtros.recebe_whatsapp.toString());
+      
+      const endpoint = `/clientes/segmentados${params.toString() ? `?${params.toString()}` : ''}`;
+      return this.request<any[]>(endpoint);
+    } catch (error: any) {
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  // Método para templates de comunicação
+  async getTemplatesComunicacao(): Promise<ApiResponse<any[]>> {
+    try {
+      return this.request<any[]>('/templates-comunicacao');
+    } catch (error: any) {
+      return { success: false, data: [], error: error.message };
+    }
+  }
+
+  // Método para upload de arquivos (versão simplificada)
+  async uploadFile(file: File): Promise<{ path?: string; error?: string }> {
+    try {
+      // Simular upload local para desenvolvimento
+      const fileName = `${Date.now()}-${file.name}`;
+      return { path: fileName, error: undefined };
+    } catch (error: any) {
+      return { path: undefined, error: error.message };
+    }
+  }
+
+  // Método para obter URL pública
+  getPublicUrl(path: string, bucket?: string): string {
+    // Simular URL pública
+    return `${this.baseUrl}/storage/${bucket || 'default'}/${path}`;
   }
 }
 

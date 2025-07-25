@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { databaseClient } from "@/lib/database-client";
 import { CalendarIcon, Target, Users, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -58,21 +58,9 @@ export const CampanhaForm = ({ campanha, onSave, onCancel, filtrosSegmentacao }:
   const loadMetadata = async () => {
     try {
       const [templatesRes, categoriasRes, origensRes] = await Promise.all([
-        supabase
-          .from('templates_comunicacao')
-          .select('*')
-          .eq('ativo', true)
-          .order('nome'),
-        supabase
-          .from('categorias')
-          .select('*')
-          .eq('ativo', true)
-          .order('nome'),
-        supabase
-          .from('origens')
-          .select('*')
-          .eq('ativo', true)
-          .order('nome')
+        databaseClient.getTemplatesComunicacao(),
+        databaseClient.getCategorias(),
+        databaseClient.getOrigens()
       ]);
 
       if (templatesRes.error) throw templatesRes.error;
@@ -93,35 +81,8 @@ export const CampanhaForm = ({ campanha, onSave, onCancel, filtrosSegmentacao }:
 
   const calcularDestinatarios = async (filtros: FiltroMarketing) => {
     try {
-      let query = supabase
-        .from('clientes')
-        .select('*', { count: 'exact', head: true })
-        .eq('ativo', true);
-
-      // Aplicar filtros de comunicação baseado no tipo
-      if (formData.tipo_comunicacao === 'email') {
-        query = query.eq('recebe_email', true).not('email', 'is', null);
-      } else if (formData.tipo_comunicacao === 'sms') {
-        query = query.eq('recebe_sms', true).not('telefone', 'is', null);
-      } else if (formData.tipo_comunicacao === 'whatsapp') {
-        query = query.eq('recebe_whatsapp', true).not('telefone', 'is', null);
-      }
-
-      // Aplicar outros filtros
-      if (filtros.categoria_id && filtros.categoria_id.length > 0) {
-        query = query.in('categoria_id', filtros.categoria_id);
-      }
-
-      if (filtros.origem_id && filtros.origem_id.length > 0) {
-        query = query.in('origem_id', filtros.origem_id);
-      }
-
-      if (filtros.cidade && filtros.cidade.length > 0) {
-        query = query.in('cidade', filtros.cidade);
-      }
-
-      const { count, error } = await query;
-      if (error) throw error;
+      const countResult = await databaseClient.getClientesSegmentados(filtros);
+      const count = countResult.data?.length || 0;
 
       setFormData(prev => ({ 
         ...prev, 

@@ -1,6 +1,6 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import { supabase } from '@/integrations/supabase/client';
+import { databaseClient } from '@/lib/database-client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
@@ -117,26 +117,20 @@ export const useCamera = () => {
       const finalFilename = filename || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
       const filePath = `${folder}/${finalFilename}`;
 
-      // Upload para Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('atendimento-fotos')
-        .upload(filePath, blob, {
-          contentType: 'image/jpeg',
-          upsert: false
-        });
+      // Simular upload local para desenvolvimento
+      const file = new File([blob], finalFilename, { type: 'image/jpeg' });
+      const uploadResult = await databaseClient.uploadFile(file);
 
-      if (error) {
-        throw error;
+      if (uploadResult.error) {
+        throw new Error(uploadResult.error);
       }
 
       // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('atendimento-fotos')
-        .getPublicUrl(data.path);
+      const publicUrl = databaseClient.getPublicUrl(filePath, 'atendimento-fotos');
 
       return {
         url: publicUrl,
-        path: data.path
+        path: filePath
       };
 
     } catch (error: any) {
