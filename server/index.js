@@ -6,17 +6,28 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Validate required environment variables
+if (!process.env.JWT_SECRET) {
+  console.error('ERRO: JWT_SECRET não está definido nas variáveis de ambiente');
+  process.exit(1);
+}
+
+if (!process.env.DB_PASSWORD) {
+  console.error('ERRO: DB_PASSWORD não está definido nas variáveis de ambiente');
+  process.exit(1);
+}
+
 // Database connection
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'InfoDB',
-  user: process.env.DB_USER || 'postgres',
+  database: process.env.DB_NAME || 'sistema_gestao',
+  user: process.env.DB_USER || 'gestao_user',
   password: process.env.DB_PASSWORD,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-  ssl: false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Database connection logging
@@ -28,8 +39,17 @@ pool.on('error', (err) => {
   console.error('Erro na conexão PostgreSQL:', err);
 });
 
+// CORS Configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.DOMAIN || 'http://localhost:3000']
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
