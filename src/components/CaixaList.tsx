@@ -44,31 +44,18 @@ export const CaixaList = () => {
   const loadMovimentos = async () => {
     setIsLoading(true);
     try {
-      let query = databaseClient
-        .from('pagamentos')
-        .select(`
-          id,
-          atendimento_id,
-          valor,
-          valor_original,
-          numero_parcelas,
-          tipo_transacao,
-          data_pagamento,
-          observacoes,
-          clientes!cliente_id (nome),
-          consultores!consultor_id (nome),
-          servicos!servico_id (nome),
-          formas_pagamento!forma_pagamento_id (nome)
-        `)
-        .gte('data_pagamento', format(dataInicio, 'yyyy-MM-dd 00:00:00'))
-        .lte('data_pagamento', format(dataFim, 'yyyy-MM-dd 23:59:59'))
-        .order('data_pagamento', { ascending: false });
+      const response = await databaseClient.getPagamentos({
+        data_inicio: format(dataInicio, 'yyyy-MM-dd'),
+        data_fim: format(dataFim, 'yyyy-MM-dd')
+      });
 
-      const { data, error } = await query;
+      if (!response.success) {
+        throw new Error(response.error);
+      }
 
-      if (error) throw error;
+      const data = response.data || [];
 
-      const movimentosFormatados = (data || []).map((item: any) => ({
+      const movimentosFormatados = data.map((item: any) => ({
         id: item.id,
         atendimento_id: item.atendimento_id,
         cliente_nome: item.clientes?.nome || 'N/A',

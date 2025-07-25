@@ -300,6 +300,21 @@ class DatabaseClient {
     });
   }
 
+  async getAgendaById(id: number): Promise<ApiResponse<Agenda>> {
+    return this.request<Agenda>(`/agenda/${id}`);
+  }
+
+  async getHistoricoById(id: number): Promise<ApiResponse<Historico>> {
+    return this.request<Historico>(`/historico/${id}`);
+  }
+
+  async updateHistorico(id: number, historico: any): Promise<ApiResponse<Historico>> {
+    return this.request<Historico>(`/historico/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(historico),
+    });
+  }
+
   // ============================================
   // PAGAMENTOS CRUD
   // ============================================

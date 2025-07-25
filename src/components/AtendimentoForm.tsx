@@ -66,32 +66,25 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     if (!agendaId) return;
     
     try {
-      const { data, error } = await databaseClient
-        .from('agenda')
-        .select(`
-          *,
-          clientes!agenda_cliente_id_fkey(nome, email, cpf, foto_url),
-          consultores!agenda_consultor_id_fkey(nome),
-          servicos!agenda_servico_id_fkey(nome, preco)
-        `)
-        .eq('id', agendaId)
-        .maybeSingle();
+      const response = await databaseClient.getAgendaById(agendaId);
 
-      if (error) {
-        throw error;
+      if (!response.success) {
+        throw new Error(response.error);
       }
 
-      if (data) {
+      if (response.data) {
+        const data = response.data;
         const agendaFormatada = {
           ...data,
-          cliente_nome: data.clientes?.nome || '',
-          cliente_email: data.clientes?.email || '',
-          cliente_cpf: data.clientes?.cpf || '',
-          cliente_data_nascimento: '', // Seria necessário adicionar na tabela clientes
-          consultor_nome: data.consultores?.nome || '',
-          servico_nome: data.servicos?.nome || '',
+          id: data.id || 0,
+          cliente_nome: (data as any).cliente_nome || '',
+          cliente_email: (data as any).cliente_email || '',
+          cliente_cpf: (data as any).cliente_cpf || '',
+          cliente_data_nascimento: '',
+          consultor_nome: (data as any).consultor_nome || '',
+          servico_nome: (data as any).servico_nome || '',
         };
-        setAgenda(agendaFormatada);
+        setAgenda(agendaFormatada as any);
         setValorFinal(data.valor_servico || 0);
       }
     } catch (error) {
@@ -110,22 +103,14 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     if (!atendimentoId) return;
     
     try {
-      const { data, error } = await databaseClient
-        .from('historico')
-        .select(`
-          *,
-          clientes!fk_historico_cliente(nome, email, cpf),
-          consultores!fk_historico_consultor(nome),
-          servicos!fk_historico_servico(nome)
-        `)
-        .eq('id', atendimentoId)
-        .maybeSingle();
+      const response = await databaseClient.getHistoricoById(atendimentoId);
 
-      if (error) {
-        throw error;
+      if (!response.success) {
+        throw new Error(response.error);
       }
 
-      if (data) {
+      if (response.data) {
+        const data = response.data;
         setAtendimento(data);
         
         // Preencher campos do formulário com dados existentes
@@ -133,7 +118,7 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
         setProcedimentosRealizados(data.procedimentos_realizados || "");
         setObservacoesAtendimento(data.observacoes_atendimento || "");
         setValorFinal(data.valor_final || data.valor_servico || 0);
-        setFotosUrls(data.fotos_urls || []);
+        setFotosUrls((data as any).fotos_urls || []);
 
         // Criar objeto agenda para compatibilidade
         const agendaSimulada = {
@@ -141,12 +126,12 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
           cliente_id: data.cliente_id,
           consultor_id: data.consultor_id,
           servico_id: data.servico_id,
-          cliente_nome: data.clientes?.nome || '',
-          cliente_email: data.clientes?.email || '',
-          cliente_cpf: data.clientes?.cpf || '',
+          cliente_nome: (data as any).cliente_nome || '',
+          cliente_email: (data as any).cliente_email || '',
+          cliente_cpf: (data as any).cliente_cpf || '',
           cliente_data_nascimento: '',
-          consultor_nome: data.consultores?.nome || '',
-          servico_nome: data.servicos?.nome || '',
+          consultor_nome: (data as any).consultor_nome || '',
+          servico_nome: (data as any).servico_nome || '',
           data_agendamento: data.data_agendamento || '',
           valor_servico: data.valor_servico,
           comissao_consultor: data.comissao_consultor,
@@ -218,16 +203,13 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
     try {
       if (isEditing && atendimentoId) {
         // Atualizar atendimento existente
-        await databaseClient
-          .from('historico')
-          .update({
-            data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
-            valor_final: valorFinal,
-            procedimentos_realizados: procedimentosRealizados,
-            observacoes_atendimento: observacoesAtendimento,
-            fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
-          })
-          .eq('id', atendimentoId);
+        await databaseClient.updateHistorico(atendimentoId, {
+          data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
+          valor_final: valorFinal,
+          procedimentos_realizados: procedimentosRealizados,
+          observacoes_atendimento: observacoesAtendimento,
+          fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
+        });
 
         // Update completed successfully
 
@@ -237,33 +219,28 @@ export const AtendimentoForm = ({ agendaId, atendimentoId, onCancel, onSuccess }
         });
       } else {
         // Criar novo atendimento
-        const { error } = await databaseClient
-          .from('historico')
-          .insert({
-            agenda_id: agendaId!,
-            cliente_id: agenda.cliente_id,
-            consultor_id: agenda.consultor_id,
-            servico_id: agenda.servico_id,
-            data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
-            data_agendamento: agenda.data_agendamento,
-            valor_servico: agenda.valor_servico,
-            valor_final: valorFinal,
-            comissao_consultor: agenda.comissao_consultor,
-            forma_pagamento: null,
-            procedimentos_realizados: procedimentosRealizados,
-            observacoes_atendimento: observacoesAtendimento,
-            fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
-          });
+        const response = await databaseClient.createHistorico({
+          agenda_id: agendaId!,
+          cliente_id: agenda.cliente_id,
+          consultor_id: agenda.consultor_id,
+          servico_id: agenda.servico_id,
+          data_atendimento: format(dataAtendimento, 'yyyy-MM-dd HH:mm:ss'),
+          data_agendamento: agenda.data_agendamento,
+          valor_servico: agenda.valor_servico,
+          valor_final: valorFinal,
+          comissao_consultor: agenda.comissao_consultor,
+          forma_pagamento: null,
+          procedimentos_realizados: procedimentosRealizados,
+          observacoes_atendimento: observacoesAtendimento,
+          fotos_urls: fotosUrls.length > 0 ? fotosUrls : null
+        });
 
-        if (error) {
-          throw error;
+        if (!response.success) {
+          throw new Error(response.error);
         }
 
         // Marcar o agendamento como concluído apenas para novos atendimentos
-        await databaseClient
-          .from('agenda')
-          .update({ status: 'concluido' })
-          .eq('id', agendaId);
+        await databaseClient.updateAgenda(agendaId!, { status: 'concluido' });
 
         toast({
           title: "Sucesso",

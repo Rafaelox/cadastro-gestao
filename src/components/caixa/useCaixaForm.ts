@@ -28,19 +28,15 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
 
   const loadData = async () => {
     try {
-      const [formasData, consultoresData, servicosData] = await Promise.all([
-        databaseClient.from('formas_pagamento').select('*').eq('ativo', true).order('ordem'),
-        databaseClient.from('consultores').select('id, nome').eq('ativo', true).order('nome'),
-        databaseClient.from('servicos').select('id, nome, preco').eq('ativo', true).order('nome')
+      const [formasRes, consultoresRes, servicosRes] = await Promise.all([
+        databaseClient.getFormasPagamento(),
+        databaseClient.getConsultores(),
+        databaseClient.getServicos()
       ]);
 
-      if (formasData.error) throw formasData.error;
-      if (consultoresData.error) throw consultoresData.error;
-      if (servicosData.error) throw servicosData.error;
-
-      setFormasPagamento(formasData.data || []);
-      setConsultores(consultoresData.data || []);
-      setServicos(servicosData.data || []);
+      setFormasPagamento(formasRes.success ? formasRes.data || [] : []);
+      setConsultores(consultoresRes.success ? consultoresRes.data || [] : []);
+      setServicos(servicosRes.success ? servicosRes.data || [] : []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast({

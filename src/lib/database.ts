@@ -441,10 +441,10 @@ export const buscarCep = async (cep: string) => {
     
     return {
       cep: data.cep,
-      endereco: data.logradouro,
+      logradouro: data.logradouro,
       bairro: data.bairro,
-      cidade: data.localidade,
-      estado: data.uf
+      localidade: data.localidade,
+      uf: data.uf
     };
   } catch (error) {
     throw new Error('Erro ao buscar CEP');

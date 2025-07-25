@@ -9,7 +9,7 @@ import { databaseClient } from "@/lib/database-client";
 import { cn } from "@/lib/utils";
 
 interface Cliente {
-  id: number;
+  id?: number;
   nome: string;
   cpf?: string;
   telefone?: string;
@@ -52,17 +52,10 @@ export const ClienteSearch = ({
 
   const loadClienteById = async (clienteId: number) => {
     try {
-      const { data, error } = await databaseClient
-        .from('clientes')
-        .select('id, nome, cpf, telefone, email')
-        .eq('id', clienteId)
-        .eq('ativo', true)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        setSelectedCliente(data);
-        setSearchTerm(data.nome);
+      const response = await databaseClient.getClienteById(clienteId);
+      if (response.success && response.data) {
+        setSelectedCliente(response.data);
+        setSearchTerm(response.data.nome);
       }
     } catch (error) {
       console.error('Erro ao carregar cliente:', error);
@@ -72,17 +65,14 @@ export const ClienteSearch = ({
   const searchClientes = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await databaseClient
-        .from('clientes')
-        .select('id, nome, cpf, telefone, email')
-        .eq('ativo', true)
-        .or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%,telefone.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
-        .order('nome')
-        .limit(10);
-
-      if (error) throw error;
-      setClientes(data || []);
-      setShowResults(true);
+      const response = await databaseClient.getClientes({
+        nome: searchTerm,
+        ativo: true
+      });
+      if (response.success && response.data) {
+        setClientes(response.data);
+        setShowResults(true);
+      }
     } catch (error) {
       console.error('Erro ao pesquisar clientes:', error);
       setClientes([]);
