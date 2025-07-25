@@ -417,6 +417,162 @@ class DatabaseClient {
       return { success: false, data: null, error: 'Erro ao criar recibo' };
     }
   }
+
+  // Audit Logs
+  async getAuditLogs(filters?: any): Promise<ApiResponse<any[]>> {
+    try {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) params.append(key, filters[key]);
+        });
+      }
+      const url = params.toString() ? `/api/audit_logs?${params.toString()}` : '/api/audit_logs';
+      const response = await this.request<any[]>(url);
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar audit logs:', error);
+      return { success: false, data: [], error: 'Erro ao buscar audit logs' };
+    }
+  }
+
+  // Comissões
+  async getComissoes(filters?: any): Promise<ApiResponse<any[]>> {
+    try {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) params.append(key, filters[key]);
+        });
+      }
+      const url = params.toString() ? `/api/comissoes?${params.toString()}` : '/api/comissoes';
+      const response = await this.request<any[]>(url);
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar comissões:', error);
+      return { success: false, data: [], error: 'Erro ao buscar comissões' };
+    }
+  }
+
+  // Configurações Empresa
+  async getConfiguracaoEmpresa(): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<any>('/api/configuracao/empresa');
+      return response.success ? { success: true, data: response.data } : { success: false, data: null, error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar configuração empresa:', error);
+      return { success: false, data: null, error: 'Erro ao buscar configuração empresa' };
+    }
+  }
+
+  async createConfiguracaoEmpresa(config: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/configuracao/empresa', {
+        method: 'POST',
+        body: JSON.stringify(config),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao criar configuração empresa:', error);
+      return { success: false, data: null, error: 'Erro ao criar configuração empresa' };
+    }
+  }
+
+  async updateConfiguracaoEmpresa(id: number, config: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>(`/api/configuracao/empresa/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(config),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao atualizar configuração empresa:', error);
+      return { success: false, data: null, error: 'Erro ao atualizar configuração empresa' };
+    }
+  }
+
+  // File Upload
+  async uploadFile(file: File, bucket: string = 'uploads'): Promise<{path: string; url: string}> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', bucket);
+    
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${this.baseUrl}/api/storage/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro no upload do arquivo');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  async getPublicUrl(path: string, bucket: string = 'uploads'): Promise<string> {
+    return `${this.baseUrl}/api/storage/${bucket}/${path}`;
+  }
+
+  // RPC Functions
+  async rpc(functionName: string, params?: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/rpc', {
+        method: 'POST',
+        body: JSON.stringify({ function: functionName, params }),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao executar RPC:', error);
+      return { success: false, data: null, error: 'Erro ao executar RPC' };
+    }
+  }
+
+  // Tipos Recibo
+  async getTiposRecibo(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await this.request<any[]>('/api/tipos-recibo');
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar tipos recibo:', error);
+      return { success: false, data: [], error: 'Erro ao buscar tipos recibo' };
+    }
+  }
+
+  // Parcelas
+  async getParcelas(filters?: any): Promise<ApiResponse<any[]>> {
+    try {
+      const params = new URLSearchParams();
+      if (filters) {
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) params.append(key, filters[key]);
+        });
+      }
+      const url = params.toString() ? `/api/parcelas?${params.toString()}` : '/api/parcelas';
+      const response = await this.request<any[]>(url);
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar parcelas:', error);
+      return { success: false, data: [], error: 'Erro ao buscar parcelas' };
+    }
+  }
+
+  async createParcela(parcela: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/parcelas', {
+        method: 'POST',
+        body: JSON.stringify(parcela),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao criar parcela:', error);
+      return { success: false, data: null, error: 'Erro ao criar parcela' };
+    }
+  }
 }
 
 export const databaseClient = new DatabaseClient();

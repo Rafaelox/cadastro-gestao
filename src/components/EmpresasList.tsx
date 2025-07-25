@@ -21,10 +21,7 @@ export function EmpresasList({ onEdit, onAdd, refreshKey }: EmpresasListProps) {
   const loadEmpresas = async () => {
     try {
       setLoading(true);
-      const { data, error } = await databaseClient
-        .from('configuracoes_empresa')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await databaseClient.getConfiguracaoEmpresa();
 
       if (error) throw error;
       setEmpresas((data as ConfiguracaoEmpresa[]) || []);
@@ -42,10 +39,7 @@ export function EmpresasList({ onEdit, onAdd, refreshKey }: EmpresasListProps) {
 
   const toggleAtivo = async (id: number, ativo: boolean) => {
     try {
-      const result = await databaseClient
-        .from('configuracoes_empresa')
-        .update({ ativo: !ativo })
-        .eq('id', id);
+      const result = await databaseClient.updateConfiguracaoEmpresa(id, { ativo: !ativo });
 
       // Result is void for updates in mock client
 

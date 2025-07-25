@@ -76,11 +76,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
 
   const loadConfiguracao = async () => {
     try {
-      const { data, error } = await databaseClient
-        .from('configuracoes_empresa')
-        .select('*')
-        .eq('ativo', true)
-        .maybeSingle();
+      const { data, error } = await databaseClient.getConfiguracaoEmpresa();
 
       if (error) throw error;
 
@@ -117,11 +113,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       if (configuracao) {
         // Atualizar configuração existente
         console.log('Atualizando configuração existente com ID:', configuracao.id);
-        const { data: result, error } = await databaseClient
-          .from('configuracoes_empresa')
-          .update(data)
-          .eq('id', configuracao.id)
-          .select();
+        const { data: result, error } = await databaseClient.updateConfiguracaoEmpresa(configuracao.id, data);
 
         console.log('Resultado da atualização:', result);
         if (error) {
@@ -152,10 +144,7 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
         };
         
         console.log('Inserindo nova configuração:', insertData);
-        const { data: result, error } = await databaseClient
-          .from('configuracoes_empresa')
-          .insert(insertData)
-          .select();
+        const { data: result, error } = await databaseClient.createConfiguracaoEmpresa(insertData);
 
         console.log('Resultado da inserção:', result);
         if (error) {
@@ -200,17 +189,10 @@ export function ConfiguracaoEmpresaForm({ empresaData, onSuccess }: Configuracao
       const fileExt = file.name.split('.').pop();
       const fileName = `logo-${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await databaseClient.storage
-        .from('cliente-documentos')
-        .upload(fileName, file);
+      const uploadResult = await databaseClient.uploadFile(file, 'cliente-documentos');
+      const publicUrl = await databaseClient.getPublicUrl(uploadResult.path, 'cliente-documentos');
 
-      if (uploadError) throw uploadError;
-
-      const { data } = databaseClient.storage
-        .from('cliente-documentos')
-        .getPublicUrl(fileName);
-
-      form.setValue('logo_url', data.publicUrl);
+      form.setValue('logo_url', publicUrl);
       
       toast({
         title: 'Sucesso',

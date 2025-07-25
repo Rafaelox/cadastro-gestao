@@ -77,24 +77,10 @@ export function ReciboForm() {
       console.log('Iniciando carregamento de dados...');
       
       const [tiposResult, clientesResult, consultoresResult, pagamentosResult] = await Promise.all([
-        databaseClient.from('tipos_recibo').select('*').eq('ativo', true),
-        databaseClient.from('clientes').select('id, nome').eq('ativo', true),
-        databaseClient.from('consultores').select('id, nome').eq('ativo', true),
-        databaseClient.from('pagamentos').select(`
-          id, 
-          valor, 
-          valor_original, 
-          cliente_id, 
-          consultor_id, 
-          data_pagamento,
-          parcelas (
-            id,
-            numero_parcela,
-            valor_parcela,
-            data_vencimento,
-            status
-          )
-        `),
+        databaseClient.getTiposRecibo(),
+        databaseClient.getClientes(),
+        databaseClient.getConsultores(),
+        databaseClient.getPagamentos()
       ]);
 
       console.log('Tipos de recibo carregados:', tiposResult);
@@ -109,8 +95,8 @@ export function ReciboForm() {
         setTiposRecibo(tiposResult.data as TipoRecibo[]);
       }
 
-      if (clientesResult.data) setClientes(clientesResult.data);
-      if (consultoresResult.data) setConsultores(consultoresResult.data);
+      if (clientesResult.data) setClientes(clientesResult.data as any[]);
+      if (consultoresResult.data) setConsultores(consultoresResult.data as any[]);
       if (pagamentosResult.data) setPagamentos(pagamentosResult.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -126,8 +112,7 @@ export function ReciboForm() {
     setLoading(true);
     try {
       // Buscar dados da empresa ativa usando a função do banco
-      const { data: empresaResult, error: empresaError } = await databaseClient
-        .rpc('get_empresa_ativa');
+      const { data: empresaResult, error: empresaError } = await databaseClient.rpc('get_empresa_ativa', {});
 
       if (empresaError) throw empresaError;
 
@@ -144,15 +129,11 @@ export function ReciboForm() {
       console.log('Empresa ativa encontrada:', empresa);
 
       // Buscar dados do cliente
-      const { data: cliente } = await databaseClient
-        .from('clientes')
-        .select('*')
-        .eq('id', data.cliente_id)
-        .single();
+      const clienteResult = await databaseClient.getClientes();
+      const cliente = clienteResult.data?.find((c: any) => c.id === data.cliente_id);
 
       // Gerar número do recibo
-      const { data: numeroRecibo } = await databaseClient
-        .rpc('generate_numero_recibo');
+      const { data: numeroRecibo } = await databaseClient.rpc('generate_numero_recibo', {});
 
       // Criar recibo
       const reciboData = {
@@ -168,17 +149,13 @@ export function ReciboForm() {
         dados_cliente: cliente,
       };
 
-      const { data: recibo, error } = await databaseClient
-        .from('recibos')
-        .insert(reciboData)
-        .select()
-        .single();
+      const { data: recibo, error } = await databaseClient.createRecibo(reciboData);
 
       if (error) throw error;
 
       toast({
         title: 'Sucesso',
-        description: `Recibo ${numeroRecibo} gerado com sucesso`,
+        description: `Recibo ${numeroRecibo.data || 'novo'} gerado com sucesso`,
       });
 
       // Resetar formulário
@@ -203,11 +180,7 @@ export function ReciboForm() {
       // Buscar informações das parcelas se houver pagamento associado
       let parcelasInfo = null;
       if (recibo.pagamento_id) {
-        const { data: parcelas } = await databaseClient
-          .from('parcelas')
-          .select('*')
-          .eq('pagamento_id', recibo.pagamento_id)
-          .order('numero_parcela');
+        const { data: parcelas } = await databaseClient.getParcelas({ pagamento_id: recibo.pagamento_id });
         
         if (parcelas && parcelas.length > 0) {
           parcelasInfo = parcelas;
@@ -331,7 +304,7 @@ export function ReciboForm() {
                       <div key={parcela.id} className="text-xs p-2 bg-background rounded border">
                         <span className="font-medium">Parcela {parcela.numero_parcela}:</span> R$ {parcela.valor_parcela.toFixed(2).replace('.', ',')} - 
                         Vencimento: {new Date(parcela.data_vencimento).toLocaleDateString('pt-BR')} - 
-                        Status: <span className={`capitalize ${parcela.status === 'pago' ? 'text-green-600' : 'text-orange-600'}`}>
+                         Status: <span className={`capitalize ${parcela.status === 'pago' ? 'text-green-600' : 'text-orange-600'}`}>
                           {parcela.status}
                         </span>
                       </div>

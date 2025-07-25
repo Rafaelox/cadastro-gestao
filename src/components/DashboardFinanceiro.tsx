@@ -46,17 +46,10 @@ export const DashboardFinanceiro = () => {
     setIsLoading(true);
     try {
       // Buscar dados de pagamentos
-      const { data: pagamentos, error: pagamentosError } = await databaseClient
-        .from('pagamentos')
-        .select(`
-          *,
-          clientes!cliente_id (nome),
-          consultores!consultor_id (nome),
-          servicos!servico_id (nome),
-          formas_pagamento!forma_pagamento_id (nome)
-        `)
-        .gte('data_pagamento', format(dataInicio, 'yyyy-MM-dd 00:00:00'))
-        .lte('data_pagamento', format(dataFim, 'yyyy-MM-dd 23:59:59'));
+      const { data: pagamentos, error: pagamentosError } = await databaseClient.getPagamentos({
+        data_inicio: format(dataInicio, 'yyyy-MM-dd'),
+        data_fim: format(dataFim, 'yyyy-MM-dd')
+      });
 
       if (pagamentosError) throw pagamentosError;
 
@@ -278,10 +271,10 @@ export const DashboardFinanceiro = () => {
                 <div className="flex items-center space-x-2">
                   <DollarSign className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Saldo do Período</p>
-                    <p className={`text-2xl font-bold ${dashboardData.saldoMensal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      R$ {dashboardData.saldoMensal.toFixed(2)}
-                    </p>
+                      <p className="text-sm font-medium text-muted-foreground">Saldo do Período</p>
+                      <p className={`text-2xl font-bold ${dashboardData.saldoMensal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        R$ {dashboardData.saldoMensal.toFixed(2)}
+                      </p>
                   </div>
                 </div>
               </CardContent>

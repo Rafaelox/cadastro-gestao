@@ -50,14 +50,10 @@ export const ComissaoExtrato = () => {
 
   const loadConsultores = async () => {
     try {
-      const { data, error } = await databaseClient
-        .from('consultores')
-        .select('id, nome, percentual_comissao')
-        .eq('ativo', true)
-        .order('nome');
+      const { data, error } = await databaseClient.getConsultores();
 
       if (error) throw error;
-      setConsultores(data || []);
+      setConsultores((data || []).filter((c: any) => c.ativo) as any[]);
     } catch (error) {
       console.error('Erro ao carregar consultores:', error);
       toast({
@@ -73,13 +69,11 @@ export const ComissaoExtrato = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await databaseClient
-        .from('comissoes')
-        .select('*')
-        .eq('consultor_id', consultorSelecionado.id)
-        .gte('data_operacao', format(dataInicio, 'yyyy-MM-dd 00:00:00'))
-        .lte('data_operacao', format(dataFim, 'yyyy-MM-dd 23:59:59'))
-        .order('data_operacao', { ascending: false });
+      const { data, error } = await databaseClient.getComissoes({
+        consultor_id: consultorSelecionado.id,
+        data_inicio: format(dataInicio, 'yyyy-MM-dd 00:00:00'),
+        data_fim: format(dataFim, 'yyyy-MM-dd 23:59:59')
+      });
 
       if (error) throw error;
       

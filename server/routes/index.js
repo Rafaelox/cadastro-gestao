@@ -10,6 +10,8 @@ const configuracaoRoutes = require('./configuracao');
 const authRoutes = require('./auth');
 const usuariosRoutes = require('./usuarios');
 const recibosRoutes = require('./recibos');
+const auditLogsRoutes = require('./audit_logs');
+const comissoesRoutes = require('./comissoes');
 
 // Use routes
 router.use('/auth', authRoutes);
@@ -20,6 +22,8 @@ router.use('/pagamentos', pagamentosRoutes);
 router.use('/configuracao', configuracaoRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/recibos', recibosRoutes);
+router.use('/audit_logs', auditLogsRoutes);
+router.use('/comissoes', comissoesRoutes);
 
 // Test route
 router.get('/test', (req, res) => {

@@ -57,28 +57,15 @@ export const AuditLogs = () => {
   const loadLogs = async () => {
     setIsLoading(true);
     try {
-      let query = databaseClient
-        .from('audit_logs')
-        .select('*')
-        .gte('created_at', `${filters.dataInicio} 00:00:00`)
-        .lte('created_at', `${filters.dataFim} 23:59:59`)
-        .order('created_at', { ascending: false });
+      const { data, error } = await databaseClient.getAuditLogs({
+        dataInicio: filters.dataInicio,
+        dataFim: filters.dataFim,
+        tabela: filters.tabela,
+        operacao: filters.operacao,
+        usuario: filters.usuario
+      });
 
-      if (filters.tabela) {
-        query = query.eq('table_name', filters.tabela);
-      }
-
-      if (filters.operacao) {
-        query = query.eq('operation', filters.operacao);
-      }
-
-      if (filters.usuario) {
-        query = query.ilike('user_email', `%${filters.usuario}%`);
-      }
-
-      const { data, error } = await query.limit(100);
-
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const formattedLogs: AuditLog[] = (data || []).map(item => ({
         id: item.id,

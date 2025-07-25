@@ -74,13 +74,11 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
       const valorPorParcela = valorOriginal / numeroParcelas;
 
       // Inserir o pagamento principal
-      const { data: pagamentoData, error: pagamentoError } = await databaseClient
-        .from('pagamentos')
-        .insert({
-          atendimento_id: atendimentoId || 0,
-          cliente_id: selectedCliente.id,
-          consultor_id: parseInt(consultorId),
-          servico_id: parseInt(servicoId),
+      const { data: pagamentoData, error: pagamentoError } = await databaseClient.createPagamento({
+        atendimento_id: atendimentoId || 0,
+        cliente_id: selectedCliente.id,
+        consultor_id: parseInt(consultorId),
+        servico_id: parseInt(servicoId),
           forma_pagamento_id: parseInt(formaPagamentoId),
           valor: valorPorParcela, // Valor da primeira parcela
           valor_original: valorOriginal,
@@ -109,20 +107,18 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
           });
         }
 
-        const { error: parcelasError } = await databaseClient
-          .from('parcelas')
-          .insert(parcelas);
-
-        if (parcelasError) throw parcelasError;
+        // Inserir cada parcela individualmente
+        for (const parcela of parcelas) {
+          const { error: parcelaError } = await databaseClient.createParcela(parcela);
+          if (parcelaError) throw parcelaError;
+        }
       } else {
         // Criar uma única parcela para pagamento à vista
-        const { error: parcelaError } = await databaseClient
-          .from('parcelas')
-          .insert({
-            pagamento_id: pagamentoData.id,
-            numero_parcela: 1,
-            valor_parcela: valorOriginal,
-            data_vencimento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
+        const { error: parcelaError } = await databaseClient.createParcela({
+          pagamento_id: pagamentoData.id,
+          numero_parcela: 1,
+          valor_parcela: valorOriginal,
+          data_vencimento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
             data_pagamento: format(dataPagamento, 'yyyy-MM-dd HH:mm:ss'),
             status: 'pago'
           });

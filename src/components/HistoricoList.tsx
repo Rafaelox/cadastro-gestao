@@ -87,9 +87,9 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const loadFilterData = async () => {
     try {
       const [consultoresRes, servicosRes, clientesRes] = await Promise.all([
-        databaseClient.from('consultores').select('id, nome').eq('ativo', true),
-        databaseClient.from('servicos').select('id, nome').eq('ativo', true),
-        databaseClient.from('clientes').select('id, nome').eq('ativo', true)
+        databaseClient.getConsultores(),
+        databaseClient.getServicos(),
+        databaseClient.getClientes()
       ]);
 
       setConsultores(consultoresRes.data || []);
@@ -139,10 +139,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
   const handleExcluirAtendimento = async (atendimentoId: number) => {
     if (window.confirm("Tem certeza que deseja excluir este atendimento?")) {
       try {
-        await databaseClient
-          .from('historico')
-          .delete()
-          .eq('id', atendimentoId);
+        const { error } = await databaseClient.updateHistorico(atendimentoId, { ativo: false });
 
         // Delete completed successfully
 
