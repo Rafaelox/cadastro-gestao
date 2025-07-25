@@ -333,10 +333,89 @@ class DatabaseClient {
   }
 
   async createPagamento(pagamento: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/pagamentos', {
-      method: 'POST',
-      body: JSON.stringify(pagamento),
-    });
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/pagamentos', {
+        method: 'POST',
+        body: JSON.stringify(pagamento),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao criar pagamento:', error);
+      return { success: false, data: null, error: 'Erro ao criar pagamento' };
+    }
+  }
+
+  // Usuários
+  async getUsuarios(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await this.request<any[]>('/api/usuarios');
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+      return { success: false, data: [], error: 'Erro ao buscar usuários' };
+    }
+  }
+
+  async createUsuario(usuario: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/usuarios', {
+        method: 'POST',
+        body: JSON.stringify(usuario),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      return { success: false, data: null, error: 'Erro ao criar usuário' };
+    }
+  }
+
+  async updateUsuario(id: number, usuario: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>(`/api/usuarios/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(usuario),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      return { success: false, data: null, error: 'Erro ao atualizar usuário' };
+    }
+  }
+
+  async deleteUsuario(id: number): Promise<ApiResponse<void>> {
+    try {
+      await this.request<void>(`/api/usuarios/${id}`, {
+        method: 'DELETE',
+      });
+      return { success: true, data: undefined };
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+      return { success: false, data: undefined, error: 'Erro ao deletar usuário' };
+    }
+  }
+
+  // Recibos
+  async getRecibos(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await this.request<any[]>('/api/recibos');
+      return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
+    } catch (error) {
+      console.error('Erro ao buscar recibos:', error);
+      return { success: false, data: [], error: 'Erro ao buscar recibos' };
+    }
+  }
+
+  async createRecibo(recibo: any): Promise<ApiResponse<any>> {
+    try {
+      const response = await this.request<{success: boolean, data: any}>('/api/recibos', {
+        method: 'POST',
+        body: JSON.stringify(recibo),
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erro ao criar recibo:', error);
+      return { success: false, data: null, error: 'Erro ao criar recibo' };
+    }
   }
 }
 

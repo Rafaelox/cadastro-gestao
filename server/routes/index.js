@@ -8,6 +8,8 @@ const historicoRoutes = require('./historico');
 const pagamentosRoutes = require('./pagamentos');
 const configuracaoRoutes = require('./configuracao');
 const authRoutes = require('./auth');
+const usuariosRoutes = require('./usuarios');
+const recibosRoutes = require('./recibos');
 
 // Use routes
 router.use('/auth', authRoutes);
@@ -16,6 +18,8 @@ router.use('/agenda', agendaRoutes);
 router.use('/historico', historicoRoutes);
 router.use('/pagamentos', pagamentosRoutes);
 router.use('/configuracao', configuracaoRoutes);
+router.use('/usuarios', usuariosRoutes);
+router.use('/recibos', recibosRoutes);
 
 // Test route
 router.get('/test', (req, res) => {
