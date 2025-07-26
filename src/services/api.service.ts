@@ -27,6 +27,17 @@ class ApiService {
     return response.json();
   }
 
+  // Método para testar conectividade sem autenticação
+  async testConnection(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/test`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   // Clientes
   async getClientes(filters?: any) {
     return this.request('/clientes', {

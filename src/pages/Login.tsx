@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { Lock, User, Mail } from 'lucide-react';
+import { Lock, User, Mail, TestTube } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { apiService } from '@/services/api.service';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -88,6 +89,24 @@ export const Login = () => {
       });
     } finally {
       setIsRecovering(false);
+    }
+  };
+
+  const testApiConnection = async () => {
+    try {
+      const result = await apiService.testConnection();
+      toast({
+        title: "API conectada!",
+        description: `Resposta: ${result.message || 'Conectividade OK'}`,
+      });
+      console.log('Teste da API:', result);
+    } catch (error: any) {
+      toast({
+        title: "Erro na API",
+        description: `Falha na conexão: ${error.message}`,
+        variant: "destructive",
+      });
+      console.error('Erro no teste da API:', error);
     }
   };
 
@@ -201,6 +220,19 @@ export const Login = () => {
               <strong>Sistema de Autenticação Seguro</strong><br />
               Entre em contato com o administrador para obter suas credenciais de acesso.
             </p>
+            
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={testApiConnection}
+                className="w-full flex items-center gap-2"
+              >
+                <TestTube className="h-4 w-4" />
+                Testar Conectividade API
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
