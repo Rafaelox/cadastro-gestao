@@ -31,7 +31,7 @@ class ApiService {
   async testConnection(): Promise<any> {
     const url = `${this.baseUrl}/test`;
     console.log('🔍 Testando API em:', url);
-    console.log('🔍 Base URL configurada:', this.baseUrl);
+    console.log('🔍 URL base configurada:', this.baseUrl);
     
     try {
       const response = await fetch(url);
@@ -57,7 +57,7 @@ class ApiService {
         return jsonData;
       } catch (parseError) {
         console.error('❌ Erro ao fazer parse do JSON:', parseError);
-        throw new Error(`Resposta não é um JSON válido. Conteúdo recebido: "${responseText.substring(0, 200)}..."`);
+        throw new Error(`A resposta não é um JSON válido. Conteúdo recebido: "${responseText.substring(0, 200)}..."`);
       }
     } catch (networkError: any) {
       console.error('❌ Erro de rede:', networkError);

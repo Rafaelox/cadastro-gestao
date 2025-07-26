@@ -25,22 +25,22 @@ router.use('/recibos', recibosRoutes);
 router.use('/audit_logs', auditLogsRoutes);
 router.use('/comissoes', comissoesRoutes);
 
-// Test route
+// Rota de teste
 router.get('/test', (req, res) => {
   console.log('🧪 Rota /test chamada');
   res.json({ 
     message: 'API funcionando!', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    server: 'PostgreSQL Backend'
+    server: 'Backend PostgreSQL'
   });
 });
 
-// Diagnostic route
+// Rota de diagnóstico
 router.get('/diagnostic', async (req, res) => {
   console.log('🔍 Rota /diagnostic chamada');
   try {
-    // Test database connection
+    // Testar conexão com banco de dados
     const { Pool } = require('pg');
     const pool = new Pool({
       host: process.env.DB_HOST || 'localhost',
@@ -56,25 +56,25 @@ router.get('/diagnostic', async (req, res) => {
     res.json({
       status: 'OK',
       timestamp: new Date().toISOString(),
-      server: 'PostgreSQL Backend',
-      environment: process.env.NODE_ENV || 'development',
-      database: {
-        status: 'connected',
+      server: 'Backend PostgreSQL',
+      ambiente: process.env.NODE_ENV || 'development',
+      banco_dados: {
+        status: 'conectado',
         host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || '5432',
+        porta: process.env.DB_PORT || '5432',
         database: process.env.DB_NAME || 'InfoDB'
       },
-      routes: ['/test', '/diagnostic', '/health']
+      rotas_disponiveis: ['/test', '/diagnostic', '/health']
     });
   } catch (error) {
     console.error('❌ Erro no diagnóstico:', error);
     res.status(500).json({
-      status: 'ERROR',
+      status: 'ERRO',
       timestamp: new Date().toISOString(),
-      error: error.message,
-      database: {
-        status: 'error',
-        error: error.message
+      erro: error.message,
+      banco_dados: {
+        status: 'erro',
+        erro: error.message
       }
     });
   }
