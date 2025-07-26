@@ -1,39 +1,43 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { BottomNavigation } from "@/components/mobile/BottomNavigation";
-import { Header } from "@/components/Header";
-import { Navigation } from "@/components/Navigation";
-import Index from "./pages/Index";
-import { Login } from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import { DashboardPage } from "./pages/DashboardPage";
-import { AgendaPage } from "./pages/AgendaPage";
-import { ClientesPage } from "./pages/ClientesPage";
-import { AtendimentosPage } from "./pages/AtendimentosPage";
-import { CaixaPage } from "./pages/CaixaPage";
-import RecibosPage from "./pages/RecibosPage";
-import PermissoesPage from "./pages/PermissoesPage";
-import { ComunicacaoPage } from "./pages/ComunicacaoPage";
-import { MarketingPage } from "./pages/MarketingPage";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/toaster';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Layout } from '@/components/Layout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
-const queryClient = new QueryClient();
+// Page imports
+import Index from '@/pages/Index';
+import { AgendaPage } from '@/pages/AgendaPage';
+import { AtendimentosPage } from '@/pages/AtendimentosPage';
+import { CaixaPage } from '@/pages/CaixaPage';
+import { ClientesPage } from '@/pages/ClientesPage';
+import { ComunicacaoPage } from '@/pages/ComunicacaoPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { MarketingPage } from '@/pages/MarketingPage';
+import NotFound from '@/pages/NotFound';
+import PermissoesPage from '@/pages/PermissoesPage';
+import RecibosPage from '@/pages/RecibosPage';
+import { Login } from '@/pages/Login';
+import { useEffect, useState } from 'react';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutos
+    },
+  },
+});
 
 const AppContent = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Mapear rotas para tabs do Navigation
   useEffect(() => {
-    const routeToTab: Record<string, string> = {
+    // Map paths to tab names
+    const pathToTab: Record<string, string> = {
       '/': 'dashboard',
       '/agenda': 'agenda',
       '/clientes': 'clientes',
@@ -41,86 +45,81 @@ const AppContent = () => {
       '/caixa': 'caixa',
       '/comunicacao': 'comunicacao',
       '/marketing': 'marketing',
-      '/sistema': 'comissoes' // Default para /sistema
+      '/sistema': 'dashboard-financeiro',
+      '/permissoes': 'permissoes-pagina'
     };
-    const newTab = routeToTab[location.pathname] || 'dashboard';
-    setActiveTab(newTab);
+    
+    const tab = pathToTab[location.pathname] || 'dashboard';
+    setActiveTab(tab);
   }, [location.pathname]);
 
-  const showNavigation = isAuthenticated && location.pathname !== '/login';
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      {showNavigation ? (
-        <>
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <Header />
-            <div className="container mx-auto p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="lg:col-span-1">
-                  <Navigation activeTab={activeTab} onTabChange={(tab) => {
-                    setActiveTab(tab);
-                    // Mapear tabs para rotas
-                    const tabToRoute: Record<string, string> = {
-                      'dashboard': '/',
-                      'agenda': '/agenda',
-                      'clientes': '/clientes',
-                      'historico-diario': '/atendimentos',
-                      'caixa': '/caixa',
-                      'comunicacao': '/comunicacao',
-                      'marketing': '/marketing',
-                      'dashboard-financeiro': '/sistema',
-                      'relatorios': '/sistema',
-                      'comissoes': '/sistema',
-                      'categorias': '/sistema',
-                      'origens': '/sistema',
-                      'auditoria': '/sistema',
-                      'configuracoes': '/sistema'
-                    };
-                    const route = tabToRoute[tab];
-                    if (route && route !== location.pathname) {
-                      navigate(route);
-                    }
-                  }} />
-                </div>
-                <div className="lg:col-span-3">
-                  <Routes>
-                    <Route path="/" element={<DashboardPage />} />
-                    <Route path="/agenda" element={<AgendaPage />} />
-                    <Route path="/clientes" element={<ClientesPage />} />
-                    <Route path="/atendimentos" element={<AtendimentosPage />} />
-                    <Route path="/caixa" element={<CaixaPage />} />
-                    <Route path="/comunicacao" element={<ComunicacaoPage />} />
-                    <Route path="/marketing" element={<MarketingPage />} />
-                    <Route path="/recibos" element={<RecibosPage />} />
-                    <Route path="/sistema" element={<Index activeTab={activeTab} />} />
-                    <Route path="/permissoes" element={<PermissoesPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          <div className="md:hidden pb-20">
-            <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/agenda" element={<AgendaPage />} />
-              <Route path="/clientes" element={<ClientesPage />} />
-              <Route path="/atendimentos" element={<AtendimentosPage />} />
-              <Route path="/caixa" element={<CaixaPage />} />
-              <Route path="/comunicacao" element={<ComunicacaoPage />} />
-              <Route path="/marketing" element={<MarketingPage />} />
-              <Route path="/recibos" element={<RecibosPage />} />
-              <Route path="/sistema" element={<Index activeTab={activeTab} />} />
-              <Route path="/permissoes" element={<PermissoesPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <BottomNavigation />
-          </div>
-        </>
+    <div className="min-h-screen bg-background">
+      {isAuthenticated ? (
+        <Routes>
+          <Route path="/" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <DashboardPage />
+            </Layout>
+          } />
+          <Route path="/agenda" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <AgendaPage />
+            </Layout>
+          } />
+          <Route path="/clientes" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <ClientesPage />
+            </Layout>
+          } />
+          <Route path="/atendimentos" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <AtendimentosPage />
+            </Layout>
+          } />
+          <Route path="/caixa" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <CaixaPage />
+            </Layout>
+          } />
+          <Route path="/comunicacao" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <ComunicacaoPage />
+            </Layout>
+          } />
+          <Route path="/marketing" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <MarketingPage />
+            </Layout>
+          } />
+          <Route path="/recibos" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <RecibosPage />
+            </Layout>
+          } />
+          <Route path="/sistema" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+              <Index activeTab={activeTab} />
+            </Layout>
+          } />
+          <Route path="/permissoes" element={
+            <Layout activeTab={activeTab} onTabChange={setActiveTab} showNavigation={false}>
+              <PermissoesPage />
+            </Layout>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       ) : (
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -136,9 +135,10 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
-        <Sonner />
         <BrowserRouter>
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

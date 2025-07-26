@@ -66,8 +66,10 @@ export const SecuritySettings = () => {
         description: "Todas as sessões foram invalidadas. Você será redirecionado.",
       });
 
-      // Recarregar página após limpeza
+      // Forçar logout através do contexto de autenticação
       setTimeout(() => {
+        // Clear all storage and let React Router handle navigation
+        localStorage.clear();
         window.location.reload();
       }, 2000);
 

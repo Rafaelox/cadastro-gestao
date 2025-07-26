@@ -181,17 +181,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setUsuario(null);
       
-      // Redirecionar para home
-      window.location.href = '/';
+      // React Router irá automaticamente redirecionar para login quando não autenticado
     } catch (error) {
       console.error('Erro no logout:', error);
-      // Mesmo com erro, limpar estados e redirecionar
+      // Mesmo com erro, limpar estados 
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
       setUser(null);
       setSession(null);
       setUsuario(null);
-      window.location.href = '/';
     }
   };
 
