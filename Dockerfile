@@ -15,10 +15,6 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Copiar dependências do servidor
-COPY server/package*.json ./server/
-RUN cd server && npm ci --only=production
-
 # Copiar código do servidor
 COPY server/ ./server/
 

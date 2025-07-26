@@ -1,3 +1,13 @@
 {
-  "type": "commonjs"
+  "name": "server",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "pg": "^8.16.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^6.0.0"
+  }
 }
