@@ -3,7 +3,9 @@ class ApiService {
   private baseUrl: string;
 
   constructor() {
+    // Em desenvolvimento, usar proxy do Vite. Em produção, usar variável de ambiente
     this.baseUrl = import.meta.env.VITE_API_URL || '/api';
+    console.log('🔧 ApiService inicializado com baseUrl:', this.baseUrl);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
