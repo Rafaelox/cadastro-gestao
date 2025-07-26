@@ -4,6 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight, Shield, MessageSquare, Target } from "lucide-react";
 import { useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationProps {
   activeTab: string;
@@ -13,6 +14,7 @@ interface NavigationProps {
 export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { permissions } = usePermissions();
+  const navigate = useNavigate();
   
   const menuItems = [
     {
@@ -182,7 +184,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                   }`}
                   onClick={() => {
                     if (item.id === 'permissoes-pagina') {
-                      window.location.href = '/permissoes';
+                      navigate('/permissoes');
                     } else {
                       onTabChange(item.id);
                     }
