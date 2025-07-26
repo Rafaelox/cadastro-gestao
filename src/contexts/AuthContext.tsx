@@ -49,8 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log('AuthProvider estado atual:', { user: user?.email, session: !!session, isLoading });
-
   useEffect(() => {
     console.log('Iniciando configuração de auth PostgreSQL...');
     
