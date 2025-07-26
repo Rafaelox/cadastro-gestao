@@ -35,21 +35,30 @@ const AppContent = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  console.log('AppContent renderizado:', { 
+    isAuthenticated, 
+    isLoading, 
+    pathname: location.pathname 
+  });
+
   useEffect(() => {
+    console.log('Mapeando rota para tab:', location.pathname);
     // Map paths to tab names
     const pathToTab: Record<string, string> = {
       '/': 'dashboard',
-      '/agenda': 'agenda',
+      '/agenda': 'agenda', 
       '/clientes': 'clientes',
       '/atendimentos': 'historico-diario',
       '/caixa': 'caixa',
       '/comunicacao': 'comunicacao',
       '/marketing': 'marketing',
       '/sistema': 'dashboard-financeiro',
-      '/permissoes': 'permissoes-pagina'
+      '/permissoes': 'permissoes-pagina',
+      '/recibos': 'relatorios'
     };
     
     const tab = pathToTab[location.pathname] || 'dashboard';
+    console.log('Tab ativa definida para:', tab);
     setActiveTab(tab);
   }, [location.pathname]);
 

@@ -183,11 +183,8 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                       : "hover:bg-muted/50"
                   }`}
                   onClick={() => {
-                    if (item.id === 'permissoes-pagina') {
-                      navigate('/permissoes');
-                    } else {
-                      onTabChange(item.id);
-                    }
+                    // Usar sempre onTabChange para manter consistência
+                    onTabChange(item.id);
                   }}
                 >
                   <IconComponent className="w-4 h-4 mr-2" />
