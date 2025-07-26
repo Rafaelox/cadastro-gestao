@@ -13,7 +13,7 @@ const navigationItems: NavigationItem[] = [
   { icon: <Home className="h-5 w-5" />, label: 'Início', path: '/' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Agenda', path: '/agenda' },
   { icon: <Users className="h-5 w-5" />, label: 'Clientes', path: '/clientes' },
-  { icon: <FileText className="h-5 w-5" />, label: 'Histórico', path: '/historico' },
+  { icon: <FileText className="h-5 w-5" />, label: 'Histórico', path: '/atendimentos' },
   { icon: <CreditCard className="h-5 w-5" />, label: 'Caixa', path: '/caixa' },
 ];
 
