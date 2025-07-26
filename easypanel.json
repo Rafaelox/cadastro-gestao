@@ -37,8 +37,8 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "DB_HOST": "easypanel.rpedro.pro",
-    "DB_PORT": "4565",
+    "DB_HOST": "localhost",
+    "DB_PORT": "5432",
     "DB_NAME": "InfoDB",
     "DB_USER": "postgres",
     "DB_PASSWORD": "RF@DB##&441",

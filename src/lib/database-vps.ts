@@ -4,13 +4,13 @@ import { Pool } from 'pg';
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'sistema_gestao',
-  user: process.env.DB_USER || 'gestao_user',
+  database: process.env.DB_NAME || 'InfoDB',
+  user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: false // Desabilitado para conexões locais na VPS
 });
 
 // Configuração de logs
