@@ -29,13 +29,40 @@ class ApiService {
 
   // Método para testar conectividade sem autenticação
   async testConnection(): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/test`);
+    const url = `${this.baseUrl}/test`;
+    console.log('🔍 Testando API em:', url);
+    console.log('🔍 Base URL configurada:', this.baseUrl);
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    try {
+      const response = await fetch(url);
+      console.log('📡 Resposta recebida:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
+      
+      // Capturar o texto bruto da resposta
+      const responseText = await response.text();
+      console.log('📄 Resposta bruta:', responseText);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}. Resposta: ${responseText}`);
+      }
 
-    return response.json();
+      // Tentar fazer parse do JSON
+      try {
+        const jsonData = JSON.parse(responseText);
+        console.log('✅ JSON válido:', jsonData);
+        return jsonData;
+      } catch (parseError) {
+        console.error('❌ Erro ao fazer parse do JSON:', parseError);
+        throw new Error(`Resposta não é um JSON válido. Conteúdo recebido: "${responseText.substring(0, 200)}..."`);
+      }
+    } catch (networkError: any) {
+      console.error('❌ Erro de rede:', networkError);
+      throw new Error(`Erro de conectividade: ${networkError.message}`);
+    }
   }
 
   // Clientes

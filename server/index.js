@@ -48,6 +48,13 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
