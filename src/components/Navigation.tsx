@@ -17,7 +17,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Painel',
       icon: BarChart3,
       description: 'Gráficos e estatísticas'
     },
@@ -59,7 +59,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     },
     {
       id: 'dashboard-financeiro',
-      label: 'Dashboard Financeiro',
+      label: 'Painel Financeiro',
       icon: BarChart3,
       description: 'Análises financeiras'
     },

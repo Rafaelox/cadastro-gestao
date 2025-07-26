@@ -19,7 +19,7 @@ export const DashboardHeader = ({ periodo, setPeriodo, onRefresh, isLoading }: D
           <div>
             <CardTitle className="text-2xl text-foreground flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-primary" />
-              Dashboard
+              Painel
             </CardTitle>
             <CardDescription className="text-muted-foreground">
               Visão geral dos cadastros e estatísticas do sistema

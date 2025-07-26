@@ -154,7 +154,7 @@ export const DashboardFinanceiro = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <BarChart3 className="h-5 w-5" />
-            <span>Dashboard Financeiro</span>
+            <span>Painel Financeiro</span>
           </CardTitle>
         </CardHeader>
         <CardContent>

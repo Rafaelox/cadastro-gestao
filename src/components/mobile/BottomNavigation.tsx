@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const navigationItems = [
   {
-    name: "Dashboard",
+    name: "Início",
     href: "/",
     icon: BarChart3,
   },

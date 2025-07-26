@@ -37,7 +37,7 @@ export const Header = () => {
                 {user?.email || 'Usuário'}
               </p>
               <p className="text-xs text-muted-foreground">
-                {user?.email === 'adm@rpedro.net' ? 'Master' : 'Usuário'}
+                {user?.email === 'adm@rpedro.net' ? 'Administrador' : 'Usuário'}
               </p>
             </div>
             <Button 

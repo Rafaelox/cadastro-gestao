@@ -45,7 +45,7 @@ export const DashboardPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-6 w-6" />
-            Dashboard
+            Painel
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -88,7 +88,7 @@ export const DashboardPage = () => {
         </CardContent>
       </Card>
 
-      {/* Dashboard Stats */}
+      {/* Estatísticas do Painel */}
       <Dashboard />
     </div>
   );
