@@ -71,8 +71,8 @@ app.use('/api', require('./routes'));
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Serve React app for all other routes
-app.get('*', (req, res) => {
+// Serve React app for all other routes (non-API)
+app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
