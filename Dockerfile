@@ -1,4 +1,4 @@
-# Dockerfile simplificado para EasyPanel
+# Dockerfile otimizado para EasyPanel
 FROM node:20-alpine
 
 # Instalar dependências do sistema
@@ -11,20 +11,20 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copiar código do frontend e fazer build
-COPY . .
-RUN npm run build
-
-# Copiar código do servidor
-COPY server/ ./server/
-
-# Instalar dependências do servidor
+# Copiar dependências do servidor
+COPY server/package*.json ./server/
 WORKDIR /app/server
-COPY server/package*.json ./
 RUN npm install
 
-# Voltar para o diretório principal
+# Voltar para o diretório principal e copiar código
 WORKDIR /app
+COPY . .
+
+# Fazer build do frontend
+RUN npm run build
+
+# Verificar se o build foi criado
+RUN ls -la dist/ || echo "Erro: diretório dist não foi criado"
 
 # Expor porta
 EXPOSE 3000
