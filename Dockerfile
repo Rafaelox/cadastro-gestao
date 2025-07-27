@@ -18,6 +18,14 @@ RUN npm run build
 # Copiar código do servidor
 COPY server/ ./server/
 
+# Instalar dependências do servidor
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm install
+
+# Voltar para o diretório principal
+WORKDIR /app
+
 # Expor porta
 EXPOSE 3000
 
