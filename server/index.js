@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { Pool } = require('pg');
+const { pool, testConnection, closeConnection } = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,33 +11,6 @@ if (!process.env.JWT_SECRET) {
   console.error('ERRO: JWT_SECRET não está definido nas variáveis de ambiente');
   process.exit(1);
 }
-
-if (!process.env.DB_PASSWORD) {
-  console.error('ERRO: DB_PASSWORD não está definido nas variáveis de ambiente');
-  process.exit(1);
-}
-
-// Database connection
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'InfoDB',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-// Database connection logging
-pool.on('connect', () => {
-  console.log('Conectado ao PostgreSQL');
-});
-
-pool.on('error', (err) => {
-  console.error('Erro na conexão PostgreSQL:', err);
-});
 
 // CORS Configuration
 const corsOptions = {
@@ -103,23 +76,28 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, async () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   
-  // Test initial database connection
-  try {
-    await pool.query('SELECT 1');
-    console.log('✅ Conexão com banco de dados estabelecida com sucesso');
-  } catch (error) {
-    console.error('❌ Falha na conexão inicial com banco de dados:', error.message);
+  // Test initial database connection with retry
+  const connected = await testConnection();
+  if (!connected) {
+    console.error('❌ Falha crítica na conexão com banco de dados. Encerrando...');
+    process.exit(1);
   }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('Encerrando servidor...');
-  await pool.end();
+  console.log('🔄 Encerrando servidor...');
+  await closeConnection();
   process.exit(0);
 });
 
-module.exports = { app, pool };
+process.on('SIGINT', async () => {
+  console.log('🔄 Encerrando servidor...');
+  await closeConnection();
+  process.exit(0);
+});
+
+module.exports = { app };

@@ -40,18 +40,9 @@ router.get('/test', (req, res) => {
 router.get('/diagnostic', async (req, res) => {
   console.log('🔍 Rota /diagnostic chamada');
   try {
-    // Testar conexão com banco de dados
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'InfoDB',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD,
-    });
-    
+    // Usar pool compartilhado
+    const { pool } = require('../config/database');
     await pool.query('SELECT 1');
-    await pool.end();
     
     res.json({
       status: 'OK',

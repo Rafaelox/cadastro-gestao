@@ -38,12 +38,13 @@
   "environment": {
     "NODE_ENV": "production",
     "PORT": "3000",
-    "DB_HOST": "db",
+    "DB_HOST": "localhost",
     "DB_PORT": "5432",
     "DB_NAME": "InfoDB",
     "DB_USER": "postgres",
     "DB_PASSWORD": "RF@DB##&441",
     "JWT_SECRET": "jwt_secret_rf2024_gestao_sistema_muito_seguro_12345",
+    "SESSION_SECRET": "session_secret_rf2024_gestao_sistema_muito_seguro_67890",
     "DOMAIN": "https://sistema-gestao.exemplo.com"
   },
   "scaling": {
