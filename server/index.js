@@ -15,7 +15,13 @@ if (!process.env.JWT_SECRET) {
 // CORS Configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.DOMAIN || 'http://localhost:3000']
+    ? [
+        process.env.DOMAIN || 'https://gest.rpedro.pro',
+        'https://gest.rpedro.pro',
+        'http://gest.rpedro.pro',
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ]
     : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200
