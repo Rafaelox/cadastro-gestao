@@ -146,10 +146,50 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+// External test endpoint for debugging
+app.get('/external-test', (req, res) => {
+  console.log('🌍 External test endpoint called');
+  console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('🔍 Connection info:', {
+    remoteAddress: req.connection?.remoteAddress,
+    remotePort: req.connection?.remotePort,
+    localAddress: req.connection?.localAddress,
+    localPort: req.connection?.localPort
+  });
+  
+  res.json({
+    message: 'External access working!',
+    timestamp: new Date().toISOString(),
+    requestInfo: {
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      ip: req.ip,
+      ips: req.ips,
+      hostname: req.hostname,
+      protocol: req.protocol,
+      secure: req.secure,
+      originalUrl: req.originalUrl
+    },
+    serverInfo: {
+      environment: process.env.NODE_ENV || 'development',
+      port: PORT,
+      host: req.get('Host'),
+      userAgent: req.get('User-Agent')
+    }
+  });
+});
+
+// Start server - Listen on all interfaces for external access
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT} em todas as interfaces (0.0.0.0)`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 URLs de acesso:`);
+  console.log(`   - Local: http://localhost:${PORT}`);
+  console.log(`   - Rede: http://0.0.0.0:${PORT}`);
+  if (process.env.DOMAIN) {
+    console.log(`   - Domínio: ${process.env.DOMAIN}`);
+  }
   
   // Test initial database connection with retry
   const connected = await testConnection();
@@ -157,6 +197,8 @@ app.listen(PORT, async () => {
     console.error('❌ Falha crítica na conexão com banco de dados. Encerrando...');
     process.exit(1);
   }
+  
+  console.log('✅ Servidor pronto para receber conexões externas');
 });
 
 // Graceful shutdown
