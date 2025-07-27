@@ -61,8 +61,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const result = await pool.query('SELECT 1');
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      database: 'connected'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error.message);
+    res.status(503).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 // API Routes
@@ -86,9 +102,17 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Servidor rodando na porta ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Test initial database connection
+  try {
+    await pool.query('SELECT 1');
+    console.log('✅ Conexão com banco de dados estabelecida com sucesso');
+  } catch (error) {
+    console.error('❌ Falha na conexão inicial com banco de dados:', error.message);
+  }
 });
 
 // Graceful shutdown

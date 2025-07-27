@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: InfoDB
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_PASSWORD: RF@DB##&441
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database-setup.sql:/docker-entrypoint-initdb.d/init.sql
@@ -34,7 +34,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=InfoDB
       - DB_USER=postgres
-      - DB_PASSWORD=postgres123
+      - DB_PASSWORD=RF@DB##&441
       - JWT_SECRET=your-jwt-secret-key-here-change-this-in-production
       - DOMAIN=https://your-domain.com
     depends_on:
@@ -48,7 +48,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
 networks:
   sistema-network:
