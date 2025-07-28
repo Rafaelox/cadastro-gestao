@@ -10,13 +10,13 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "port": 3000,
+    "port": 80,
     "healthcheck": {
-      "path": "/health",
-      "interval": 30,
-      "timeout": 10,
+      "path": "/health/simple",
+      "interval": 45,
+      "timeout": 15,
       "retries": 3,
-      "startPeriod": 60
+      "startPeriod": 120
     },
     "resources": {
       "memory": "1Gi",
@@ -37,15 +37,15 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "PORT": "3000",
+    "PORT": "80",
     "DB_HOST": "raiz_bancodados",
     "DB_PORT": "5432",
     "DB_NAME": "InfoDB",
     "DB_USER": "postgres",
-    "DB_PASSWORD": "Rf@801707Ps$",
+    "DB_PASSWORD": "RF@DB##&441",
     "JWT_SECRET": "jwt_secret_rf2024_gestao_sistema_muito_seguro_12345",
     "SESSION_SECRET": "session_secret_rf2024_gestao_sistema_muito_seguro_67890",
-    "DOMAIN": "https://gest.rpedro.pro"
+    "DOMAIN": "https://raiz-geta.ti1gsh.easypanel.host"
   },
   "scaling": {
     "minReplicas": 1,

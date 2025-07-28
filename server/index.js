@@ -33,7 +33,7 @@ console.log('   - JWT_SECRET:', process.env.JWT_SECRET ? '[DEFINED]' : '[NOT DEF
 console.log('   - DOMAIN:', process.env.DOMAIN);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 
 // Validate required environment variables
 if (!process.env.JWT_SECRET) {

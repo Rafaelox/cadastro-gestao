@@ -24,6 +24,7 @@ Object.keys(process.env)
 // Force environment check
 console.log('🔥 REQUIRED ENVIRONMENT CHECK:');
 const requiredVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'JWT_SECRET'];
+console.log('🔥 Expected DB_PASSWORD should be: RF@DB##&441');
 let missingVars = [];
 
 requiredVars.forEach(varName => {
