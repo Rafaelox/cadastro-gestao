@@ -31,7 +31,7 @@
   },
   "domains": [
     {
-      "name": "gest.rpedro.pro",
+      "name": "raiz-gate.ti1gsh.easypanel.host",
       "ssl": true
     }
   ],
@@ -45,7 +45,7 @@
     "DB_PASSWORD": "Rf@801707Ps$",
     "JWT_SECRET": "jwt_secret_rf2024_gestao_sistema_muito_seguro_12345",
     "SESSION_SECRET": "session_secret_rf2024_gestao_sistema_muito_seguro_67890",
-    "DOMAIN": "https://raiz-geta.ti1gsh.easypanel.host"
+    "DOMAIN": "https://raiz-gate.ti1gsh.easypanel.host"
   },
   "scaling": {
     "minReplicas": 1,
