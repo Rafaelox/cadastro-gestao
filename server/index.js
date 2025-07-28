@@ -23,17 +23,20 @@ console.log('🔧 Inicializando servidor...');
 console.log('🔧 Node.js version:', process.version);
 console.log('🔧 Environment variables:');
 console.log('   - NODE_ENV:', process.env.NODE_ENV);
-console.log('   - PORT:', process.env.PORT);
+console.log('   - PORT (raw):', process.env.PORT);
+console.log('   - PORT (type):', typeof process.env.PORT);
 console.log('   - DB_HOST:', process.env.DB_HOST);
 console.log('   - DB_PORT:', process.env.DB_PORT);
 console.log('   - DB_NAME:', process.env.DB_NAME);
 console.log('   - DB_USER:', process.env.DB_USER);
 console.log('   - DB_PASSWORD:', process.env.DB_PASSWORD ? '[DEFINED]' : '[NOT DEFINED]');
+console.log('   - Expected DB_PASSWORD: RF@DB##&441');
 console.log('   - JWT_SECRET:', process.env.JWT_SECRET ? '[DEFINED]' : '[NOT DEFINED]');
 console.log('   - DOMAIN:', process.env.DOMAIN);
 
 const app = express();
-const PORT = process.env.PORT || 80;
+const PORT = parseInt(process.env.PORT || '80', 10);
+console.log('🔧 PORTA FINAL CONFIGURADA:', PORT, '(type:', typeof PORT, ')');
 
 // Validate required environment variables
 if (!process.env.JWT_SECRET) {
@@ -53,6 +56,8 @@ const corsOptions = {
       ? [
           'https://gest.rpedro.pro',
           'http://gest.rpedro.pro',
+          'https://raiz-geta.ti1gsh.easypanel.host',
+          'http://raiz-geta.ti1gsh.easypanel.host',
           'http://localhost:3000',
           'http://localhost:5173',
           process.env.DOMAIN
@@ -185,6 +190,80 @@ app.get('/debug', (req, res) => {
   });
 });
 
+// Database connectivity test endpoint
+app.get('/debug/db-test', async (req, res) => {
+  try {
+    console.log('🔍 Endpoint de teste de DB chamado');
+    console.log('🔍 Configuração atual:');
+    console.log(`   - Host: ${process.env.DB_HOST}`);
+    console.log(`   - Port: ${process.env.DB_PORT}`);
+    console.log(`   - Database: ${process.env.DB_NAME}`);
+    console.log(`   - User: ${process.env.DB_USER}`);
+    console.log(`   - Password: ${process.env.DB_PASSWORD ? '[SET]' : '[NOT SET]'}`);
+    console.log(`   - Expected: RF@DB##&441`);
+    
+    const start = Date.now();
+    const result = await pool.query('SELECT 1 as test, NOW() as server_time, version() as pg_version');
+    const duration = Date.now() - start;
+    
+    console.log(`✅ Teste de conectividade bem-sucedido em ${duration}ms`);
+    
+    res.json({
+      status: 'success',
+      connection_time_ms: duration,
+      database_time: result.rows[0].server_time,
+      postgresql_version: result.rows[0].pg_version,
+      config: {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        database: process.env.DB_NAME,
+        user: process.env.DB_USER,
+        password_configured: !!process.env.DB_PASSWORD
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro no teste de conectividade:', error);
+    
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      error_code: error.code,
+      error_detail: error.detail,
+      config: {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        database: process.env.DB_NAME,
+        user: process.env.DB_USER,
+        password_configured: !!process.env.DB_PASSWORD
+      }
+    });
+  }
+});
+
+// Environment variables debug endpoint
+app.get('/debug/env', (req, res) => {
+  const debugInfo = {
+    timestamp: new Date().toISOString(),
+    port_configured: PORT,
+    port_env_raw: process.env.PORT,
+    port_env_type: typeof process.env.PORT,
+    node_env: process.env.NODE_ENV,
+    db_config: {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password_set: !!process.env.DB_PASSWORD,
+      expected_password: 'RF@DB##&441'
+    },
+    uptime: process.uptime(),
+    process_pid: process.pid,
+    memory: process.memoryUsage()
+  };
+  
+  res.json(debugInfo);
+});
+
 // Status endpoint for detailed diagnostics
 app.get('/status', async (req, res) => {
   console.log('📊 Status endpoint requested');
@@ -301,7 +380,9 @@ app.get('/external-test', (req, res) => {
 console.log('🚀 Iniciando servidor HTTP...');
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT} em todas as interfaces (0.0.0.0)`);
+  console.log(`🚀 SERVIDOR INICIADO COM SUCESSO!`);
+  console.log(`🔧 Porta configurada: ${PORT} (type: ${typeof PORT})`);
+  console.log(`🔧 Interface: 0.0.0.0 (todas as interfaces)`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 URLs de acesso:`);
   console.log(`   - Local: http://localhost:${PORT}`);
@@ -309,6 +390,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`   - Health: http://0.0.0.0:${PORT}/health`);
   console.log(`   - Simple Health: http://0.0.0.0:${PORT}/health/simple`);
   console.log(`   - Debug: http://0.0.0.0:${PORT}/debug`);
+  console.log(`   - DB Test: http://0.0.0.0:${PORT}/debug/db-test`);
+  console.log(`   - Env Debug: http://0.0.0.0:${PORT}/debug/env`);
   console.log(`   - External Test: http://0.0.0.0:${PORT}/external-test`);
   if (process.env.DOMAIN) {
     console.log(`   - Domínio: ${process.env.DOMAIN}`);
