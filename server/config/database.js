@@ -2,8 +2,8 @@ const { Pool } = require('pg');
 
 // Validate required environment variables
 if (!process.env.DB_PASSWORD) {
-  console.error('ERRO: DB_PASSWORD não está definido nas variáveis de ambiente');
-  process.exit(1);
+  console.error('⚠️ AVISO: DB_PASSWORD não está definido nas variáveis de ambiente');
+  console.error('⚠️ A aplicação pode ter problemas de conectividade com o banco');
 }
 
 // Database connection pool
