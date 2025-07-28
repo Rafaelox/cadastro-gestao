@@ -131,9 +131,19 @@ app.get('/health', async (req, res) => {
     uptime: process.uptime(),
     database: 'unknown',
     environment: process.env.NODE_ENV || 'development',
+    config: {
+      db_host: process.env.DB_HOST,
+      db_port: process.env.DB_PORT,
+      db_name: process.env.DB_NAME,
+      db_user: process.env.DB_USER,
+      db_password_set: !!process.env.DB_PASSWORD,
+      jwt_secret_set: !!process.env.JWT_SECRET
+    },
     server: {
       memory: process.memoryUsage(),
-      pid: process.pid
+      pid: process.pid,
+      port: PORT,
+      host: req.get('Host')
     }
   };
 
@@ -173,6 +183,64 @@ app.get('/debug', (req, res) => {
     url: req.url,
     method: req.method
   });
+});
+
+// Status endpoint for detailed diagnostics
+app.get('/status', async (req, res) => {
+  console.log('📊 Status endpoint requested');
+  
+  const status = {
+    timestamp: new Date().toISOString(),
+    server: {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      pid: process.pid,
+      platform: process.platform,
+      arch: process.arch,
+      node_version: process.version,
+      environment: process.env.NODE_ENV || 'development'
+    },
+    configuration: {
+      port: PORT,
+      host: req.get('Host'),
+      db_host: process.env.DB_HOST,
+      db_port: process.env.DB_PORT,
+      db_name: process.env.DB_NAME,
+      db_user: process.env.DB_USER,
+      db_password_configured: !!process.env.DB_PASSWORD,
+      jwt_secret_configured: !!process.env.JWT_SECRET,
+      domain: process.env.DOMAIN
+    },
+    request_info: {
+      method: req.method,
+      url: req.url,
+      ip: req.ip,
+      user_agent: req.get('User-Agent'),
+      origin: req.get('Origin'),
+      referer: req.get('Referer')
+    }
+  };
+
+  // Test database connectivity
+  try {
+    console.log('📊 Testing database for status check...');
+    const dbResult = await pool.query('SELECT NOW() as db_time, version() as db_version');
+    status.database = {
+      status: 'connected',
+      server_time: dbResult.rows[0].db_time,
+      version: dbResult.rows[0].db_version
+    };
+    console.log('📊 Database connection successful');
+  } catch (error) {
+    console.error('📊 Database connection failed:', error.message);
+    status.database = {
+      status: 'disconnected',
+      error: error.message,
+      code: error.code
+    };
+  }
+
+  res.json(status);
 });
 
 // API Routes
