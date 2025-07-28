@@ -8,6 +8,7 @@ router.use(authenticateToken);
 // GET /api/categorias
 router.get('/', async (req, res) => {
   const endpoint = req.originalUrl.split('/').pop();
+  console.log(`🔍 Endpoint configuração: ${endpoint}`);
   
   switch (endpoint) {
     case 'categorias':
@@ -28,7 +29,9 @@ router.get('/', async (req, res) => {
 // GET /api/configuracao/categorias
 async function getCategorias(req, res) {
   try {
+    console.log('📋 Buscando categorias...');
     const result = await pool.query('SELECT * FROM categorias ORDER BY nome');
+    console.log(`📋 Encontradas ${result.rows.length} categorias`);
     res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Erro ao buscar categorias:', error);
