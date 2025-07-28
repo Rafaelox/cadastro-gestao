@@ -4,67 +4,68 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
+// Função para garantir o usuário master - Implementa a lógica "Achou, Atualiza! Não Achou, Cria!"
+async function ensureMasterAdmin() {
+  const email = 'master@sistema.com';
+  const nome = 'Master Admin';
+  const role = 'admin';
+  const hashedPassword = await bcrypt.hash('master123', 10);
+
+  try {
+    // 1. Procurar pelo Master Admin com esse email e role
+    let existingUser = await pool.query(
+      'SELECT id, nome, email FROM usuarios WHERE email = $1 AND role = $2', 
+      [email, role]
+    );
+
+    if (existingUser.rows.length > 0) {
+      // 🎉 Achamos! O Master Admin já existe! Agora, só vamos atualizá-lo.
+      // Isso evita a duplicação porque estamos atualizando o registro JÁ EXISTENTE.
+      const result = await pool.query(
+        `UPDATE usuarios SET
+           nome = $1,
+           senha = $2,
+           ativo = true,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE email = $3 AND role = $4
+         RETURNING id, nome, email, role, ativo`,
+        [nome, hashedPassword, email, role] // Não mudamos o email, só a senha e o nome!
+      );
+      console.log('💚 Master Admin atualizado com sucesso:', result.rows[0]);
+      return result.rows[0];
+    } else {
+      // ✨ Não achamos! É um ótimo dia para criar um Master Admin novinho!
+      const result = await pool.query(
+        `INSERT INTO usuarios (nome, email, senha, role, ativo, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         RETURNING id, nome, email, role, ativo`,
+        [nome, email, hashedPassword, role, true]
+      );
+      console.log('💖 Master Admin criado com sucesso:', result.rows[0]);
+      return result.rows[0];
+    }
+  } catch (error) {
+    console.error('💔 Erro ao garantir o Master Admin:', error.message);
+    throw error;
+  }
+}
+
 // POST /api/setup/create-master - Criar usuário master inicial
 router.post('/create-master', async (req, res) => {
   try {
     console.log('🔧 Criando usuário master...');
     
-    // Hash da senha
-    const hashedPassword = await bcrypt.hash('master123', 10);
+    const adminUser = await ensureMasterAdmin();
     
-    // Verificar se já existe um usuário master
-    const existingMaster = await pool.query(
-      'SELECT id FROM usuarios WHERE role = $1 LIMIT 1',
-      ['admin']
-    );
-    
-    if (existingMaster.rows.length > 0) {
-      console.log('⚠️  Usuário master já existe, atualizando...');
-      
-      // Atualizar usuário existente
-      const result = await pool.query(
-        `UPDATE usuarios SET 
-         nome = $1, 
-         email = $2, 
-         senha = $3, 
-         role = $4, 
-         ativo = true,
-         updated_at = CURRENT_TIMESTAMP
-         WHERE role = 'admin'
-         RETURNING id, nome, email, role, ativo`,
-        ['Master Admin', 'master@sistema.com', hashedPassword, 'admin']
-      );
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Usuário master atualizado com sucesso',
-        data: result.rows[0],
-        credentials: {
-          email: 'master@sistema.com',
-          password: 'master123'
-        }
-      });
-    } else {
-      // Criar novo usuário master
-      const result = await pool.query(
-        `INSERT INTO usuarios (nome, email, senha, role, ativo) 
-         VALUES ($1, $2, $3, $4, true) 
-         RETURNING id, nome, email, role, ativo`,
-        ['Master Admin', 'master@sistema.com', hashedPassword, 'admin']
-      );
-
-      console.log('✅ Usuário master criado com sucesso');
-      
-      res.status(201).json({
-        success: true,
-        message: 'Usuário master criado com sucesso',
-        data: result.rows[0],
-        credentials: {
-          email: 'master@sistema.com',
-          password: 'master123'
-        }
-      });
-    }
+    res.status(200).json({
+      success: true,
+      message: 'Usuário master configurado com sucesso',
+      data: adminUser,
+      credentials: {
+        email: 'master@sistema.com',
+        password: 'master123'
+      }
+    });
   } catch (error) {
     console.error('❌ Erro ao criar usuário master:', error);
     res.status(500).json({ 
