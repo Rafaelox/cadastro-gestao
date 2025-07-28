@@ -10,7 +10,7 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "port": 80,
+    "port": 3000,
     "healthcheck": {
       "path": "/health/simple",
       "interval": 45,
@@ -37,12 +37,12 @@
   ],
   "environment": {
     "NODE_ENV": "production",
-    "PORT": "80",
+    "PORT": "3000",
     "DB_HOST": "raiz_bancodados",
     "DB_PORT": "5432",
     "DB_NAME": "InfoDB",
     "DB_USER": "postgres",
-    "DB_PASSWORD": "RF@DB##&441",
+    "DB_PASSWORD": "Rf@801707Ps$",
     "JWT_SECRET": "jwt_secret_rf2024_gestao_sistema_muito_seguro_12345",
     "SESSION_SECRET": "session_secret_rf2024_gestao_sistema_muito_seguro_67890",
     "DOMAIN": "https://raiz-geta.ti1gsh.easypanel.host"

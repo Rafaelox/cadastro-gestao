@@ -27,11 +27,11 @@ RUN npm run build
 RUN ls -la dist/ || echo "Erro: diretório dist não foi criado"
 
 # Expor porta
-EXPOSE 80
+EXPOSE 3000
 
 # Health check - using simple endpoint with generous timing
 HEALTHCHECK --interval=45s --timeout=15s --start-period=120s --retries=3 \
-  CMD curl -f http://localhost:80/health/simple || curl -f http://localhost:80/status || exit 1
+  CMD curl -f http://localhost:3000/health/simple || curl -f http://localhost:3000/status || exit 1
 
 # Iniciar o servidor com script de startup detalhado
 CMD ["node", "server/startup.js"]
