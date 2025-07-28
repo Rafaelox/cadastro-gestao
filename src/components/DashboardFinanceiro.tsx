@@ -59,8 +59,8 @@ export const DashboardFinanceiro = () => {
       const recebimentos = dados.filter(p => p.tipo_transacao === 'entrada');
       const pagamentosData = dados.filter(p => p.tipo_transacao === 'saida');
 
-      const totalRecebimentos = recebimentos.reduce((sum, p) => sum + (p.valor_original || p.valor), 0);
-      const totalPagamentos = pagamentosData.reduce((sum, p) => sum + (p.valor_original || p.valor), 0);
+      const totalRecebimentos = recebimentos.reduce((sum, p) => sum + (p.valor_original || p.valor || 0), 0) || 0;
+      const totalPagamentos = pagamentosData.reduce((sum, p) => sum + (p.valor_original || p.valor || 0), 0) || 0;
       const saldoMensal = totalRecebimentos - totalPagamentos;
 
       // Clientes únicos atendidos
@@ -68,13 +68,13 @@ export const DashboardFinanceiro = () => {
       const clientesAtendidos = clientesUnicos.size;
 
       // Ticket médio
-      const ticketMedio = recebimentos.length > 0 ? totalRecebimentos / recebimentos.length : 0;
+      const ticketMedio = recebimentos.length > 0 ? (totalRecebimentos / recebimentos.length) || 0 : 0;
 
       // Recebimentos por dia
       const recebimentosPorDia: { [key: string]: number } = {};
       recebimentos.forEach(r => {
         const dia = format(new Date(r.data_pagamento), 'yyyy-MM-dd');
-        recebimentosPorDia[dia] = (recebimentosPorDia[dia] || 0) + (r.valor_original || r.valor);
+        recebimentosPorDia[dia] = (recebimentosPorDia[dia] || 0) + (r.valor_original || r.valor || 0);
       });
 
       const recebimentosPorDiaArray = Object.entries(recebimentosPorDia).map(([data, valor]) => ({
@@ -89,7 +89,7 @@ export const DashboardFinanceiro = () => {
         if (!formasPagamento[forma]) {
           formasPagamento[forma] = { total: 0, count: 0 };
         }
-        formasPagamento[forma].total += (p.valor_original || p.valor);
+        formasPagamento[forma].total += (p.valor_original || p.valor || 0);
         formasPagamento[forma].count += 1;
       });
 
@@ -110,7 +110,7 @@ export const DashboardFinanceiro = () => {
         if (!consultores[consultor]) {
           consultores[consultor] = { total: 0, transacoes: 0 };
         }
-        consultores[consultor].total += (p.valor_original || p.valor);
+        consultores[consultor].total += (p.valor_original || p.valor || 0);
         consultores[consultor].transacoes += 1;
       });
 

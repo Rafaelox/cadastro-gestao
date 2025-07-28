@@ -95,11 +95,11 @@ export const CaixaList = () => {
   const calcularTotais = () => {
     const entradas = movimentos
       .filter(m => m.tipo_transacao === 'entrada')
-      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? m.valor_original : m.valor), 0);
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original || 0) : (m.valor || 0)), 0) || 0;
     
     const saidas = movimentos
       .filter(m => m.tipo_transacao === 'saida')
-      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? m.valor_original : m.valor), 0);
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original || 0) : (m.valor || 0)), 0) || 0;
 
     return { entradas, saidas, saldo: entradas - saidas };
   };
