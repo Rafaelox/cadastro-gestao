@@ -110,6 +110,41 @@ export const Login = () => {
     }
   };
 
+  const createMasterUser = async () => {
+    try {
+      const response = await fetch('/api/setup/create-master', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Usuário Master Criado",
+          description: `Email: ${data.credentials.email} | Senha: ${data.credentials.password}`,
+        });
+        // Auto-fill the form
+        setEmail(data.credentials.email);
+        setSenha(data.credentials.password);
+      } else {
+        toast({
+          title: "Erro ao criar usuário",
+          description: data.error || "Erro desconhecido",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível criar o usuário master",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -221,7 +256,7 @@ export const Login = () => {
               Entre em contato com o administrador para obter suas credenciais de acesso.
             </p>
             
-            <div className="mt-4 pt-4 border-t border-border">
+            <div className="mt-4 pt-4 border-t border-border space-y-2">
               <Button
                 type="button"
                 variant="outline"
@@ -231,6 +266,17 @@ export const Login = () => {
               >
                 <TestTube className="h-4 w-4" />
                 Testar Conectividade API
+              </Button>
+              
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={createMasterUser}
+                className="w-full flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Criar Usuário Master
               </Button>
             </div>
           </div>
