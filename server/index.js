@@ -56,8 +56,8 @@ const corsOptions = {
       ? [
           'https://gest.rpedro.pro',
           'http://gest.rpedro.pro',
-          'https://raiz-geta.ti1gsh.easypanel.host',
-          'http://raiz-geta.ti1gsh.easypanel.host',
+          'https://raiz-gate.ti1gsh.easypanel.host',
+          'http://raiz-gate.ti1gsh.easypanel.host',
           'http://localhost:3000',
           'http://localhost:5173',
           process.env.DOMAIN
