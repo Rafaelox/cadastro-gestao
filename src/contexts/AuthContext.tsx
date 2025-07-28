@@ -50,35 +50,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Iniciando configuração de auth PostgreSQL...');
+    console.log('🔄 Iniciando configuração de auth PostgreSQL...');
     
-    // Verificar sessão atual no localStorage
+    // Verificar sessão atual no localStorage com timeout
     const checkSession = async () => {
+      const timeout = setTimeout(() => {
+        console.warn('⚠️ Timeout na verificação de sessão, prosseguindo sem autenticação');
+        setIsLoading(false);
+      }, 3000); // 3 segundos de timeout
+
       try {
+        console.log('📋 Verificando localStorage...');
+        
+        // Verificar se localStorage está disponível
+        if (typeof Storage === 'undefined') {
+          console.warn('⚠️ localStorage não disponível');
+          clearTimeout(timeout);
+          setIsLoading(false);
+          return;
+        }
+
         const token = localStorage.getItem('auth_token');
         const userData = localStorage.getItem('user_data');
         
+        console.log('🔍 Token encontrado:', !!token);
+        console.log('🔍 UserData encontrado:', !!userData);
+        
         if (token && userData) {
+          console.log('🔄 Parseando dados do usuário...');
           const parsedUser = JSON.parse(userData);
-          setSession({
-            user: { id: parsedUser.id, email: parsedUser.email },
-            access_token: token
-          });
-          setUser({ id: parsedUser.id, email: parsedUser.email });
-          setUsuario(parsedUser);
-          console.log('Sessão restaurada:', parsedUser.email);
+          
+          if (parsedUser && parsedUser.id && parsedUser.email) {
+            setSession({
+              user: { id: parsedUser.id, email: parsedUser.email },
+              access_token: token
+            });
+            setUser({ id: parsedUser.id, email: parsedUser.email });
+            setUsuario(parsedUser);
+            console.log('✅ Sessão restaurada:', parsedUser.email);
+          } else {
+            console.warn('⚠️ Dados do usuário inválidos, limpando...');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+          }
+        } else {
+          console.log('ℹ️ Nenhuma sessão encontrada');
         }
+        
+        clearTimeout(timeout);
       } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        console.error('❌ Erro ao verificar sessão:', error);
         // Limpar dados inválidos
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user_data');
+        try {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_data');
+        } catch (storageError) {
+          console.error('❌ Erro ao limpar localStorage:', storageError);
+        }
+        clearTimeout(timeout);
       } finally {
+        console.log('🏁 Verificação de sessão concluída');
         setIsLoading(false);
       }
     };
 
-    checkSession();
+    // Adicionar delay pequeno para evitar problemas de inicialização
+    const initTimer = setTimeout(() => {
+      checkSession();
+    }, 100);
+
+    return () => {
+      clearTimeout(initTimer);
+    };
   }, []);
 
   // Função de login para PostgreSQL
@@ -212,13 +255,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     canManagePayments: usuario?.permissao === 'master' || usuario?.permissao === 'gerente',
   };
 
-  // Mostrar loading durante inicialização
+  // Mostrar loading durante inicialização com timeout de segurança
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Carregando aplicação...</p>
+          <div className="text-xs text-muted-foreground text-center max-w-md">
+            <p>Verificando sessão e inicializando componentes</p>
+            <p className="mt-2">Se esta tela persistir, recarregue a página</p>
+          </div>
         </div>
       </div>
     );
