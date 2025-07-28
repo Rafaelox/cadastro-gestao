@@ -50,7 +50,7 @@ router.get('/diagnostic', async (req, res) => {
   console.log('🔍 Rota /diagnostic chamada');
   try {
     // Usar pool compartilhado
-    const { pool } = require('../index');
+    const { pool } = require('../config/database');
     await pool.query('SELECT 1');
     
     res.json({

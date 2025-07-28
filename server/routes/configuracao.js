@@ -83,7 +83,7 @@ router.get('/consultores', getConsultores);
 // GET /api/configuracao/formas-pagamento
 async function getFormasPagamento(req, res) {
   try {
-    const result = await pool.query('SELECT * FROM formas_pagamento ORDER BY ordem');
+    const result = await pool.query('SELECT * FROM formas_pagamento ORDER BY id');
     res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Erro ao buscar formas de pagamento:', error);
