@@ -7,6 +7,7 @@ router.use(authenticateToken);
 
 // GET /api/formas-pagamento
 router.get('/', async (req, res) => {
+  console.log('🎯 SERVER: Route /formas-pagamento called');
   try {
     const result = await pool.query('SELECT * FROM formas_pagamento ORDER BY ordem, nome');
     res.json({

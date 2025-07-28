@@ -7,6 +7,7 @@ router.use(authenticateToken);
 
 // GET /api/categorias
 router.get('/', async (req, res) => {
+  console.log('🎯 SERVER: Route /categorias called');
   try {
     const result = await pool.query('SELECT * FROM categorias ORDER BY nome');
     res.json({

@@ -7,6 +7,7 @@ router.use(authenticateToken);
 
 // GET /api/origens
 router.get('/', async (req, res) => {
+  console.log('🎯 SERVER: Route /origens called');
   try {
     const result = await pool.query('SELECT * FROM origens ORDER BY nome');
     res.json({

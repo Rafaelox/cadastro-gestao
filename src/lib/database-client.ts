@@ -122,6 +122,7 @@ class DatabaseClient {
   // ============================================
 
   async getCategorias(): Promise<ApiResponse<Categoria[]>> {
+    console.log('🎯 DatabaseClient: Calling getCategorias()');
     return this.request<Categoria[]>('/categorias');
   }
 
@@ -150,6 +151,7 @@ class DatabaseClient {
   // ============================================
 
   async getOrigens(): Promise<ApiResponse<Origem[]>> {
+    console.log('🎯 DatabaseClient: Calling getOrigens()');
     return this.request<Origem[]>('/origens');
   }
 
@@ -178,6 +180,7 @@ class DatabaseClient {
   // ============================================
 
   async getServicos(): Promise<ApiResponse<Servico[]>> {
+    console.log('🎯 DatabaseClient: Calling getServicos()');
     return this.request<Servico[]>('/servicos');
   }
 
@@ -210,6 +213,7 @@ class DatabaseClient {
   // ============================================
 
   async getConsultores(): Promise<ApiResponse<Consultor[]>> {
+    console.log('🎯 DatabaseClient: Calling getConsultores()');
     return this.request<Consultor[]>('/consultores');
   }
 
@@ -238,6 +242,7 @@ class DatabaseClient {
   // ============================================
 
   async getFormasPagamento(): Promise<ApiResponse<FormaPagamento[]>> {
+    console.log('🎯 DatabaseClient: Calling getFormasPagamento()');
     return this.request<FormaPagamento[]>('/formas-pagamento');
   }
 
