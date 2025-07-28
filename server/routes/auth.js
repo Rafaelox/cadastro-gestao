@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { pool } = require('../index');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
@@ -9,22 +9,30 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
+    console.log('🔐 Tentativa de login para:', email);
 
     // Buscar usuário no banco
     const result = await pool.query(
       'SELECT * FROM usuarios WHERE email = $1 AND ativo = true',
       [email]
     );
+    
+    console.log('👤 Usuários encontrados:', result.rows.length);
 
     if (result.rows.length === 0) {
+      console.log('❌ Usuário não encontrado ou inativo');
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     const usuario = result.rows[0];
+    console.log('🔍 Usuário encontrado:', { id: usuario.id, email: usuario.email, ativo: usuario.ativo });
 
     // Verificar senha
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
+    console.log('🔑 Senha válida:', senhaValida);
+    
     if (!senhaValida) {
+      console.log('❌ Senha incorreta');
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
@@ -39,6 +47,8 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('✅ Login bem-sucedido para:', email);
+    
     res.json({
       success: true,
       token,
