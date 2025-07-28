@@ -103,17 +103,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await response.json();
       
-      if (data.success && data.user && data.token) {
+      if (data.success && data.usuario && data.token) {
         // Armazenar dados da sessão
         localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('user_data', JSON.stringify(data.user));
+        localStorage.setItem('user_data', JSON.stringify(data.usuario));
         
         setSession({
-          user: { id: data.user.id, email: data.user.email },
+          user: { id: data.usuario.id, email: data.usuario.email },
           access_token: data.token
         });
-        setUser({ id: data.user.id, email: data.user.email });
-        setUsuario(data.user);
+        setUser({ id: data.usuario.id, email: data.usuario.email });
+        setUsuario(data.usuario);
         
         console.log('Login PostgreSQL realizado com sucesso');
         return true;
