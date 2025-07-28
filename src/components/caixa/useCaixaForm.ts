@@ -28,17 +28,30 @@ export const useCaixaForm = (atendimentoId?: number, onSuccess?: () => void) => 
 
   const loadData = async () => {
     try {
+      console.log('🔄 useCaixaForm: Iniciando loadData...');
       const [formasRes, consultoresRes, servicosRes] = await Promise.all([
         databaseClient.getFormasPagamento(),
         databaseClient.getConsultores(),
         databaseClient.getServicos()
       ]);
 
+      console.log('📊 useCaixaForm resultados:', { 
+        formasRes: formasRes.success, 
+        consultoresRes: consultoresRes.success, 
+        servicosRes: servicosRes.success 
+      });
+
       setFormasPagamento(formasRes.success ? formasRes.data || [] : []);
       setConsultores(consultoresRes.success ? consultoresRes.data || [] : []);
       setServicos(servicosRes.success ? servicosRes.data || [] : []);
+      
+      console.log('✅ useCaixaForm: Dados carregados com sucesso!', {
+        formas: formasRes.data?.length || 0,
+        consultores: consultoresRes.data?.length || 0,
+        servicos: servicosRes.data?.length || 0
+      });
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.error('❌ useCaixaForm: Erro ao carregar dados:', error);
       toast({
         variant: "destructive",
         title: "Erro",

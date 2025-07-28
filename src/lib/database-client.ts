@@ -25,9 +25,11 @@ class DatabaseClient {
   private baseUrl: string;
 
   constructor() {
-    // Use environment variable for API URL, fallback to localhost for development
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-    console.log('DatabaseClient initialized with baseUrl:', this.baseUrl);
+    // Use environment variable for API URL, fallback to relative URL for production
+    this.baseUrl = import.meta.env.VITE_API_URL || '/api';
+    console.log('🔧 DatabaseClient initialized with baseUrl:', this.baseUrl);
+    console.log('🔧 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('🔧 Current hostname:', window.location.hostname);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -39,25 +41,34 @@ class DatabaseClient {
         ...options.headers,
       };
 
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const fullUrl = `${this.baseUrl}${endpoint}`;
+      console.log(`🌐 Making request to: ${fullUrl}`);
+      console.log(`🔑 Token exists: ${!!token}`);
+
+      const response = await fetch(fullUrl, {
         ...options,
         headers,
       });
 
+      console.log(`📡 Response status: ${response.status} for ${fullUrl}`);
       const data = await response.json();
 
       if (!response.ok) {
+        console.error(`❌ Request failed: ${response.status} for ${fullUrl}`, data);
         return {
           success: false,
           error: data.error || `HTTP error! status: ${response.status}`
         };
       }
 
+      console.log(`✅ Request successful for ${fullUrl}`, data);
       return {
         success: true,
         data: data.data || data
       };
     } catch (error) {
+      const fullUrl = `${this.baseUrl}${endpoint}`;
+      console.error(`💥 Network error for ${fullUrl}:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -336,7 +347,7 @@ class DatabaseClient {
 
   async createPagamento(pagamento: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/pagamentos', {
+      const response = await this.request<{success: boolean, data: any}>('/pagamentos', {
         method: 'POST',
         body: JSON.stringify(pagamento),
       });
@@ -350,7 +361,7 @@ class DatabaseClient {
   // Usuários
   async getUsuarios(): Promise<ApiResponse<any[]>> {
     try {
-      const response = await this.request<any[]>('/api/usuarios');
+      const response = await this.request<any[]>('/usuarios');
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -360,7 +371,7 @@ class DatabaseClient {
 
   async createUsuario(usuario: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/usuarios', {
+      const response = await this.request<{success: boolean, data: any}>('/usuarios', {
         method: 'POST',
         body: JSON.stringify(usuario),
       });
@@ -373,7 +384,7 @@ class DatabaseClient {
 
   async updateUsuario(id: number, usuario: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>(`/api/usuarios/${id}`, {
+      const response = await this.request<{success: boolean, data: any}>(`/usuarios/${id}`, {
         method: 'PUT',
         body: JSON.stringify(usuario),
       });
@@ -386,7 +397,7 @@ class DatabaseClient {
 
   async deleteUsuario(id: number): Promise<ApiResponse<void>> {
     try {
-      await this.request<void>(`/api/usuarios/${id}`, {
+      await this.request<void>(`/usuarios/${id}`, {
         method: 'DELETE',
       });
       return { success: true, data: undefined };
@@ -399,7 +410,7 @@ class DatabaseClient {
   // Recibos
   async getRecibos(): Promise<ApiResponse<any[]>> {
     try {
-      const response = await this.request<any[]>('/api/recibos');
+      const response = await this.request<any[]>('/recibos');
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
       console.error('Erro ao buscar recibos:', error);
@@ -409,7 +420,7 @@ class DatabaseClient {
 
   async createRecibo(recibo: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/recibos', {
+      const response = await this.request<{success: boolean, data: any}>('/recibos', {
         method: 'POST',
         body: JSON.stringify(recibo),
       });
@@ -429,7 +440,7 @@ class DatabaseClient {
           if (filters[key]) params.append(key, filters[key]);
         });
       }
-      const url = params.toString() ? `/api/audit_logs?${params.toString()}` : '/api/audit_logs';
+      const url = params.toString() ? `/audit_logs?${params.toString()}` : '/audit_logs';
       const response = await this.request<any[]>(url);
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
@@ -447,7 +458,7 @@ class DatabaseClient {
           if (filters[key]) params.append(key, filters[key]);
         });
       }
-      const url = params.toString() ? `/api/comissoes?${params.toString()}` : '/api/comissoes';
+      const url = params.toString() ? `/comissoes?${params.toString()}` : '/comissoes';
       const response = await this.request<any[]>(url);
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
@@ -459,7 +470,7 @@ class DatabaseClient {
   // Configurações Empresa
   async getConfiguracaoEmpresa(): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<any>('/api/configuracao/empresa');
+      const response = await this.request<any>('/configuracao/empresa');
       return response.success ? { success: true, data: response.data } : { success: false, data: null, error: 'Erro ao buscar dados' };
     } catch (error) {
       console.error('Erro ao buscar configuração empresa:', error);
@@ -469,7 +480,7 @@ class DatabaseClient {
 
   async createConfiguracaoEmpresa(config: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/configuracao/empresa', {
+      const response = await this.request<{success: boolean, data: any}>('/configuracao/empresa', {
         method: 'POST',
         body: JSON.stringify(config),
       });
@@ -482,7 +493,7 @@ class DatabaseClient {
 
   async updateConfiguracaoEmpresa(id: number, config: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>(`/api/configuracao/empresa/${id}`, {
+      const response = await this.request<{success: boolean, data: any}>(`/configuracao/empresa/${id}`, {
         method: 'PUT',
         body: JSON.stringify(config),
       });
@@ -500,7 +511,7 @@ class DatabaseClient {
     formData.append('bucket', bucket);
     
     const token = localStorage.getItem('token');
-    const response = await fetch(`${this.baseUrl}/api/storage/upload`, {
+    const response = await fetch(`${this.baseUrl}/storage/upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -517,13 +528,13 @@ class DatabaseClient {
   }
 
   async getPublicUrlFromStorage(path: string, bucket: string = 'uploads'): Promise<string> {
-    return `${this.baseUrl}/api/storage/${bucket}/${path}`;
+    return `${this.baseUrl}/storage/${bucket}/${path}`;
   }
 
   // RPC Functions
   async rpc(functionName: string, params?: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/rpc', {
+      const response = await this.request<{success: boolean, data: any}>('/rpc', {
         method: 'POST',
         body: JSON.stringify({ function: functionName, params }),
       });
@@ -537,7 +548,7 @@ class DatabaseClient {
   // Tipos Recibo
   async getTiposRecibo(): Promise<ApiResponse<any[]>> {
     try {
-      const response = await this.request<any[]>('/api/tipos-recibo');
+      const response = await this.request<any[]>('/tipos-recibo');
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
       console.error('Erro ao buscar tipos recibo:', error);
@@ -554,7 +565,7 @@ class DatabaseClient {
           if (filters[key]) params.append(key, filters[key]);
         });
       }
-      const url = params.toString() ? `/api/parcelas?${params.toString()}` : '/api/parcelas';
+      const url = params.toString() ? `/parcelas?${params.toString()}` : '/parcelas';
       const response = await this.request<any[]>(url);
       return response.success ? { success: true, data: response.data || [] } : { success: false, data: [], error: 'Erro ao buscar dados' };
     } catch (error) {
@@ -565,7 +576,7 @@ class DatabaseClient {
 
   async createParcela(parcela: any): Promise<ApiResponse<any>> {
     try {
-      const response = await this.request<{success: boolean, data: any}>('/api/parcelas', {
+      const response = await this.request<{success: boolean, data: any}>('/parcelas', {
         method: 'POST',
         body: JSON.stringify(parcela),
       });
