@@ -13,6 +13,11 @@ const recibosRoutes = require('./recibos');
 const setupRoutes = require('./setup');
 const auditLogsRoutes = require('./audit_logs');
 const comissoesRoutes = require('./comissoes');
+const categoriasRoutes = require('./categorias');
+const origensRoutes = require('./origens');
+const servicosRoutes = require('./servicos');
+const consultoresRoutes = require('./consultores');
+const formasPagamentoRoutes = require('./formas-pagamento');
 
 // Use routes
 router.use('/auth', authRoutes);
@@ -22,12 +27,15 @@ router.use('/historico', historicoRoutes);
 router.use('/pagamentos', pagamentosRoutes);
 router.use('/configuracao', configuracaoRoutes);
 
-// Map configuration routes directly
-router.use('/categorias', configuracaoRoutes);
-router.use('/origens', configuracaoRoutes);
-router.use('/servicos', configuracaoRoutes);
-router.use('/consultores', configuracaoRoutes);
-router.use('/formas-pagamento', configuracaoRoutes);
+// Map specific CRUD routes for each resource type
+router.use('/categorias', categoriasRoutes);
+router.use('/origens', origensRoutes);
+router.use('/servicos', servicosRoutes);
+router.use('/consultores', consultoresRoutes);
+router.use('/formas-pagamento', formasPagamentoRoutes);
+
+// Map configuration routes for read-only access
+router.use('/configuracao', configuracaoRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/recibos', recibosRoutes);
 router.use('/audit_logs', auditLogsRoutes);
