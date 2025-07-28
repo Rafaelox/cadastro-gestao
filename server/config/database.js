@@ -28,8 +28,8 @@ pool.on('error', (err) => {
   console.error('❌ Erro na conexão PostgreSQL:', err);
 });
 
-// Test database connection with enhanced retry logic
-async function testConnection(retries = 10) {
+// Test database connection with non-blocking retry logic
+async function testConnection(retries = 5) {
   console.log('🔌 Iniciando teste de conexão com banco de dados...');
   console.log(`🔌 Configuração do banco:`);
   console.log(`   - Host: ${process.env.DB_HOST}`);
@@ -66,28 +66,33 @@ async function testConnection(retries = 10) {
       
       if (error.code === 'ECONNREFUSED') {
         console.error('❌ Conexão recusada - Verifique se o PostgreSQL está rodando');
+        console.error(`❌ Tentando conectar em: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
       } else if (error.code === 'ENOTFOUND') {
         console.error('❌ Host não encontrado - Verifique DB_HOST');
+        console.error(`❌ Hostname atual: ${process.env.DB_HOST}`);
+        console.error('❌ Dica: Em Docker, verifique se o serviço do banco está com o nome correto');
       } else if (error.code === '28P01') {
         console.error('❌ Falha de autenticação - Verifique DB_USER e DB_PASSWORD');
       } else if (error.code === '3D000') {
         console.error('❌ Banco de dados não existe - Verifique DB_NAME');
+        console.error(`❌ Database configurado: ${process.env.DB_NAME}`);
       }
       
       if (i < retries - 1) {
-        const waitTime = Math.min(2000 * (i + 1), 10000); // Exponential backoff, max 10s
+        const waitTime = Math.min(3000 * (i + 1), 8000); // Linear backoff, max 8s
         console.log(`🔄 Aguardando ${waitTime}ms antes da próxima tentativa...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
-      } else {
-        console.error('❌ Todas as tentativas de conexão falharam');
-        console.error('❌ Verifique:');
-        console.error('   1. Se o container do PostgreSQL está rodando');
-        console.error('   2. Se as variáveis de ambiente estão corretas');
-        console.error('   3. Se a rede Docker está configurada corretamente');
-        console.error('   4. Se o banco de dados InfoDB existe');
       }
     }
   }
+  
+  console.log(`⚠️  Não foi possível conectar ao PostgreSQL após ${retries} tentativas`);
+  console.error('❌ Problemas mais comuns:');
+  console.error('   1. Container do PostgreSQL não está rodando');
+  console.error('   2. Nome do serviço no Docker está incorreto (DB_HOST)');
+  console.error('   3. Credenciais estão incorretas');
+  console.error('   4. Banco de dados não foi criado');
+  console.error('   5. Porta está bloqueada ou incorreta');
   return false;
 }
 

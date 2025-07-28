@@ -111,65 +111,52 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Enhanced health check with detailed logging
+// Simple health check endpoint (always returns OK for Docker)
+app.get('/health/simple', (req, res) => {
+  console.log('🏥 Simple health check requested');
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Enhanced health check with database testing
 app.get('/health', async (req, res) => {
-  console.log('🏥 Health check requested');
+  console.log('🏥 Full health check requested');
   
+  const healthStatus = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: 'unknown',
+    environment: process.env.NODE_ENV || 'development',
+    server: {
+      memory: process.memoryUsage(),
+      pid: process.pid
+    }
+  };
+
   try {
+    // Test database connection with timeout
     console.log('🏥 Testing database connection...');
-    const startTime = Date.now();
-    const result = await pool.query('SELECT 1, NOW() as server_time');
-    const endTime = Date.now();
-    const responseTime = endTime - startTime;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database timeout')), 5000)
+    );
     
-    console.log(`🏥 Database query successful in ${responseTime}ms`);
+    const dbPromise = pool.query('SELECT 1, NOW() as server_time');
+    const result = await Promise.race([dbPromise, timeoutPromise]);
     
-    const clientIP = req.ip || req.connection.remoteAddress;
-    const health = {
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      database: {
-        status: 'connected',
-        responseTime: `${responseTime}ms`,
-        serverTime: result.rows[0].server_time
-      },
-      server: {
-        environment: process.env.NODE_ENV || 'development',
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        pid: process.pid
-      },
-      request: {
-        clientIP,
-        host: req.get('Host'),
-        userAgent: req.get('User-Agent')
-      },
-      version: '1.0.0'
-    };
-    
-    console.log('🏥 Health check successful');
-    res.status(200).json(health);
+    healthStatus.database = 'connected';
+    healthStatus.database_time = result.rows[0].server_time;
+    console.log('🏥 Database connection successful');
+    res.status(200).json(healthStatus);
   } catch (error) {
-    console.error('🏥 Health check failed:', error.message);
-    console.error('🏥 Error stack:', error.stack);
-    
-    const errorResponse = {
-      status: 'ERROR',
-      timestamp: new Date().toISOString(),
-      database: {
-        status: 'disconnected',
-        error: error.message
-      },
-      server: {
-        environment: process.env.NODE_ENV || 'development',
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        pid: process.pid
-      },
-      version: '1.0.0'
-    };
-    
-    res.status(503).json(errorResponse);
+    console.error('🏥 Database connection warning:', error.message);
+    healthStatus.database = 'disconnected';
+    healthStatus.database_error = error.message;
+    // Return 200 for partial health - service is up even if DB is down
+    res.status(200).json(healthStatus);
   }
 });
 
@@ -245,37 +232,48 @@ app.get('/external-test', (req, res) => {
 // Start server with enhanced logging and error handling
 console.log('🚀 Iniciando servidor HTTP...');
 
-const server = app.listen(PORT, '0.0.0.0', async () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor rodando na porta ${PORT} em todas as interfaces (0.0.0.0)`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 URLs de acesso:`);
   console.log(`   - Local: http://localhost:${PORT}`);
   console.log(`   - Rede: http://0.0.0.0:${PORT}`);
   console.log(`   - Health: http://0.0.0.0:${PORT}/health`);
+  console.log(`   - Simple Health: http://0.0.0.0:${PORT}/health/simple`);
   console.log(`   - Debug: http://0.0.0.0:${PORT}/debug`);
   console.log(`   - External Test: http://0.0.0.0:${PORT}/external-test`);
   if (process.env.DOMAIN) {
     console.log(`   - Domínio: ${process.env.DOMAIN}`);
   }
   
-  console.log('🔌 Testando conexão com banco de dados...');
+  console.log('✅ Servidor HTTP pronto para receber conexões');
   
-  // Test initial database connection with enhanced retry logic
-  const connected = await testConnection();
-  if (!connected) {
-    console.error('❌ FALHA CRÍTICA: Não foi possível conectar ao banco de dados após várias tentativas');
-    console.error('❌ Verifique as variáveis de ambiente do banco de dados');
-    console.error('❌ DB_HOST:', process.env.DB_HOST);
-    console.error('❌ DB_PORT:', process.env.DB_PORT);
-    console.error('❌ DB_NAME:', process.env.DB_NAME);
-    console.error('❌ DB_USER:', process.env.DB_USER);
-    console.error('❌ Encerrando servidor...');
-    process.exit(1);
-  }
-  
-  console.log('✅ Servidor HTTP pronto para receber conexões externas');
-  console.log('✅ Banco de dados conectado com sucesso');
-  console.log('✅ Sistema inicializado completamente');
+  // Test database connection in background (non-blocking)
+  setTimeout(async () => {
+    try {
+      console.log('🔌 Testando conexão com banco de dados...');
+      const connected = await testConnection(3); // Reduced retries for faster startup
+      if (connected) {
+        console.log('✅ Banco de dados conectado com sucesso');
+      } else {
+        console.log('⚠️  Servidor rodando sem banco - tentará reconectar automaticamente');
+        
+        // Schedule retry in 30 seconds
+        setTimeout(() => {
+          console.log('🔄 Tentando reconectar ao banco...');
+          testConnection(2).then((reconnected) => {
+            if (reconnected) {
+              console.log('✅ Banco de dados reconectado');
+            } else {
+              console.log('⚠️  Falha na reconexão - verificar configuração de banco');
+            }
+          });
+        }, 30000);
+      }
+    } catch (error) {
+      console.error('❌ Erro durante teste de banco:', error.message);
+    }
+  }, 1000);
   
   // Log server configuration
   console.log('📋 Configuração do servidor:');

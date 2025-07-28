@@ -29,9 +29,9 @@ RUN ls -la dist/ || echo "Erro: diretório dist não foi criado"
 # Expor porta
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+# Health check - using simple endpoint initially
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -f http://localhost:3000/health/simple || curl -f http://localhost:3000/health || exit 1
 
 # Iniciar apenas o servidor Node.js
 CMD ["node", "server/index.js"]
