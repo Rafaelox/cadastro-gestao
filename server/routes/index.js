@@ -21,6 +21,13 @@ router.use('/agenda', agendaRoutes);
 router.use('/historico', historicoRoutes);
 router.use('/pagamentos', pagamentosRoutes);
 router.use('/configuracao', configuracaoRoutes);
+
+// Map configuration routes directly
+router.use('/categorias', configuracaoRoutes);
+router.use('/origens', configuracaoRoutes);
+router.use('/servicos', configuracaoRoutes);
+router.use('/consultores', configuracaoRoutes);
+router.use('/formas-pagamento', configuracaoRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/recibos', recibosRoutes);
 router.use('/audit_logs', auditLogsRoutes);

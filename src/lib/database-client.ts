@@ -25,7 +25,9 @@ class DatabaseClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = 'http://localhost:3000/api';
+    // Use environment variable for API URL, fallback to localhost for development
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    console.log('DatabaseClient initialized with baseUrl:', this.baseUrl);
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
