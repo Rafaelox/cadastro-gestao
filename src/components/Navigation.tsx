@@ -4,75 +4,65 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Users, Database, FileText, BarChart3, Settings, Briefcase, UserCheck, Calendar, FileBarChart, History, DollarSign, ChevronDown, ChevronRight, Shield, MessageSquare, Target } from "lucide-react";
 import { useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-interface NavigationProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
-export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
+export const Navigation = () => {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { permissions } = usePermissions();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const menuItems = [
     {
-      id: 'dashboard',
+      path: '/',
       label: 'Painel',
       icon: BarChart3,
       description: 'Gráficos e estatísticas'
     },
     {
-      id: 'clientes',
+      path: '/clientes',
       label: 'Clientes',
       icon: Users,
       description: 'Gerenciar clientes'
     },
     {
-      id: 'agenda',
+      path: '/agenda',
       label: 'Agenda',
       icon: Calendar,
       description: 'Gerenciar agendamentos'
     },
     ...(permissions.canCreateUser ? [{
-      id: 'usuarios',
+      path: '/sistema',
       label: 'Usuários',
       icon: UserCheck,
       description: 'Gerenciar usuários'
     }] : []),
     {
-      id: 'historico-diario',
+      path: '/atendimentos',
       label: 'Histórico Diário',
       icon: History,
       description: 'Atividades por dia'
     },
     {
-      id: 'relatorios',
+      path: '/recibos',
       label: 'Relatórios',
       icon: FileBarChart,
       description: 'Relatórios e PDF'
     },
     {
-      id: 'caixa',
+      path: '/caixa',
       label: 'Caixa',
       icon: DollarSign,
       description: 'Controle financeiro'
     },
     {
-      id: 'dashboard-financeiro',
-      label: 'Painel Financeiro',
-      icon: BarChart3,
-      description: 'Análises financeiras'
-    },
-    {
-      id: 'comunicacao',
+      path: '/comunicacao',
       label: 'Comunicação',
       icon: MessageSquare,
       description: 'Templates e campanhas'
     },
     {
-      id: 'marketing',
+      path: '/marketing',
       label: 'Marketing',
       icon: Target,
       description: 'Campanhas de marketing'
@@ -80,15 +70,15 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   ];
 
   const configItems = [
-    { id: 'comissoes', label: 'Comissões', icon: DollarSign },
-    { id: 'categorias', label: 'Categorias', icon: Database },
-    { id: 'origens', label: 'Origens', icon: FileText },
-    { id: 'auditoria', label: 'Logs de Auditoria', icon: History },
-    { id: 'configuracoes', label: 'Configurações', icon: Settings }
+    { path: '/sistema', label: 'Comissões', icon: DollarSign, tab: 'comissoes' },
+    { path: '/sistema', label: 'Categorias', icon: Database, tab: 'categorias' },
+    { path: '/sistema', label: 'Origens', icon: FileText, tab: 'origens' },
+    { path: '/sistema', label: 'Logs de Auditoria', icon: History, tab: 'auditoria' },
+    { path: '/sistema', label: 'Configurações', icon: Settings, tab: 'configuracoes' }
   ];
 
   const permissionItems = permissions.canCreateUser ? [
-    { id: 'permissoes-pagina', label: 'Permissões por Página', icon: Shield }
+    { path: '/permissoes', label: 'Permissões por Página', icon: Shield }
   ] : [];
 
   return (
@@ -96,18 +86,18 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       <div className="space-y-2">
         {menuItems.map((item) => {
           const IconComponent = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = location.pathname === item.path;
           
           return (
             <Button
-              key={item.id}
+              key={item.path}
               variant={isActive ? "default" : "ghost"}
               className={`w-full justify-start h-12 ${
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-md" 
                   : "hover:bg-muted/50 text-foreground"
               }`}
-              onClick={() => onTabChange(item.id)}
+              onClick={() => navigate(item.path)}
             >
               <IconComponent className="w-5 h-5 mr-3" />
               <div className="text-left">
@@ -147,11 +137,11 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
           <CollapsibleContent className="ml-4 mt-2 space-y-1">
             {configItems.map((item) => {
               const IconComponent = item.icon;
-              const isActive = activeTab === item.id;
+              const isActive = location.pathname === item.path && location.search.includes(item.tab || '');
               
               return (
                 <Button
-                  key={item.id}
+                  key={item.label}
                   variant={isActive ? "default" : "ghost"}
                   size="sm"
                   className={`w-full justify-start ${
@@ -159,7 +149,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                       ? "bg-primary text-primary-foreground" 
                       : "hover:bg-muted/50"
                   }`}
-                  onClick={() => onTabChange(item.id)}
+                  onClick={() => navigate(item.tab ? `${item.path}?tab=${item.tab}` : item.path)}
                 >
                   <IconComponent className="w-4 h-4 mr-2" />
                   <span>{item.label}</span>
@@ -170,11 +160,11 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
             {/* Seção de permissões especiais */}
             {permissionItems.map((item) => {
               const IconComponent = item.icon;
-              const isActive = activeTab === item.id;
+              const isActive = location.pathname === item.path;
               
               return (
                 <Button
-                  key={item.id}
+                  key={item.path}
                   variant={isActive ? "default" : "ghost"}
                   size="sm"
                   className={`w-full justify-start ${
@@ -182,10 +172,7 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
                       ? "bg-primary text-primary-foreground" 
                       : "hover:bg-muted/50"
                   }`}
-                  onClick={() => {
-                    // Usar sempre onTabChange para manter consistência
-                    onTabChange(item.id);
-                  }}
+                  onClick={() => navigate(item.path)}
                 >
                   <IconComponent className="w-4 h-4 mr-2" />
                   <span>{item.label}</span>

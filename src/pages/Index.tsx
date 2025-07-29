@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ClientesList } from "@/components/ClientesList";
 import { ClienteForm } from "@/components/ClienteForm";
@@ -20,12 +20,9 @@ import { UsuarioForm } from "@/components/UsuarioForm";
 import type { Cliente } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface IndexProps {
-  activeTab?: string;
-}
-
-const Index = ({ activeTab: propActiveTab }: IndexProps) => {
-  const [activeTab, setActiveTab] = useState(propActiveTab || 'dashboard');
+const Index = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard-financeiro');
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
   const [showUsuarioForm, setShowUsuarioForm] = useState(false);
@@ -34,10 +31,9 @@ const Index = ({ activeTab: propActiveTab }: IndexProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (propActiveTab) {
-      setActiveTab(propActiveTab);
-    }
-  }, [propActiveTab]);
+    const tab = searchParams.get('tab') || 'dashboard-financeiro';
+    setActiveTab(tab);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isAuthenticated) {

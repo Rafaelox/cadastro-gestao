@@ -33,34 +33,12 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('dashboard');
 
   console.log('AppContent renderizado:', { 
     isAuthenticated, 
     isLoading, 
     pathname: location.pathname 
   });
-
-  useEffect(() => {
-    console.log('Mapeando rota para tab:', location.pathname);
-    // Map paths to tab names
-    const pathToTab: Record<string, string> = {
-      '/': 'dashboard',
-      '/agenda': 'agenda', 
-      '/clientes': 'clientes',
-      '/atendimentos': 'historico-diario',
-      '/caixa': 'caixa',
-      '/comunicacao': 'comunicacao',
-      '/marketing': 'marketing',
-      '/sistema': 'dashboard-financeiro',
-      '/permissoes': 'permissoes-pagina',
-      '/recibos': 'relatorios'
-    };
-    
-    const tab = pathToTab[location.pathname] || 'dashboard';
-    console.log('Tab ativa definida para:', tab);
-    setActiveTab(tab);
-  }, [location.pathname]);
 
   if (isLoading) {
     return (
@@ -78,52 +56,52 @@ const AppContent = () => {
       {isAuthenticated ? (
         <Routes>
           <Route path="/" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <DashboardPage />
             </Layout>
           } />
           <Route path="/agenda" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <AgendaPage />
             </Layout>
           } />
           <Route path="/clientes" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <ClientesPage />
             </Layout>
           } />
           <Route path="/atendimentos" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <AtendimentosPage />
             </Layout>
           } />
           <Route path="/caixa" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <CaixaPage />
             </Layout>
           } />
           <Route path="/comunicacao" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <ComunicacaoPage />
             </Layout>
           } />
           <Route path="/marketing" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <MarketingPage />
             </Layout>
           } />
           <Route path="/recibos" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+            <Layout>
               <RecibosPage />
             </Layout>
           } />
           <Route path="/sistema" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab}>
-              <Index activeTab={activeTab} />
+            <Layout>
+              <Index />
             </Layout>
           } />
           <Route path="/permissoes" element={
-            <Layout activeTab={activeTab} onTabChange={setActiveTab} showNavigation={false}>
+            <Layout showNavigation={false}>
               <PermissoesPage />
             </Layout>
           } />
