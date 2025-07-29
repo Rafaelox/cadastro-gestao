@@ -190,7 +190,7 @@ export const ConsultoresList = ({ onEdit, onAdd }: ConsultoresListProps) => {
                       <TableCell>
                         <div className="flex items-center space-x-1">
                           <Percent className="h-3 w-3" />
-                          <span>{consultor.percentual_comissao.toFixed(2)}%</span>
+                          <span>{(consultor.percentual_comissao ?? 0).toFixed(2)}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
