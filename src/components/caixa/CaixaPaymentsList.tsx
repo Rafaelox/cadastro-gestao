@@ -99,11 +99,11 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
   const calcularTotais = () => {
     const entradas = pagamentos
       .filter(p => p.tipo_transacao === 'entrada')
-      .reduce((sum, p) => sum + (p.numero_parcelas > 1 ? p.valor_original : p.valor), 0);
+      .reduce((sum, p) => sum + (p.numero_parcelas > 1 ? (p.valor_original ?? 0) : (p.valor ?? 0)), 0);
     
     const saidas = pagamentos
       .filter(p => p.tipo_transacao === 'saida')
-      .reduce((sum, p) => sum + (p.numero_parcelas > 1 ? p.valor_original : p.valor), 0);
+      .reduce((sum, p) => sum + (p.numero_parcelas > 1 ? (p.valor_original ?? 0) : (p.valor ?? 0)), 0);
 
     return { entradas, saidas, saldo: entradas - saidas };
   };
@@ -189,7 +189,7 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
               <TrendingUp className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Entradas</p>
-                <p className="text-lg font-bold text-green-600">R$ {totais.entradas.toFixed(2)}</p>
+                <p className="text-lg font-bold text-green-600">R$ {(totais.entradas ?? 0).toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -201,7 +201,7 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
               <TrendingDown className="h-4 w-4 text-red-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Saídas</p>
-                <p className="text-lg font-bold text-red-600">R$ {totais.saidas.toFixed(2)}</p>
+                <p className="text-lg font-bold text-red-600">R$ {(totais.saidas ?? 0).toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -213,8 +213,8 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
               <DollarSign className="h-4 w-4 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Saldo</p>
-                <p className={`text-lg font-bold ${totais.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  R$ {totais.saldo.toFixed(2)}
+                <p className={`text-lg font-bold ${(totais.saldo ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  R$ {(totais.saldo ?? 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -277,7 +277,7 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
                     <td className="border border-border p-2">
                       {pagamento.numero_parcelas > 1 ? (
                         <span className="text-blue-600 font-medium">
-                          {pagamento.numero_parcelas}x de R$ {(pagamento.valor_original / pagamento.numero_parcelas).toFixed(2)}
+                          {pagamento.numero_parcelas}x de R$ {((pagamento.valor_original ?? 0) / pagamento.numero_parcelas).toFixed(2)}
                         </span>
                       ) : (
                         <span>1x</span>
@@ -288,7 +288,7 @@ export const CaixaPaymentsList = ({ onLoadComplete }: CaixaPaymentsListProps) =>
                         pagamento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {pagamento.tipo_transacao === 'entrada' ? '+' : '-'} 
-                        R$ {pagamento.numero_parcelas > 1 ? pagamento.valor_original.toFixed(2) : pagamento.valor.toFixed(2)}
+                        R$ {pagamento.numero_parcelas > 1 ? (pagamento.valor_original ?? 0).toFixed(2) : (pagamento.valor ?? 0).toFixed(2)}
                       </span>
                     </td>
                     <td className="border border-border p-2 text-sm text-muted-foreground">

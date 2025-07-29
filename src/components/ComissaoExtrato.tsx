@@ -98,11 +98,11 @@ export const ComissaoExtrato = () => {
   const calcularTotais = () => {
     const entradas = comissoes
       .filter(c => c.tipo_operacao === 'entrada')
-      .reduce((sum, c) => sum + c.valor_comissao, 0);
+      .reduce((sum, c) => sum + (c.valor_comissao ?? 0), 0);
     
     const saidas = comissoes
       .filter(c => c.tipo_operacao === 'saida')
-      .reduce((sum, c) => sum + c.valor_comissao, 0);
+      .reduce((sum, c) => sum + (c.valor_comissao ?? 0), 0);
 
     return { entradas, saidas, saldo: entradas - saidas };
   };
@@ -289,7 +289,7 @@ export const ComissaoExtrato = () => {
                       <TrendingUp className="h-4 w-4 text-green-600" />
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">A Receber</p>
-                        <p className="text-xl font-bold text-green-600">R$ {totais.entradas.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-green-600">R$ {(totais.entradas ?? 0).toFixed(2)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -301,7 +301,7 @@ export const ComissaoExtrato = () => {
                       <TrendingDown className="h-4 w-4 text-red-600" />
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Deduzido</p>
-                        <p className="text-xl font-bold text-red-600">R$ {totais.saidas.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-red-600">R$ {(totais.saidas ?? 0).toFixed(2)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -313,8 +313,8 @@ export const ComissaoExtrato = () => {
                       <DollarSign className="h-4 w-4 text-blue-600" />
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Saldo Total</p>
-                        <p className={`text-xl font-bold ${totais.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          R$ {totais.saldo.toFixed(2)}
+                        <p className={`text-xl font-bold ${(totais.saldo ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          R$ {(totais.saldo ?? 0).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -355,7 +355,7 @@ export const ComissaoExtrato = () => {
                         
                         <div className="text-sm text-muted-foreground space-y-1">
                           <div>Serviço: {comissao.servico_nome}</div>
-                          <div>Valor do Serviço: R$ {comissao.valor_servico.toFixed(2)}</div>
+                          <div>Valor do Serviço: R$ {(comissao.valor_servico ?? 0).toFixed(2)}</div>
                           <div>Percentual: {comissao.percentual_comissao}%</div>
                           {comissao.observacoes && (
                             <div>Obs: {comissao.observacoes}</div>
@@ -367,7 +367,7 @@ export const ComissaoExtrato = () => {
                         <div className={`text-lg font-bold ${
                           comissao.tipo_operacao === 'entrada' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {comissao.tipo_operacao === 'entrada' ? '+' : '-'} R$ {comissao.valor_comissao.toFixed(2)}
+                          {comissao.tipo_operacao === 'entrada' ? '+' : '-'} R$ {(comissao.valor_comissao ?? 0).toFixed(2)}
                         </div>
                       </div>
                     </div>

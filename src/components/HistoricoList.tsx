@@ -308,7 +308,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
                         <div className="flex items-center space-x-2">
                           <DollarSign className="h-4 w-4 text-green-600" />
                           <span className="font-medium text-green-600">
-                            R$ {(item.valor_final || item.valor_servico).toFixed(2)}
+                            R$ {(item.valor_final ?? item.valor_servico ?? 0).toFixed(2)}
                           </span>
                         </div>
                         <Badge variant="outline" className="text-xs">
@@ -367,7 +367,7 @@ export const HistoricoList = ({ clienteId, consultorId, onNovoAgendamento, searc
                     {item.comissao_consultor > 0 && (
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <DollarSign className="h-4 w-4" />
-                        <span>Comissão: R$ {item.comissao_consultor.toFixed(2)}</span>
+                        <span>Comissão: R$ {(item.comissao_consultor ?? 0).toFixed(2)}</span>
                       </div>
                     )}
                   </div>

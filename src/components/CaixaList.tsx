@@ -95,11 +95,11 @@ export const CaixaList = () => {
   const calcularTotais = () => {
     const entradas = movimentos
       .filter(m => m.tipo_transacao === 'entrada')
-      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original || 0) : (m.valor || 0)), 0) || 0;
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original ?? 0) : (m.valor ?? 0)), 0) || 0;
     
     const saidas = movimentos
       .filter(m => m.tipo_transacao === 'saida')
-      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original || 0) : (m.valor || 0)), 0) || 0;
+      .reduce((sum, m) => sum + (m.numero_parcelas > 1 ? (m.valor_original ?? 0) : (m.valor ?? 0)), 0) || 0;
 
     return { entradas, saidas, saldo: entradas - saidas };
   };
@@ -251,7 +251,7 @@ export const CaixaList = () => {
               <TrendingUp className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Entradas</p>
-                <p className="text-2xl font-bold text-green-600">R$ {totais.entradas.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-600">R$ {(totais.entradas ?? 0).toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -263,7 +263,7 @@ export const CaixaList = () => {
               <TrendingDown className="h-5 w-5 text-red-600" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Saídas</p>
-                <p className="text-2xl font-bold text-red-600">R$ {totais.saidas.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-red-600">R$ {(totais.saidas ?? 0).toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -275,8 +275,8 @@ export const CaixaList = () => {
               <DollarSign className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Saldo</p>
-                <p className={`text-2xl font-bold ${totais.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  R$ {totais.saldo.toFixed(2)}
+                <p className={`text-2xl font-bold ${(totais.saldo ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  R$ {(totais.saldo ?? 0).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -332,8 +332,8 @@ export const CaixaList = () => {
                         <div>Forma de Pagamento: {movimento.forma_pagamento_nome}</div>
                         {movimento.numero_parcelas > 1 && (
                           <div className="text-blue-600 font-medium">
-                            {movimento.numero_parcelas}x de R$ {(movimento.valor_original / movimento.numero_parcelas).toFixed(2)} 
-                            = R$ {movimento.valor_original.toFixed(2)}
+                            {movimento.numero_parcelas}x de R$ {((movimento.valor_original ?? 0) / movimento.numero_parcelas).toFixed(2)} 
+                            = R$ {(movimento.valor_original ?? 0).toFixed(2)}
                           </div>
                         )}
                         {movimento.observacoes && (
@@ -347,7 +347,7 @@ export const CaixaList = () => {
                         movimento.tipo_transacao === 'entrada' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {movimento.tipo_transacao === 'entrada' ? '+' : '-'} 
-                        R$ {movimento.numero_parcelas > 1 ? movimento.valor_original.toFixed(2) : movimento.valor.toFixed(2)}
+                        R$ {movimento.numero_parcelas > 1 ? (movimento.valor_original ?? 0).toFixed(2) : (movimento.valor ?? 0).toFixed(2)}
                       </div>
                       
                       {movimento.numero_parcelas > 1 && (

@@ -245,10 +245,10 @@ export const AgendaList = ({ selectedDate, onRefresh, onAtendimento }: AgendaLis
                       <div className="space-y-1">
                         <div className="flex items-center space-x-1">
                           <DollarSign className="h-3 w-3" />
-                          <span className="font-medium">R$ {agenda.valor_servico.toFixed(2)}</span>
+                          <span className="font-medium">R$ {(agenda.valor_servico ?? 0).toFixed(2)}</span>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          Comissão: R$ {agenda.comissao_consultor.toFixed(2)}
+                          Comissão: R$ {(agenda.comissao_consultor ?? 0).toFixed(2)}
                         </div>
                       </div>
                     </TableCell>
