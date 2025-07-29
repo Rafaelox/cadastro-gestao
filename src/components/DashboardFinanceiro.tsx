@@ -97,8 +97,8 @@ export const DashboardFinanceiro = () => {
       const formasPagamentoMaisUsadas = Object.entries(formasPagamento)
         .map(([nome, data]) => ({
           nome,
-          total: data.total,
-          percentual: totalTransacoes > 0 ? (data.count / totalTransacoes) * 100 : 0
+          total: (data?.total ?? 0),
+          percentual: totalTransacoes > 0 ? ((data?.count ?? 0) / totalTransacoes) * 100 : 0
         }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
@@ -116,8 +116,8 @@ export const DashboardFinanceiro = () => {
       const consultoresMaisAtivos = Object.entries(consultores)
         .map(([nome, data]) => ({
           nome,
-          total: data.total,
-          transacoes: data.transacoes
+          total: (data?.total ?? 0),
+          transacoes: (data?.transacoes ?? 0)
         }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
@@ -247,7 +247,7 @@ export const DashboardFinanceiro = () => {
                   <TrendingUp className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Recebimentos</p>
-                    <p className="text-2xl font-bold text-green-600">R$ {dashboardData.totalRecebimentos.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-green-600">R$ {(dashboardData.totalRecebimentos ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -259,7 +259,7 @@ export const DashboardFinanceiro = () => {
                   <TrendingDown className="h-5 w-5 text-red-600" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Total Pagamentos</p>
-                    <p className="text-2xl font-bold text-red-600">R$ {dashboardData.totalPagamentos.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-red-600">R$ {(dashboardData.totalPagamentos ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -271,9 +271,9 @@ export const DashboardFinanceiro = () => {
                   <DollarSign className="h-5 w-5 text-blue-600" />
                   <div>
                       <p className="text-sm font-medium text-muted-foreground">Saldo do Período</p>
-                      <p className={`text-2xl font-bold ${dashboardData.saldoMensal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        R$ {dashboardData.saldoMensal.toFixed(2)}
-                      </p>
+                       <p className={`text-2xl font-bold ${(dashboardData.saldoMensal ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                         R$ {(dashboardData.saldoMensal ?? 0).toFixed(2)}
+                       </p>
                   </div>
                 </div>
               </CardContent>
@@ -300,7 +300,7 @@ export const DashboardFinanceiro = () => {
                   <BarChart3 className="h-5 w-5 text-orange-600" />
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Ticket Médio</p>
-                    <p className="text-xl font-bold text-orange-600">R$ {dashboardData.ticketMedio.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-orange-600">R$ {(dashboardData.ticketMedio ?? 0).toFixed(2)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -333,9 +333,9 @@ export const DashboardFinanceiro = () => {
                     <div key={index} className="flex items-center justify-between p-3 border rounded">
                       <div>
                         <p className="font-medium">{forma.nome}</p>
-                        <p className="text-sm text-muted-foreground">{forma.percentual.toFixed(1)}% das transações</p>
+                        <p className="text-sm text-muted-foreground">{(forma.percentual ?? 0).toFixed(1)}% das transações</p>
                       </div>
-                      <p className="text-lg font-bold">R$ {forma.total.toFixed(2)}</p>
+                      <p className="text-lg font-bold">R$ {(forma.total ?? 0).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
@@ -359,7 +359,7 @@ export const DashboardFinanceiro = () => {
                         <p className="font-medium">{consultor.nome}</p>
                         <p className="text-sm text-muted-foreground">{consultor.transacoes} transações</p>
                       </div>
-                      <p className="text-lg font-bold">R$ {consultor.total.toFixed(2)}</p>
+                      <p className="text-lg font-bold">R$ {(consultor.total ?? 0).toFixed(2)}</p>
                     </div>
                   ))}
                 </div>
