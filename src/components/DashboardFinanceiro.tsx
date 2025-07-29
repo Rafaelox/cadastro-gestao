@@ -103,15 +103,14 @@ export const DashboardFinanceiro = () => {
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
 
-      // Consultores mais ativos
-      const consultores: { [key: string]: { total: number; transacoes: number } } = {};
+      // Consultores mais ativos - Dados temporários até implementar relacionamento
+      const consultores: { [key: string]: { total: number; transacoes: number } } = {
+        'Não especificado': { total: 0, transacoes: 0 }
+      };
       dados.forEach(p => {
-        const consultor = p.consultor_nome || 'N/A';
-        if (!consultores[consultor]) {
-          consultores[consultor] = { total: 0, transacoes: 0 };
-        }
-        consultores[consultor].total += (p.valor_original || p.valor || 0);
-        consultores[consultor].transacoes += 1;
+        // Como não temos consultor nos pagamentos ainda, agrupamos como "Não especificado"
+        consultores['Não especificado'].total += (p.valor_original || p.valor || 0);
+        consultores['Não especificado'].transacoes += 1;
       });
 
       const consultoresMaisAtivos = Object.entries(consultores)

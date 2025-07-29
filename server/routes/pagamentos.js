@@ -13,14 +13,12 @@ router.get('/', async (req, res) => {
         p.*,
         c.nome as cliente_nome,
         s.nome as servico_nome,
-        s.valor as valor_original,
-        cons.nome as consultor_nome,
+        s.preco as valor_original,
         fp.nome as forma_pagamento_nome,
         1 as numero_parcelas
       FROM pagamentos p
       LEFT JOIN clientes c ON p.cliente_id = c.id
       LEFT JOIN servicos s ON p.servico_id = s.id
-      LEFT JOIN consultores cons ON s.consultor_id = cons.id
       LEFT JOIN formas_pagamento fp ON p.forma_pagamento_id = fp.id
       ORDER BY p.data_pagamento DESC
     `);
