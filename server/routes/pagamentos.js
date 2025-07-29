@@ -8,9 +8,22 @@ router.use(authenticateToken);
 // GET /api/pagamentos
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM pagamentos ORDER BY data_pagamento DESC'
-    );
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        c.nome as cliente_nome,
+        s.nome as servico_nome,
+        s.valor as valor_original,
+        cons.nome as consultor_nome,
+        fp.nome as forma_pagamento_nome,
+        1 as numero_parcelas
+      FROM pagamentos p
+      LEFT JOIN clientes c ON p.cliente_id = c.id
+      LEFT JOIN servicos s ON p.servico_id = s.id
+      LEFT JOIN consultores cons ON s.consultor_id = cons.id
+      LEFT JOIN formas_pagamento fp ON p.forma_pagamento_id = fp.id
+      ORDER BY p.data_pagamento DESC
+    `);
     
     res.json({
       success: true,

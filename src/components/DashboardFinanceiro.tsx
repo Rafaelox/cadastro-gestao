@@ -85,7 +85,7 @@ export const DashboardFinanceiro = () => {
       // Formas de pagamento mais usadas
       const formasPagamento: { [key: string]: { total: number; count: number } } = {};
       dados.forEach(p => {
-        const forma = p.formas_pagamento?.nome || 'N/A';
+        const forma = p.forma_pagamento_nome || 'N/A';
         if (!formasPagamento[forma]) {
           formasPagamento[forma] = { total: 0, count: 0 };
         }
@@ -106,7 +106,7 @@ export const DashboardFinanceiro = () => {
       // Consultores mais ativos
       const consultores: { [key: string]: { total: number; transacoes: number } } = {};
       dados.forEach(p => {
-        const consultor = p.consultores?.nome || 'N/A';
+        const consultor = p.consultor_nome || 'N/A';
         if (!consultores[consultor]) {
           consultores[consultor] = { total: 0, transacoes: 0 };
         }
